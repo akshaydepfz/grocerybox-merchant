@@ -1,26 +1,22 @@
 "use client";
 
-import { Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/stores/auth-store";
 
 import { DashboardSidebar } from "./dashboard-sidebar";
 
 type DashboardShellProps = {
   children: ReactNode;
-  title?: string;
 };
 
-export function DashboardShell({ children, title }: DashboardShellProps) {
+export function DashboardShell({ children }: DashboardShellProps) {
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
-  const session = useAuthStore((s) => s.session);
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 
@@ -40,18 +36,10 @@ export function DashboardShell({ children, title }: DashboardShellProps) {
     };
   }, [showMobileNav, closeMobile]);
 
-  const displayTitle = title ?? "Overview";
-  const email = session?.email ?? "merchant@grocery.in";
-
   return (
-    <div className="flex min-h-screen bg-muted/40">
-      <aside
-        className={cn(
-          "hidden shrink-0 border-r border-border bg-card transition-[width] duration-200 ease-out lg:block",
-          collapsed ? "w-16" : "w-60",
-        )}
-      >
-        <DashboardSidebar collapsed={collapsed} />
+    <div className="flex min-h-screen bg-[#f5f6f8]">
+      <aside className="hidden shrink-0 lg:block">
+        <DashboardSidebar className="sticky top-0 h-screen" />
       </aside>
 
       <div
@@ -64,7 +52,7 @@ export function DashboardShell({ children, title }: DashboardShellProps) {
         <button
           type="button"
           className={cn(
-            "absolute inset-0 bg-foreground/20 transition-opacity duration-200",
+            "absolute inset-0 bg-black/40 transition-opacity duration-200",
             showMobileNav ? "opacity-100" : "opacity-0",
           )}
           onClick={closeMobile}
@@ -74,7 +62,7 @@ export function DashboardShell({ children, title }: DashboardShellProps) {
         <div
           id="dashboard-mobile-nav"
           className={cn(
-            "absolute inset-y-0 left-0 w-60 border-r border-border bg-card shadow-lg transition-transform duration-200 ease-out",
+            "absolute inset-y-0 left-0 shadow-2xl transition-transform duration-200 ease-out",
             showMobileNav ? "translate-x-0" : "-translate-x-full",
           )}
         >
@@ -83,24 +71,23 @@ export function DashboardShell({ children, title }: DashboardShellProps) {
               type="button"
               variant="ghost"
               size="icon-sm"
-              className="absolute right-2 top-2.5 z-10"
+              className="absolute right-2 top-3 z-10 text-white hover:bg-white/10"
               onClick={closeMobile}
               aria-label="Close navigation"
             >
-              <X className="size-4" />
+              <X className="size-5" />
             </Button>
-            <DashboardSidebar onNavigate={closeMobile} />
+            <DashboardSidebar onNavigate={closeMobile} className="h-full" />
           </div>
         </div>
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-border bg-card px-4 sm:px-6">
+        <div className="sticky top-0 z-30 flex h-14 items-center border-b border-[#eceef2] bg-[#f5f6f8] px-4 lg:hidden">
           <Button
             type="button"
             variant="ghost"
-            size="icon-sm"
-            className="lg:hidden"
+            size="icon"
             onClick={() => setMobileOpen(true)}
             aria-expanded={showMobileNav}
             aria-controls="dashboard-mobile-nav"
@@ -108,32 +95,12 @@ export function DashboardShell({ children, title }: DashboardShellProps) {
           >
             <Menu className="size-5" />
           </Button>
+          <span className="ml-2 text-sm font-semibold text-[#1a1f2e]">
+            GroceryBox Merchant
+          </span>
+        </div>
 
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="hidden lg:inline-flex"
-            onClick={() => setCollapsed((c) => !c)}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {collapsed ? (
-              <PanelLeftOpen className="size-4" />
-            ) : (
-              <PanelLeftClose className="size-4" />
-            )}
-          </Button>
-
-          <h1 className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-            {displayTitle}
-          </h1>
-
-          <p className="hidden max-w-[200px] truncate text-xs text-muted-foreground sm:block">
-            {email}
-          </p>
-        </header>
-
-        <main className="flex-1 px-4 py-6 sm:px-6">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

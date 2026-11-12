@@ -1,12 +1,16 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
+  CreditCard,
+  FolderTree,
+  HelpCircle,
   LayoutDashboard,
+  Megaphone,
   Package,
-  Percent,
   Settings,
-  ShoppingBag,
+  ShoppingCart,
   Users,
+  UserRound,
   Warehouse,
 } from "lucide-react";
 
@@ -18,12 +22,13 @@ export type DashboardNavItem = {
   href: string;
   icon: LucideIcon;
   available: boolean;
+  badge?: number;
 };
 
 export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
   {
-    id: "overview",
-    label: "Overview",
+    id: "dashboard",
+    label: "Dashboard",
     href: dashboardRoutePrefix,
     icon: LayoutDashboard,
     available: true,
@@ -32,14 +37,22 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     id: "orders",
     label: "Orders",
     href: `${dashboardRoutePrefix}/orders`,
-    icon: ShoppingBag,
+    icon: ShoppingCart,
     available: false,
+    badge: 12,
   },
   {
     id: "products",
     label: "Products",
     href: `${dashboardRoutePrefix}/products`,
     icon: Package,
+    available: false,
+  },
+  {
+    id: "categories",
+    label: "Categories",
+    href: `${dashboardRoutePrefix}/categories`,
+    icon: FolderTree,
     available: false,
   },
   {
@@ -57,10 +70,10 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     available: false,
   },
   {
-    id: "promotions",
-    label: "Promotions",
-    href: `${dashboardRoutePrefix}/promotions`,
-    icon: Percent,
+    id: "marketing",
+    label: "Marketing",
+    href: `${dashboardRoutePrefix}/marketing`,
+    icon: Megaphone,
     available: false,
   },
   {
@@ -72,9 +85,30 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
   },
   {
     id: "settings",
-    label: "Settings",
+    label: "Store Settings",
     href: `${dashboardRoutePrefix}/settings`,
     icon: Settings,
+    available: false,
+  },
+  {
+    id: "payments",
+    label: "Payments",
+    href: `${dashboardRoutePrefix}/payments`,
+    icon: CreditCard,
+    available: false,
+  },
+  {
+    id: "team",
+    label: "Team",
+    href: `${dashboardRoutePrefix}/team`,
+    icon: UserRound,
+    available: false,
+  },
+  {
+    id: "help",
+    label: "Help & Support",
+    href: `${dashboardRoutePrefix}/help`,
+    icon: HelpCircle,
     available: false,
   },
 ];

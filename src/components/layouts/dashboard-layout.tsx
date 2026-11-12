@@ -7,6 +7,6 @@ type DashboardLayoutProps = {
   title?: string;
 };
 
-export function DashboardLayout({ children, title }: DashboardLayoutProps) {
-  return <DashboardShell title={title}>{children}</DashboardShell>;
+export function DashboardLayout({ children }: DashboardLayoutProps) {
+  return <DashboardShell>{children}</DashboardShell>;
 }
