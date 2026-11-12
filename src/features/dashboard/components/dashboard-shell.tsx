@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, PanelLeftClose, PanelLeftOpen, Search, X } from "lucide-react";
+import { Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -40,22 +40,20 @@ export function DashboardShell({ children, title }: DashboardShellProps) {
     };
   }, [showMobileNav, closeMobile]);
 
-  const displayTitle = title ?? "Store overview";
-  const email = session?.email ?? "Merchant";
+  const displayTitle = title ?? "Overview";
+  const email = session?.email ?? "merchant@grocery.in";
 
   return (
-    <div className="flex min-h-screen bg-gb-bg-secondary">
-      {/* Desktop sidebar */}
+    <div className="flex min-h-screen bg-muted/40">
       <aside
         className={cn(
-          "hidden shrink-0 border-r border-gb-border bg-gb-mo-sidebar transition-[width] duration-300 ease-out lg:block",
-          collapsed ? "w-[72px]" : "w-72",
+          "hidden shrink-0 border-r border-border bg-card transition-[width] duration-200 ease-out lg:block",
+          collapsed ? "w-16" : "w-60",
         )}
       >
         <DashboardSidebar collapsed={collapsed} />
       </aside>
 
-      {/* Mobile slide-over menu */}
       <div
         className={cn(
           "fixed inset-0 z-50 lg:hidden",
@@ -66,7 +64,7 @@ export function DashboardShell({ children, title }: DashboardShellProps) {
         <button
           type="button"
           className={cn(
-            "absolute inset-0 bg-gb-mo-gray-900/40 backdrop-blur-[2px] transition-opacity duration-300",
+            "absolute inset-0 bg-foreground/20 transition-opacity duration-200",
             showMobileNav ? "opacity-100" : "opacity-0",
           )}
           onClick={closeMobile}
@@ -76,7 +74,7 @@ export function DashboardShell({ children, title }: DashboardShellProps) {
         <div
           id="dashboard-mobile-nav"
           className={cn(
-            "absolute inset-y-0 left-0 w-[min(100%,20rem)] border-r border-gb-border shadow-2xl transition-transform duration-300 ease-out",
+            "absolute inset-y-0 left-0 w-60 border-r border-border bg-card shadow-lg transition-transform duration-200 ease-out",
             showMobileNav ? "translate-x-0" : "-translate-x-full",
           )}
         >
@@ -85,11 +83,11 @@ export function DashboardShell({ children, title }: DashboardShellProps) {
               type="button"
               variant="ghost"
               size="icon-sm"
-              className="absolute right-2 top-3 z-10 text-gb-mo-gray-600"
+              className="absolute right-2 top-2.5 z-10"
               onClick={closeMobile}
               aria-label="Close navigation"
             >
-              <X className="size-5" />
+              <X className="size-4" />
             </Button>
             <DashboardSidebar onNavigate={closeMobile} />
           </div>
@@ -97,66 +95,45 @@ export function DashboardShell({ children, title }: DashboardShellProps) {
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-40 border-b border-gb-border bg-white/90 backdrop-blur-md">
-          <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="lg:hidden"
-              onClick={() => setMobileOpen(true)}
-              aria-expanded={showMobileNav}
-              aria-controls="dashboard-mobile-nav"
-              aria-label="Open menu"
-            >
-              <Menu className="size-5" />
-            </Button>
+        <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-border bg-card px-4 sm:px-6">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="lg:hidden"
+            onClick={() => setMobileOpen(true)}
+            aria-expanded={showMobileNav}
+            aria-controls="dashboard-mobile-nav"
+            aria-label="Open menu"
+          >
+            <Menu className="size-5" />
+          </Button>
 
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="hidden text-gb-mo-gray-600 lg:inline-flex"
-              onClick={() => setCollapsed((c) => !c)}
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              {collapsed ? (
-                <PanelLeftOpen className="size-5" />
-              ) : (
-                <PanelLeftClose className="size-5" />
-              )}
-            </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="hidden lg:inline-flex"
+            onClick={() => setCollapsed((c) => !c)}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="size-4" />
+            ) : (
+              <PanelLeftClose className="size-4" />
+            )}
+          </Button>
 
-            <div className="min-w-0 flex-1">
-              <h1 className="truncate text-lg font-semibold tracking-tight text-gb-mo-gray-900">
-                {displayTitle}
-              </h1>
-              <p className="hidden text-xs text-gb-mo-gray-500 sm:block">
-                Fresh inventory, orders, and growth at a glance
-              </p>
-            </div>
+          <h1 className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+            {displayTitle}
+          </h1>
 
-            <div className="relative hidden max-w-xs flex-1 md:flex">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gb-mo-gray-400" />
-              <input
-                type="search"
-                placeholder="Search orders, SKUs…"
-                className="h-10 w-full rounded-xl border border-gb-mo-input-border bg-gb-mo-gray-100/80 pl-10 pr-4 text-sm outline-none transition focus:border-gb-mo-focus-ring focus:bg-white focus:ring-2 focus:ring-gb-mo-focus-ring/25"
-                disabled
-                aria-label="Search (coming soon)"
-              />
-            </div>
-
-            <div
-              className="hidden h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-gb-secondary to-gb-primary text-sm font-semibold text-white sm:flex"
-              title={email}
-            >
-              {email.charAt(0).toUpperCase()}
-            </div>
-          </div>
+          <p className="hidden max-w-[200px] truncate text-xs text-muted-foreground sm:block">
+            {email}
+          </p>
         </header>
 
-        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        <main className="flex-1 px-4 py-6 sm:px-6">{children}</main>
       </div>
     </div>
   );
