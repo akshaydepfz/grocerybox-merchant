@@ -1,24 +1,17 @@
 "use client";
 
-import {
-  ArrowRight,
-  Check,
-  ChevronDown,
-  Loader2,
-  Store,
-} from "lucide-react";
-import Image from "next/image";
+import { ArrowRight, Check, ChevronDown, Loader2 } from "lucide-react";
 import type { ReactNode } from "react";
 
+import {
+  AppLogoImage,
+  GroceryBrandLogoOnboarding,
+} from "@/components/branding/app-logo";
 import { GoogleGlyph } from "@/features/auth/components/google-glyph";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 
-import {
-  ONBOARDING_STEPS,
-  ONBOARDING_STORE_ILLUSTRATION_URL,
-  ONBOARDING_TOTAL_STEPS,
-} from "../constants";
+import { ONBOARDING_STEPS, ONBOARDING_TOTAL_STEPS } from "../constants";
 
 type StepState = "completed" | "active" | "pending";
 
@@ -146,12 +139,7 @@ function MerchantOnboardingHeader({ email }: { email: string }) {
 function HeaderBrandRow() {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="flex size-8 items-center justify-center rounded-lg bg-gb-onboard-brand shadow-sm">
-        <Store className="size-5 text-white" />
-      </div>
-      <span className="text-2xl font-bold tracking-tight text-gb-mo-gray-900">
-        Grocery<span className="text-gb-onboard-lime-500">.in</span>
-      </span>
+      <GroceryBrandLogoOnboarding />
       <div className="mx-2 hidden h-6 w-px bg-gb-mo-gray-300 sm:block" />
       <span className="text-lg font-semibold text-gb-mo-gray-800">
         Merchant Onboarding
@@ -194,14 +182,7 @@ function OnboardingSidebar({
   return (
     <div className={cn(compact ? "p-6" : "")}>
       <IllustrationWrap className="flex justify-center">
-        <Image
-          src={ONBOARDING_STORE_ILLUSTRATION_URL}
-          alt=""
-          width={192}
-          height={192}
-          className="object-contain"
-          unoptimized
-        />
+        <AppLogoImage size={192} alt="" priority />
       </IllustrationWrap>
       <h2 className="mt-4 text-2xl font-bold leading-tight text-gb-mo-gray-900">
         Set up your
@@ -294,16 +275,18 @@ function StepIndicator({ number, state }: { number: number; state: StepState }) 
 
 export function OnboardingStepProgress({
   currentStep,
+  totalSteps = ONBOARDING_TOTAL_STEPS,
   useGradient = false,
 }: {
   currentStep: number;
+  totalSteps?: number;
   useGradient?: boolean;
 }) {
-  const progress = currentStep / ONBOARDING_TOTAL_STEPS;
+  const progress = currentStep / totalSteps;
   return (
     <div className="max-w-2xl">
       <p className="text-xs font-semibold text-gb-mo-gray-700">
-        Step {currentStep} of {ONBOARDING_TOTAL_STEPS}
+        Step {currentStep} of {totalSteps}
       </p>
       <ProgressTrack
         className={cn(

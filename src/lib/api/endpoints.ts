@@ -26,6 +26,13 @@ export const API_ENDPOINTS = {
   merchantStoreBrandingBanner: `${API_V1_PREFIX}/merchant/store/branding/banner`,
   merchantStoreLocation: `${API_V1_PREFIX}/merchant/store/location`,
   merchantOnboardingReview: `${API_V1_PREFIX}/merchant/onboarding/review`,
+  merchantStorePublish: `${API_V1_PREFIX}/merchant/store/publish`,
+  merchantStoreConfig: `${API_V1_PREFIX}/merchant/store/config`,
+  subscriptionPlans: `${API_V1_PREFIX}/subscription/plans`,
+  merchantSubscription: `${API_V1_PREFIX}/merchant/subscription`,
+  merchantSubscriptionSelect: `${API_V1_PREFIX}/merchant/subscription/select`,
+  merchantSubscriptionPaymentOrder: `${API_V1_PREFIX}/merchant/subscription/payment/order`,
+  merchantSubscriptionPaymentVerify: `${API_V1_PREFIX}/merchant/subscription/payment/verify`,
 } as const satisfies Record<string, string>;
 
 export type ApiEndpointKey = keyof typeof API_ENDPOINTS;

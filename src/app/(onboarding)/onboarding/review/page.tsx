@@ -1,15 +1,23 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+
+import { OnboardingReviewScreen } from "@/features/onboarding/components/onboarding-review-screen";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Review & Publish",
+  description: "Review onboarding and publish your store.",
 };
 
-/** Flutter `OnboardingReviewScreen` — step 6 (placeholder). */
-export default function OnboardingReviewPlaceholderPage() {
+/** Flutter `OnboardingReviewScreen` — final onboarding step. */
+export default function OnboardingReviewPage() {
   return (
-    <p className="min-h-screen bg-white p-8 text-sm text-gb-text-secondary">
-      Onboarding review and publish will be implemented from the Flutter
-      reference next.
-    </p>
+    <div className={inter.className}>
+      <OnboardingReviewScreen />
+    </div>
   );
 }

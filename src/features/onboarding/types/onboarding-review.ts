@@ -7,14 +7,53 @@ export type OnboardingSectionStatus = {
   missingFields: string[];
 };
 
+export type SubscriptionPublishStatus =
+  | "missing"
+  | "pending_payment"
+  | "active"
+  | "expired"
+  | "cancelled"
+  | "expired_by_date"
+  | "invalid"
+  | "unknown";
+
 export type OnboardingReview = {
   merchantId: string;
   storeId: string | null;
   readyToPublish: boolean;
   storePublished: boolean;
-  subscriptionPublishStatus: string;
+  subscriptionPublishStatus: SubscriptionPublishStatus;
   sections: OnboardingSectionStatus[];
 };
+
+export type StorePublishResult = {
+  storePublished: boolean;
+  alreadyPublished: boolean;
+  publishedAt: string | null;
+};
+
+export function parseSubscriptionPublishStatus(
+  value: string | null | undefined,
+): SubscriptionPublishStatus {
+  switch (value) {
+    case "missing":
+      return "missing";
+    case "pending_payment":
+      return "pending_payment";
+    case "active":
+      return "active";
+    case "expired":
+      return "expired";
+    case "cancelled":
+      return "cancelled";
+    case "expired_by_date":
+      return "expired_by_date";
+    case "invalid":
+      return "invalid";
+    default:
+      return "unknown";
+  }
+}
 
 export function onboardingSectionFromJson(
   json: Record<string, unknown>,
@@ -43,8 +82,9 @@ export function onboardingReviewFromEnvelopeData(
         : null,
     readyToPublish: (data.ready_to_publish as boolean) ?? false,
     storePublished: (data.store_published as boolean) ?? false,
-    subscriptionPublishStatus:
-      (data.subscription_publish_status as string) ?? "",
+    subscriptionPublishStatus: parseSubscriptionPublishStatus(
+      data.subscription_publish_status as string | undefined,
+    ),
     sections:
       sectionsRaw instanceof Array
         ? sectionsRaw

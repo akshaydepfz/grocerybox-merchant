@@ -1,9 +1,10 @@
 "use client";
 
 import {
+  AdvancedMarker,
   APIProvider,
   Map,
-  Marker,
+  Pin,
   useMap,
 } from "@vis.gl/react-google-maps";
 import { Loader2 } from "lucide-react";
@@ -13,6 +14,7 @@ import {
   GOOGLE_MAPS_DEFAULT_LATITUDE,
   GOOGLE_MAPS_DEFAULT_LONGITUDE,
   googleMapsApiKey,
+  googleMapsMapId,
 } from "@/config/google-maps-config";
 
 type StoreLocationMapInnerProps = {
@@ -52,8 +54,9 @@ export function StoreLocationMapInner({
   }
 
   return (
-    <APIProvider apiKey={googleMapsApiKey}>
+    <APIProvider apiKey={googleMapsApiKey} libraries={["marker"]}>
       <Map
+        mapId={googleMapsMapId}
         defaultCenter={{
           lat: latitude || GOOGLE_MAPS_DEFAULT_LATITUDE,
           lng: longitude || GOOGLE_MAPS_DEFAULT_LONGITUDE,
@@ -74,7 +77,7 @@ export function StoreLocationMapInner({
         }
       >
         <MapCameraSync latitude={latitude} longitude={longitude} />
-        <Marker
+        <AdvancedMarker
           position={{ lat: latitude, lng: longitude }}
           draggable={enabled}
           onDragEnd={
@@ -86,7 +89,13 @@ export function StoreLocationMapInner({
                 }
               : undefined
           }
-        />
+        >
+          <Pin
+            background="#22C55E"
+            borderColor="#15803D"
+            glyphColor="#FFFFFF"
+          />
+        </AdvancedMarker>
       </Map>
     </APIProvider>
   );

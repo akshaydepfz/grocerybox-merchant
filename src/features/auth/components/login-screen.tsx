@@ -7,10 +7,8 @@ import {
   Loader2,
   Mail,
   ShieldCheck,
-  Store,
   Verified,
 } from "lucide-react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -23,11 +21,10 @@ import { firebaseAuthMessage } from "../utils/firebase-auth-messages";
 
 import { usePostAuthDestination } from "@/features/onboarding/hooks/use-post-auth-destination";
 
+import { AppLogoImage, GroceryBrandLogo } from "@/components/branding/app-logo";
+
 import { useAuth } from "./auth-provider";
 import { GoogleGlyph } from "./google-glyph";
-
-const STORE_ILLUSTRATION_URL =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAxdCVnZxADmoiYBoPDI0cMLSbu_iJGswjjeEkU31kBm99G75wAN8RQgkFdgpEB01AL8LTPa5Ytaf1Ph724AjPePnNk1Hly4KQ7ltlUUwuBw4wZsSgVjqUjkDR8vKyza96GMlBzR1EdIbQXEIJbv7QnEdz8osEVEfhQ0URdgQzB7imQkLVyZvqbEb86EW6t7fU6tOom21_UXHFUw5VN5_YnKRDW2B5fPbQRO5tpnrTU";
 
 const MERCHANT_DETAILS_PATH = "/onboarding/merchant-details";
 
@@ -203,7 +200,7 @@ function DecorativeBackground() {
 function BrandIntroduction({ isWide }: { isWide: boolean }) {
   return (
     <div className="flex flex-col items-start text-left">
-      <GroceryLogo size="large" />
+      <GroceryBrandLogo />
       <div className="mt-8 inline-flex rounded-full bg-gb-onboard-pill-badge px-3.5 py-1.5">
         <span className="text-xs font-semibold tracking-wide text-gb-onboard-emerald-950">
           For Store Owners
@@ -313,13 +310,11 @@ function StoreIllustration({
         className="absolute inset-[5%] rounded-full bg-gb-onboard-emerald-200/40 blur-3xl"
         aria-hidden
       />
-      <Image
-        src={STORE_ILLUSTRATION_URL}
+      <AppLogoImage
+        size={size}
         alt=""
-        width={size}
-        height={size}
-        className="relative object-contain"
-        unoptimized
+        className="relative"
+        priority={size >= 192}
       />
     </div>
   );
@@ -337,7 +332,7 @@ function SignInCard({
   return (
     <div className="w-full max-w-[420px] rounded-[32px] border border-white/80 bg-white/95 p-8 shadow-[0_20px_45px_-12px_rgb(22_163_74_/_0.12)] sm:px-10 sm:py-10">
       <div className="flex flex-col items-center">
-        <GroceryLogo size="compact" />
+        <GroceryBrandLogo size="compact" />
         <h2 className="mt-6 text-center text-2xl font-bold tracking-tight text-gb-onboard-slate-900">
           Sign in to get started
         </h2>
@@ -434,30 +429,3 @@ function OrDivider() {
   );
 }
 
-type LogoSize = "large" | "compact";
-
-function GroceryLogo({ size }: { size: LogoSize }) {
-  const box = size === "large" ? 40 : 36;
-  const icon = size === "large" ? 24 : 20;
-  const text = size === "large" ? "text-2xl" : "text-xl";
-
-  return (
-    <div className="inline-flex items-center gap-2.5">
-      <div
-        className="flex items-center justify-center rounded-xl bg-gradient-to-br from-gb-onboard-accent to-gb-onboard-brand shadow-sm"
-        style={{ width: box, height: box }}
-      >
-        <Store className="text-white" style={{ width: icon, height: icon }} />
-      </div>
-      <span
-        className={cn(
-          "font-bold tracking-tight text-gb-onboard-slate-900",
-          text,
-        )}
-      >
-        Grocery
-        <span className="font-extrabold text-gb-onboard-lime-500">.in</span>
-      </span>
-    </div>
-  );
-}

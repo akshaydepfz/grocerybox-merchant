@@ -1,14 +1,23 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+
+import { PlanScreen } from "@/features/onboarding/components/plan-screen";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Choose Plan",
+  description: "Select a subscription plan to publish your store.",
 };
 
-/** Flutter `PlanScreen` — subscription step (placeholder). */
-export default function PlanPlaceholderPage() {
+/** Flutter `PlanScreen` — onboarding subscription step. */
+export default function PlanPage() {
   return (
-    <p className="min-h-screen bg-white p-8 text-sm text-gb-text-secondary">
-      Plan selection will be implemented from the Flutter reference next.
-    </p>
+    <div className={inter.className}>
+      <PlanScreen />
+    </div>
   );
 }
