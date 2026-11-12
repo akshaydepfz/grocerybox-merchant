@@ -22,6 +22,7 @@ import {
 import { SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT } from "../constants";
 import { isActiveSubscription } from "../types/subscription";
 import { canPublishStore } from "../utils/onboarding-publish-eligibility";
+import { publishErrorMessage } from "../utils/publish-error-message";
 import { runSubscriptionCheckout } from "../utils/run-subscription-checkout";
 
 import {
@@ -93,17 +94,14 @@ export function OnboardingReviewScreen() {
     },
     onError: (error) => {
       if (error instanceof ApiError && (error.status === 400 || error.status === 422)) {
-        toast.error(
-          error.message ||
-            "Complete all onboarding sections before publishing.",
-        );
+        toast.error(publishErrorMessage(error));
         void reviewQuery.refetch();
         return;
       }
       toast.error(
-        error instanceof AuthError || error instanceof ApiError
+        error instanceof AuthError
           ? error.message
-          : "Unable to publish store.",
+          : publishErrorMessage(error),
       );
     },
   });
