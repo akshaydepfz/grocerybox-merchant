@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 
 import { DashboardHeader } from "./dashboard-header";
 import { DashboardSalesChart } from "./dashboard-sales-chart";
+import { DashboardSurface } from "./dashboard-surface";
 
 const STATS = [
   {
@@ -109,25 +110,6 @@ const STATUS_STYLES = {
   "Out for Delivery": "bg-[#f3e8ff] text-[#7e22ce]",
 } as const;
 
-function Surface({
-  className,
-  children,
-}: {
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className={cn(
-        "rounded-2xl border border-[#eceef2] bg-white shadow-[0_1px_3px_rgb(0_0_0_/0.04)]",
-        className,
-      )}
-    >
-      {children}
-    </div>
-  );
-}
-
 export function DashboardHomeScreen() {
   return (
     <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6">
@@ -166,7 +148,7 @@ export function DashboardHomeScreen() {
       </section>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Surface className="p-5 lg:col-span-2">
+        <DashboardSurface className="p-5 lg:col-span-2">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="text-base font-semibold text-[#1a1f2e]">
@@ -187,7 +169,7 @@ export function DashboardHomeScreen() {
           <div className="mt-4 h-52 w-full">
             <DashboardSalesChart />
           </div>
-        </Surface>
+        </DashboardSurface>
 
         <div className="flex flex-col gap-4">
           <div className="relative overflow-hidden rounded-2xl bg-[#bef264] p-5">
@@ -210,7 +192,7 @@ export function DashboardHomeScreen() {
             </Button>
           </div>
 
-          <Surface className="p-4">
+          <DashboardSurface className="p-4">
             <p className="px-1 text-sm font-semibold text-[#1a1f2e]">
               Quick Actions
             </p>
@@ -232,12 +214,12 @@ export function DashboardHomeScreen() {
                 );
               })}
             </div>
-          </Surface>
+          </DashboardSurface>
         </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Surface>
+        <DashboardSurface>
           <div className="flex items-center justify-between border-b border-[#f0f1f4] px-5 py-4">
             <h2 className="text-base font-semibold text-[#1a1f2e]">
               Recent Orders
@@ -291,9 +273,9 @@ export function DashboardHomeScreen() {
               </li>
             ))}
           </ul>
-        </Surface>
+        </DashboardSurface>
 
-        <Surface>
+        <DashboardSurface>
           <div className="flex items-center justify-between border-b border-[#f0f1f4] px-5 py-4">
             <h2 className="text-base font-semibold text-[#1a1f2e]">
               Top Selling Products
@@ -340,7 +322,7 @@ export function DashboardHomeScreen() {
               </li>
             ))}
           </ul>
-        </Surface>
+        </DashboardSurface>
       </div>
     </div>
   );

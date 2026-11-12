@@ -53,7 +53,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: "Categories",
     href: `${dashboardRoutePrefix}/categories`,
     icon: FolderTree,
-    available: false,
+    available: true,
   },
   {
     id: "inventory",
