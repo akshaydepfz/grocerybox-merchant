@@ -21,6 +21,7 @@ import {
 } from "../services/subscription-service";
 import { SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT } from "../constants";
 import { isActiveSubscription } from "../types/subscription";
+import { canPublishStore } from "../utils/onboarding-publish-eligibility";
 import { runSubscriptionCheckout } from "../utils/run-subscription-checkout";
 
 import {
@@ -179,7 +180,8 @@ export function OnboardingReviewScreen() {
 
   const review = reviewQuery.data;
   const isLoading = reviewQuery.isLoading && !review;
-  const canPublish = review?.readyToPublish === true && !publishMutation.isPending;
+  const canPublish =
+    canPublishStore(review) && !publishMutation.isPending;
 
   return (
     <MerchantOnboardingScreenLayout
@@ -224,11 +226,13 @@ export function OnboardingReviewScreen() {
           />
         ) : (
           <>
-            <SubscriptionStatusCard
-              status={review.subscriptionPublishStatus}
-              onSelectPlan={() => router.push(PLAN_PATH)}
-              onResumeCheckout={() => void resumeCheckout()}
-            />
+            {!SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT ? (
+              <SubscriptionStatusCard
+                status={review.subscriptionPublishStatus}
+                onSelectPlan={() => router.push(PLAN_PATH)}
+                onResumeCheckout={() => void resumeCheckout()}
+              />
+            ) : null}
 
             {review.storePublished ? (
               <ReviewMessageCard
@@ -248,7 +252,7 @@ export function OnboardingReviewScreen() {
                   <ReviewSectionRow key={section.key} section={section} />
                 ))}
               </div>
-              {review.readyToPublish ? (
+              {canPublishStore(review) ? (
                 <p className="mt-4 text-xs font-semibold text-emerald-700">
                   All required sections are complete. You can publish your store.
                 </p>
