@@ -1,5 +1,6 @@
 import { dashboardRoutePrefix } from "@/config/routes";
 
+import { SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT } from "../constants";
 import type { OnboardingReview, OnboardingSectionStatus } from "../types/onboarding-review";
 
 /** Same order as backend publish validation (`onboarding_review.go`). */
@@ -27,12 +28,19 @@ export const DASHBOARD_PATH = dashboardRoutePrefix;
 
 const DEFAULT_RESUME_PATH = ONBOARDING_SECTION_PATHS.business_information;
 
+function onboardingSectionOrder(): readonly (typeof ONBOARDING_SECTION_ORDER)[number][] {
+  if (SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT) {
+    return ONBOARDING_SECTION_ORDER.filter((key) => key !== "subscription_plan");
+  }
+  return ONBOARDING_SECTION_ORDER;
+}
+
 export function findFirstIncompleteSection(
   sections: OnboardingSectionStatus[],
 ): OnboardingSectionStatus | null {
   const byKey = new Map(sections.map((section) => [section.key, section]));
 
-  for (const key of ONBOARDING_SECTION_ORDER) {
+  for (const key of onboardingSectionOrder()) {
     const section = byKey.get(key);
     if (section && !section.complete) {
       return section;

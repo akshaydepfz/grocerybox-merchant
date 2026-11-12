@@ -19,6 +19,7 @@ import {
   fetchSubscriptionPlans,
   verifySubscriptionPayment,
 } from "../services/subscription-service";
+import { SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT } from "../constants";
 import { isActiveSubscription } from "../types/subscription";
 import { runSubscriptionCheckout } from "../utils/run-subscription-checkout";
 
@@ -35,7 +36,11 @@ import {
 
 const PLAN_PATH = "/onboarding/plan";
 const PLAN_SUCCESS_PATH = "/onboarding/plan/success";
+const STORE_CONFIG_PATH = "/onboarding/store-config";
 const DASHBOARD_PATH = "/dashboard";
+const REVIEW_BACK_PATH = SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT
+  ? STORE_CONFIG_PATH
+  : PLAN_SUCCESS_PATH;
 
 export function OnboardingReviewScreen() {
   const router = useRouter();
@@ -182,7 +187,7 @@ export function OnboardingReviewScreen() {
       currentStep={6}
       footer={
         <OnboardingFormFooter
-          onBack={() => router.push(PLAN_SUCCESS_PATH)}
+          onBack={() => router.push(REVIEW_BACK_PATH)}
           onContinue={
             canPublish ? () => publishMutation.mutate() : undefined
           }

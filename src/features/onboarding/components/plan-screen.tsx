@@ -20,11 +20,11 @@ import {
   selectSubscriptionPlan,
   verifySubscriptionPayment,
 } from "../services/subscription-service";
+import { SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT } from "../constants";
 import {
   isActiveSubscription,
   type SubscriptionPlan,
 } from "../types/subscription";
-
 import {
   MerchantOnboardingScreenLayout,
   OnboardingFormFooter,
@@ -84,6 +84,10 @@ export function PlanScreen() {
   const currentSubscription = subscriptionQuery.data ?? null;
 
   useEffect(() => {
+    if (SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT) {
+      router.replace(ONBOARDING_REVIEW_PATH);
+      return;
+    }
     if (isActiveSubscription(subscriptionQuery.data)) {
       router.replace(PLAN_SUCCESS_PATH);
     }

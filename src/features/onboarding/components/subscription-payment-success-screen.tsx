@@ -2,11 +2,13 @@
 
 import { CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { resolveSignedInEmail } from "@/features/auth/services/auth-service";
 
+import { SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT } from "../constants";
 import { fetchCurrentSubscription } from "../services/subscription-service";
 
 import {
@@ -31,6 +33,12 @@ export function SubscriptionPaymentSuccessScreen() {
     enabled: Boolean(user),
     retry: false,
   });
+
+  useEffect(() => {
+    if (SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT) {
+      router.replace(ONBOARDING_REVIEW_PATH);
+    }
+  }, [router]);
 
   const planName = subscriptionQuery.data?.planName;
 

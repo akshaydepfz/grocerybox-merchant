@@ -1,3 +1,9 @@
+/**
+ * Skip the Choose Plan / Razorpay step during onboarding (dev or promo registration).
+ * Store config continues to Review & Publish; resume routing ignores `subscription_plan`.
+ */
+export const SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT = true;
+
 export const ONBOARDING_STEPS = [
   "Business Information",
   "Store Identity",

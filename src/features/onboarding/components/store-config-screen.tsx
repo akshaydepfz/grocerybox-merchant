@@ -21,10 +21,12 @@ import {
   type StoreConfigData,
   type StoreConfigFormState,
 } from "../types/store-config";
+import { SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT } from "../constants";
 import {
   STORE_CONFIG_DELIVERY_RADII,
   validateStoreConfig,
 } from "../validators/store-config-validator";
+import { ONBOARDING_REVIEW_PATH } from "../utils/onboarding-resume";
 
 import {
   MerchantOnboardingScreenLayout,
@@ -45,6 +47,9 @@ import {
 
 const STORE_LOCATION_PATH = "/onboarding/store-location";
 const PLAN_PATH = "/onboarding/plan";
+const AFTER_STORE_CONFIG_PATH = SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT
+  ? ONBOARDING_REVIEW_PATH
+  : PLAN_PATH;
 const CONTINUE_LIME_CLASS = "bg-[#B4F316]";
 
 function applyLoadedConfig(
@@ -145,7 +150,7 @@ export function StoreConfigScreen() {
 
     try {
       await saveMutation.mutateAsync(validated.values);
-      router.push(PLAN_PATH);
+      router.push(AFTER_STORE_CONFIG_PATH);
     } catch (error) {
       toast.error(
         error instanceof AuthError || error instanceof ApiError
