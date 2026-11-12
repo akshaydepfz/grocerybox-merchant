@@ -1,9 +1,9 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 
+import { GroceryAnimatedLoader } from "@/components/shared/animated-loader";
 import { useAuth } from "@/features/auth/components/auth-provider";
 
 import { usePostAuthDestination } from "../hooks/use-post-auth-destination";
@@ -40,19 +40,45 @@ export function DashboardOnboardingGate({ children }: { children: ReactNode }) {
     user,
   ]);
 
+  const loadingCopy = !isAuthReady
+    ? {
+        label: "Signing you in",
+        sublabel: "Restoring your merchant session…",
+      }
+    : isRegistering
+      ? {
+          label: "Setting up your store",
+          sublabel: "Registering merchant account…",
+        }
+      : isResolving
+        ? {
+            label: "Preparing your dashboard",
+            sublabel: "Checking onboarding progress…",
+          }
+        : {
+            label: "Redirecting",
+            sublabel: "Taking you to the right place…",
+          };
+
   if (!isAuthReady || !user || isRegistering || isResolving) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gb-bg-secondary">
-        <Loader2 className="size-8 animate-spin text-gb-onboard-brand" />
-      </div>
+      <GroceryAnimatedLoader
+        fullScreen
+        theme="dashboard"
+        label={loadingCopy.label}
+        sublabel={loadingCopy.sublabel}
+      />
     );
   }
 
   if (destination && destination !== DASHBOARD_PATH) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gb-bg-secondary">
-        <Loader2 className="size-8 animate-spin text-gb-onboard-brand" />
-      </div>
+      <GroceryAnimatedLoader
+        fullScreen
+        theme="dashboard"
+        label={loadingCopy.label}
+        sublabel={loadingCopy.sublabel}
+      />
     );
   }
 
