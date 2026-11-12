@@ -110,3 +110,4 @@ Brand tokens live in `src/app/globals.css` (CSS variables) and `src/config/theme
 ## License
 
 Private — GroceryBox.
+# grocerybox-merchant
