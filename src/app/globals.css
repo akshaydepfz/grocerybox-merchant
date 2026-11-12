@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+:root {
+  /* GroceryBox brand */
+  --gb-primary: #14532d;
+  --gb-secondary: #16a34a;
+  --gb-accent: #d4ff3f;
+  --gb-bg: #ffffff;
+  --gb-bg-secondary: #f8faf8;
+  --gb-text-primary: #171717;
+  --gb-text-secondary: #737373;
+  --gb-border: #e5e7eb;
+
+  /* Flutter onboard / AppColors palette */
+  --gb-onboard-brand: #22c55e;
+  --gb-onboard-brand-dark: #16a34a;
+  --gb-onboard-lime: #84cc16;
+  --gb-onboard-accent: #a3e635;
+  --gb-onboard-bright-lime: #bef264;
+  --gb-onboard-pill-badge: #d9f99d;
+  --gb-onboard-wave-fill: #f6fcf6;
+  --gb-onboard-slate-900: #0f172a;
+  --gb-onboard-slate-800: #1e293b;
+  --gb-onboard-slate-700: #334155;
+  --gb-onboard-slate-600: #475569;
+  --gb-onboard-slate-500: #64748b;
+  --gb-onboard-slate-400: #94a3b8;
+  --gb-onboard-slate-200: #e2e8f0;
+  --gb-onboard-emerald-950: #022c22;
+  --gb-onboard-emerald-700: #047857;
+  --gb-onboard-emerald-600: #059669;
+  --gb-onboard-emerald-200: #a7f3d0;
+  --gb-onboard-lime-500: #84cc16;
+  --gb-onboard-feature-lime: #ecfccb;
+  --gb-onboard-feature-emerald: #dcfce7;
+
+  /* Flutter MerchantOnboardingColors */
+  --gb-mo-sidebar: #f8fcf5;
+  --gb-mo-address-bg: #f7fcf4;
+  --gb-mo-address-border: #e4f3de;
+  --gb-mo-step-active-bg: #e8fcc2;
+  --gb-mo-step-active-badge: #95dc12;
+  --gb-mo-progress-track: #f3f4f6;
+  --gb-mo-progress-fill: #65a30d;
+  --gb-mo-continue: #c4f82a;
+  --gb-mo-accent-lime: #c2f82c;
+  --gb-mo-gray-900: #111827;
+  --gb-mo-gray-800: #1f2937;
+  --gb-mo-gray-700: #374151;
+  --gb-mo-gray-600: #4b5563;
+  --gb-mo-gray-500: #6b7280;
+  --gb-mo-gray-400: #9ca3af;
+  --gb-mo-gray-300: #d1d5db;
+  --gb-mo-gray-200: #e5e7eb;
+  --gb-mo-gray-100: #f3f4f6;
+  --gb-mo-input-border: #d1d5db;
+  --gb-mo-focus-ring: #84cc16;
+
+  /* shadcn semantic tokens (light theme only) */
+  --background: var(--gb-bg);
+  --foreground: var(--gb-text-primary);
+  --card: var(--gb-bg);
+  --card-foreground: var(--gb-text-primary);
+  --popover: var(--gb-bg);
+  --popover-foreground: var(--gb-text-primary);
+  --primary: var(--gb-primary);
+  --primary-foreground: #ffffff;
+  --secondary: var(--gb-bg-secondary);
+  --secondary-foreground: var(--gb-text-primary);
+  --muted: var(--gb-bg-secondary);
+  --muted-foreground: var(--gb-text-secondary);
+  --accent: var(--gb-accent);
+  --accent-foreground: var(--gb-primary);
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: var(--gb-border);
+  --input: var(--gb-border);
+  --ring: var(--gb-secondary);
+  --radius: 0.5rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-gb-primary: var(--gb-primary);
+  --color-gb-secondary: var(--gb-secondary);
+  --color-gb-accent: var(--gb-accent);
+  --color-gb-bg: var(--gb-bg);
+  --color-gb-bg-secondary: var(--gb-bg-secondary);
+  --color-gb-text-primary: var(--gb-text-primary);
+  --color-gb-text-secondary: var(--gb-text-secondary);
+  --color-gb-border: var(--gb-border);
+
+  --color-gb-onboard-brand: var(--gb-onboard-brand);
+  --color-gb-onboard-brand-dark: var(--gb-onboard-brand-dark);
+  --color-gb-onboard-lime: var(--gb-onboard-lime);
+  --color-gb-onboard-accent: var(--gb-onboard-accent);
+  --color-gb-onboard-bright-lime: var(--gb-onboard-bright-lime);
+  --color-gb-onboard-pill-badge: var(--gb-onboard-pill-badge);
+  --color-gb-onboard-slate-900: var(--gb-onboard-slate-900);
+  --color-gb-onboard-slate-800: var(--gb-onboard-slate-800);
+  --color-gb-onboard-slate-700: var(--gb-onboard-slate-700);
+  --color-gb-onboard-slate-600: var(--gb-onboard-slate-600);
+  --color-gb-onboard-slate-500: var(--gb-onboard-slate-500);
+  --color-gb-onboard-slate-400: var(--gb-onboard-slate-400);
+  --color-gb-onboard-slate-200: var(--gb-onboard-slate-200);
+  --color-gb-onboard-emerald-950: var(--gb-onboard-emerald-950);
+  --color-gb-onboard-emerald-700: var(--gb-onboard-emerald-700);
+  --color-gb-onboard-emerald-600: var(--gb-onboard-emerald-600);
+  --color-gb-onboard-emerald-200: var(--gb-onboard-emerald-200);
+  --color-gb-onboard-lime-500: var(--gb-onboard-lime-500);
+  --color-gb-onboard-feature-lime: var(--gb-onboard-feature-lime);
+  --color-gb-onboard-feature-emerald: var(--gb-onboard-feature-emerald);
+
+  --color-gb-mo-sidebar: var(--gb-mo-sidebar);
+  --color-gb-mo-address-bg: var(--gb-mo-address-bg);
+  --color-gb-mo-address-border: var(--gb-mo-address-border);
+  --color-gb-mo-step-active-bg: var(--gb-mo-step-active-bg);
+  --color-gb-mo-step-active-badge: var(--gb-mo-step-active-badge);
+  --color-gb-mo-progress-track: var(--gb-mo-progress-track);
+  --color-gb-mo-progress-fill: var(--gb-mo-progress-fill);
+  --color-gb-mo-continue: var(--gb-mo-continue);
+  --color-gb-mo-accent-lime: var(--gb-mo-accent-lime);
+  --color-gb-mo-gray-900: var(--gb-mo-gray-900);
+  --color-gb-mo-gray-800: var(--gb-mo-gray-800);
+  --color-gb-mo-gray-700: var(--gb-mo-gray-700);
+  --color-gb-mo-gray-600: var(--gb-mo-gray-600);
+  --color-gb-mo-gray-500: var(--gb-mo-gray-500);
+  --color-gb-mo-gray-400: var(--gb-mo-gray-400);
+  --color-gb-mo-gray-300: var(--gb-mo-gray-300);
+  --color-gb-mo-gray-200: var(--gb-mo-gray-200);
+  --color-gb-mo-gray-100: var(--gb-mo-gray-100);
+  --color-gb-mo-input-border: var(--gb-mo-input-border);
+  --color-gb-mo-focus-ring: var(--gb-mo-focus-ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --shadow-gb-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-gb-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
