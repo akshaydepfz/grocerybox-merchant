@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   Users,
   UserRound,
+  CircleUser,
   Warehouse,
 } from "lucide-react";
 
@@ -82,6 +83,13 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     href: `${dashboardRoutePrefix}/analytics`,
     icon: BarChart3,
     available: false,
+  },
+  {
+    id: "profile",
+    label: "Profile",
+    href: `${dashboardRoutePrefix}/profile`,
+    icon: CircleUser,
+    available: true,
   },
   {
     id: "settings",

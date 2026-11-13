@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:profile-parse": "npx --yes tsx src/features/profile/types/merchant-profile.parse-self-check.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^7.0.6",

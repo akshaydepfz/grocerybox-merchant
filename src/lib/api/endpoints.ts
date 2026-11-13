@@ -18,6 +18,7 @@ export const apiPath = (...segments: string[]): string => {
 /** Paths match Flutter services (`${ApiConfig.apiV1Prefix}/…`). */
 export const API_ENDPOINTS = {
   merchantRegister: `${API_V1_PREFIX}/merchant/register`,
+  merchantProfile: `${API_V1_PREFIX}/merchant/profile`,
   merchantBusiness: `${API_V1_PREFIX}/merchant/business`,
   merchantStore: `${API_V1_PREFIX}/merchant/store`,
   merchantStoreCheckSlug: `${API_V1_PREFIX}/merchant/store/check-slug`,
