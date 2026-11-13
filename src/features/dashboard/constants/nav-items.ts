@@ -46,7 +46,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: "Products",
     href: `${dashboardRoutePrefix}/products`,
     icon: Package,
-    available: false,
+    available: true,
   },
   {
     id: "categories",

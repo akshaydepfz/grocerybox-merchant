@@ -35,6 +35,7 @@ export const API_ENDPOINTS = {
   merchantSubscriptionPaymentVerify: `${API_V1_PREFIX}/merchant/subscription/payment/verify`,
   merchantCategories: `${API_V1_PREFIX}/merchant/categories`,
   merchantCategoryImageUpload: `${API_V1_PREFIX}/merchant/categories/images/upload`,
+  merchantProducts: `${API_V1_PREFIX}/merchant/products`,
 } as const satisfies Record<string, string>;
 
 export function merchantCategoryPath(
@@ -62,6 +63,17 @@ export function merchantSubcategoryPath(
   action?: "activate" | "deactivate",
 ): string {
   const base = `${merchantSubcategoriesPath(categoryId)}/${subcategoryId}`;
+  if (action) {
+    return `${base}/${action}`;
+  }
+  return base;
+}
+
+export function merchantProductPath(
+  productId: string,
+  action?: "activate" | "deactivate",
+): string {
+  const base = `${API_ENDPOINTS.merchantProducts}/${productId}`;
   if (action) {
     return `${base}/${action}`;
   }
