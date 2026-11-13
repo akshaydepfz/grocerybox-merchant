@@ -87,4 +87,18 @@ export function merchantProductImagesPath(productId: string): string {
   return `${merchantProductPath(productId)}/images`;
 }
 
+export function merchantProductImagePath(
+  productId: string,
+  imageId: string,
+): string {
+  return `${merchantProductImagesPath(productId)}/${imageId}`;
+}
+
+export function merchantProductImagePrimaryPath(
+  productId: string,
+  imageId: string,
+): string {
+  return `${merchantProductImagePath(productId, imageId)}/primary`;
+}
+
 export type ApiEndpointKey = keyof typeof API_ENDPOINTS;

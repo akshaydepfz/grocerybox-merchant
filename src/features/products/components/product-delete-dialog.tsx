@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -32,6 +33,7 @@ export function ProductDeleteDialog({
   onOpenChange,
   onDeleted,
 }: ProductDeleteDialogProps) {
+  const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -41,6 +43,10 @@ export function ProductDeleteDialog({
     setDeleting(true);
     try {
       await deleteMerchantProduct(productId);
+      await queryClient.invalidateQueries({ queryKey: ["merchant-products"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["merchant-product", productId],
+      });
       toast.success("Product deleted.");
       onDeleted();
       onOpenChange(false);

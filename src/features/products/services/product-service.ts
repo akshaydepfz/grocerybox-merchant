@@ -1,5 +1,7 @@
 import {
   API_ENDPOINTS,
+  merchantProductImagePath,
+  merchantProductImagePrimaryPath,
   merchantProductImagesPath,
   merchantProductPath,
 } from "@/lib/api/endpoints";
@@ -12,6 +14,8 @@ import {
   parseProductListData,
   productCreateToJson,
   productImagesAssociateToJson,
+  productUpdateToJson,
+  type MerchantProductUpdateBody,
   type MerchantProduct,
   type MerchantProductCreateInput,
   type MerchantProductImageAssociateInput,
@@ -92,6 +96,17 @@ export async function createMerchantProduct(
   return assertProductPayload(response.data, response.status);
 }
 
+export async function updateMerchantProduct(
+  id: string,
+  input: MerchantProductUpdateBody,
+): Promise<MerchantProduct> {
+  const response = await apiClient.put(
+    merchantProductPath(id),
+    productUpdateToJson(input),
+  );
+  return assertProductPayload(response.data, response.status);
+}
+
 export async function deleteMerchantProduct(id: string): Promise<void> {
   const response = await apiClient.delete(merchantProductPath(id));
   const envelope = parseApiEnvelope(response.data);
@@ -107,6 +122,32 @@ export async function associateMerchantProductImages(
   const response = await apiClient.post(
     merchantProductImagesPath(productId),
     productImagesAssociateToJson(images),
+  );
+  const envelope = parseApiEnvelope(response.data);
+  if (!envelope.success) {
+    throw new ApiError(envelopeErrorMessage(response.status, envelope), response.status);
+  }
+}
+
+export async function deleteMerchantProductImage(
+  productId: string,
+  imageId: string,
+): Promise<void> {
+  const response = await apiClient.delete(
+    merchantProductImagePath(productId, imageId),
+  );
+  const envelope = parseApiEnvelope(response.data);
+  if (!envelope.success) {
+    throw new ApiError(envelopeErrorMessage(response.status, envelope), response.status);
+  }
+}
+
+export async function setPrimaryMerchantProductImage(
+  productId: string,
+  imageId: string,
+): Promise<void> {
+  const response = await apiClient.patch(
+    merchantProductImagePrimaryPath(productId, imageId),
   );
   const envelope = parseApiEnvelope(response.data);
   if (!envelope.success) {

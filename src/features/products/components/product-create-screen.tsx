@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -25,43 +25,40 @@ import { DashboardSurface } from "@/features/dashboard/components/dashboard-surf
 import { listMerchantSubcategories } from "@/features/subcategories/services";
 import { dashboardRoutePrefix } from "@/config/routes";
 import { ApiError } from "@/lib/api/types";
-import { cn } from "@/lib/utils";
-
 import {
   associateMerchantProductImages,
   createMerchantProduct,
   friendlyProductError,
   friendlyProductImageUploadMessage,
+  getMerchantProduct,
+  updateMerchantProduct,
   uploadMerchantProductImage,
 } from "../services";
 import type { MerchantProductImageAssociateInput, MerchantProductUnit } from "../types/merchant-product";
 import {
   computeDiscountPercent,
   defaultProductCreateForm,
+  productFormValuesFromProduct,
   validateProductCreateForm,
   type ProductCreateFieldErrors,
   type ProductCreateFormValues,
 } from "../validators/product-create-validator";
-import { formatProductUnitLabel } from "../utils/format-product";
 
 import {
   ProductCreateImagesField,
   revokeProductImagePreviews,
   type ProductCreateImageItem,
 } from "./product-create-images-field";
+import { ProductEditExistingImages } from "./product-edit-existing-images";
+import {
+  Field,
+  formatUnitHint,
+  SectionTitle,
+  selectClassName,
+  UNIT_OPTIONS,
+} from "./product-form-parts";
 
 const CATEGORY_LIMIT = 100;
-
-const UNIT_OPTIONS: { value: MerchantProductUnit; label: string }[] = [
-  { value: "kg", label: "Kilogram (kg)" },
-  { value: "g", label: "Gram (g)" },
-  { value: "litre", label: "Litre" },
-  { value: "ml", label: "Millilitre (ml)" },
-  { value: "piece", label: "Piece" },
-  { value: "pack", label: "Pack" },
-  { value: "dozen", label: "Dozen" },
-  { value: "box", label: "Box" },
-];
 
 type AssociationRecovery = {
   productId: string;
@@ -69,13 +66,19 @@ type AssociationRecovery = {
   productName: string;
 };
 
-export function ProductCreateScreen() {
+type ProductFormScreenProps = {
+  mode: "create" | "edit";
+  productId?: string;
+};
+
+function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user, isRegistered } = useAuth();
+  const isEdit = mode === "edit" && Boolean(productId);
 
-  const [form, setForm] = useState<ProductCreateFormValues>(
-    defaultProductCreateForm,
+  const [formDraft, setFormDraft] = useState<ProductCreateFormValues | null>(
+    null,
   );
   const [fieldErrors, setFieldErrors] = useState<ProductCreateFieldErrors>({});
   const [images, setImages] = useState<ProductCreateImageItem[]>([]);
@@ -84,13 +87,28 @@ export function ProductCreateScreen() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitPhase, setSubmitPhase] = useState<
-    "idle" | "uploading" | "creating" | "associating"
+    "idle" | "uploading" | "creating" | "updating" | "associating"
   >("idle");
   const [associationRecovery, setAssociationRecovery] =
     useState<AssociationRecovery | null>(null);
   const [retryingAssociation, setRetryingAssociation] = useState(false);
-
   const listEnabled = Boolean(user && isRegistered);
+
+  const productQuery = useQuery({
+    queryKey: ["merchant-product-edit", productId],
+    queryFn: () => getMerchantProduct(productId!),
+    enabled: listEnabled && isEdit,
+    refetchOnWindowFocus: false,
+  });
+
+  const baseForm = useMemo((): ProductCreateFormValues => {
+    if (isEdit && productQuery.data) {
+      return productFormValuesFromProduct(productQuery.data);
+    }
+    return defaultProductCreateForm();
+  }, [isEdit, productQuery.data]);
+
+  const form = formDraft ?? baseForm;
 
   const categoriesQuery = useQuery({
     queryKey: ["merchant-product-create-categories"],
@@ -111,9 +129,10 @@ export function ProductCreateScreen() {
   });
 
   const patchForm = (patch: Partial<ProductCreateFormValues>) => {
-    setForm((prev) => {
-      const next = { ...prev, ...patch };
-      if (patch.categoryId != null && patch.categoryId !== prev.categoryId) {
+    setFormDraft((prev) => {
+      const current = prev ?? baseForm;
+      const next = { ...current, ...patch };
+      if (patch.categoryId != null && patch.categoryId !== current.categoryId) {
         next.subcategoryId = "";
       }
       return next;
@@ -122,12 +141,12 @@ export function ProductCreateScreen() {
   };
 
   const isDirty = useMemo(() => {
-    const defaults = defaultProductCreateForm();
-    const formDirty = (Object.keys(defaults) as (keyof ProductCreateFormValues)[]).some(
-      (key) => form[key] !== defaults[key],
-    );
+    const reference = baseForm;
+    const formDirty = (
+      Object.keys(reference) as (keyof ProductCreateFormValues)[]
+    ).some((key) => form[key] !== reference[key]);
     return formDirty || images.length > 0;
-  }, [form, images.length]);
+  }, [baseForm, form, images.length]);
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -180,8 +199,16 @@ export function ProductCreateScreen() {
   ) => {
     await associateMerchantProductImages(productId, payload);
     await queryClient.invalidateQueries({ queryKey: ["merchant-products"] });
-    toast.success(`“${productName}” was created successfully.`);
-    router.push(`${dashboardRoutePrefix}/products`);
+    await queryClient.invalidateQueries({
+      queryKey: ["merchant-product", productId],
+    });
+    if (isEdit) {
+      toast.success(`“${productName}” was updated.`);
+      router.push(`${dashboardRoutePrefix}/products/${productId}`);
+    } else {
+      toast.success(`“${productName}” was created successfully.`);
+      router.push(`${dashboardRoutePrefix}/products`);
+    }
   };
 
   const handleRetryAssociation = async () => {
@@ -223,7 +250,9 @@ export function ProductCreateScreen() {
     }
 
     setSubmitting(true);
-    setSubmitPhase(images.length > 0 ? "uploading" : "creating");
+    setSubmitPhase(
+      images.length > 0 ? "uploading" : isEdit ? "updating" : "creating",
+    );
 
     const uploadedImages: ProductCreateImageItem[] = images.map((item) => ({
       ...item,
@@ -277,37 +306,69 @@ export function ProductCreateScreen() {
         }
       }
 
-      setSubmitPhase("creating");
-      const product = await createMerchantProduct(payload);
+      setSubmitPhase(isEdit ? "updating" : "creating");
+      const product = isEdit
+        ? await updateMerchantProduct(productId!, payload)
+        : await createMerchantProduct(payload);
 
-      const assocPayload = buildAssociationPayload(uploadedImages);
+      const existingCount = isEdit
+        ? (productQuery.data?.images.length ?? product.images.length)
+        : 0;
+      const assocPayload = buildAssociationPayload(uploadedImages).map(
+        (item, index) => ({
+          ...item,
+          displayOrder: existingCount + index,
+        }),
+      );
+
       if (assocPayload.length > 0) {
         setSubmitPhase("associating");
         try {
           await runImageAssociation(product.id, assocPayload, product.name);
         } catch (error) {
-          setAssociationRecovery({
-            productId: product.id,
-            images: assocPayload,
-            productName: product.name,
-          });
+          if (!isEdit) {
+            setAssociationRecovery({
+              productId: product.id,
+              images: assocPayload,
+              productName: product.name,
+            });
+          }
           toast.error(
             error instanceof ApiError
-              ? `${friendlyProductError(error)} The product was created — attach images when ready.`
-              : "Product created, but images could not be attached.",
+              ? `${friendlyProductError(error)} ${
+                  isEdit
+                    ? "Product saved, but new images could not be attached."
+                    : "The product was created — attach images when ready."
+                }`
+              : isEdit
+                ? "Product saved, but new images could not be attached."
+                : "Product created, but images could not be attached.",
           );
+          if (isEdit) {
+            router.push(`${dashboardRoutePrefix}/products/${product.id}`);
+          }
           return;
         }
       } else {
         await queryClient.invalidateQueries({ queryKey: ["merchant-products"] });
-        toast.success(`“${product.name}” was created successfully.`);
-        router.push(`${dashboardRoutePrefix}/products`);
+        await queryClient.invalidateQueries({
+          queryKey: ["merchant-product", product.id],
+        });
+        if (isEdit) {
+          toast.success(`“${product.name}” was updated.`);
+          router.push(`${dashboardRoutePrefix}/products/${product.id}`);
+        } else {
+          toast.success(`“${product.name}” was created successfully.`);
+          router.push(`${dashboardRoutePrefix}/products`);
+        }
       }
     } catch (error) {
       toast.error(
         error instanceof ApiError
           ? friendlyProductError(error)
-          : "Unable to create product.",
+          : isEdit
+            ? "Unable to update product."
+            : "Unable to create product.",
       );
     } finally {
       setSubmitting(false);
@@ -326,13 +387,32 @@ export function ProductCreateScreen() {
     );
   }
 
-  if (categoriesQuery.isLoading && !categoriesQuery.data) {
+  if (
+    (categoriesQuery.isLoading && !categoriesQuery.data) ||
+    (isEdit && productQuery.isLoading && !productQuery.data)
+  ) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center py-16">
         <GroceryAnimatedLoader
           theme="dashboard"
-          label="Preparing form"
-          sublabel="Loading categories"
+          label={isEdit ? "Loading product" : "Preparing form"}
+          sublabel={isEdit ? "Fetching product details" : "Loading categories"}
+        />
+      </div>
+    );
+  }
+
+  if (isEdit && productQuery.isError && !productQuery.data) {
+    const message =
+      productQuery.error instanceof ApiError
+        ? friendlyProductError(productQuery.error)
+        : "Unable to load product.";
+    return (
+      <div className="mx-auto w-full max-w-[960px] py-8">
+        <ErrorState
+          title="Could not load product"
+          message={message}
+          onRetry={() => void productQuery.refetch()}
         />
       </div>
     );
@@ -343,16 +423,17 @@ export function ProductCreateScreen() {
     retryingAssociation ||
     submitPhase !== "idle";
 
-  const unitLabel = form.unit
-    ? formatProductUnitLabel(form.unit as MerchantProductUnit)
-    : "units";
+  const unitLabel = formatUnitHint(form.unit);
+  const listHref = `${dashboardRoutePrefix}/products`;
+  const detailHref =
+    isEdit && productId ? `${listHref}/${productId}` : listHref;
 
   return (
     <div className="mx-auto flex w-full max-w-[960px] flex-col gap-6 pb-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <Link
-            href={`${dashboardRoutePrefix}/products`}
+            href={detailHref}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-[#6b7280] transition hover:text-[#16a34a]"
             onClick={(event) => {
               if (!isDirty || busy) {
@@ -367,18 +448,20 @@ export function ProductCreateScreen() {
             }}
           >
             <ArrowLeft className="size-4" aria-hidden />
-            Back to products
+            {isEdit ? "Back to product" : "Back to products"}
           </Link>
           <h1 className="mt-3 text-2xl font-bold tracking-tight text-[#1a1f2e]">
-            Add product
+            {isEdit ? "Edit product" : "Add product"}
           </h1>
           <p className="mt-1 text-sm text-[#6b7280]">
-            Create a new item for your storefront catalog.
+            {isEdit
+              ? "Update catalog details, pricing, inventory, and images."
+              : "Create a new item for your storefront catalog."}
           </p>
         </div>
       </div>
 
-      {associationRecovery ? (
+      {!isEdit && associationRecovery ? (
         <DashboardSurface className="border-amber-200 bg-amber-50/80 p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex gap-3">
@@ -516,15 +599,44 @@ export function ProductCreateScreen() {
         </DashboardSurface>
 
         <DashboardSurface className="p-5">
-          <ProductCreateImagesField
-            items={images}
-            primaryClientId={primaryClientId}
-            disabled={busy}
-            error={imagesError}
-            onChange={setImages}
-            onPrimaryChange={setPrimaryClientId}
-            onValidationError={(message) => toast.error(message)}
+          {isEdit && productId ? (
+            <div className="mb-5 flex flex-col gap-3">
+              <SectionTitle
+                title="Current images"
+                description="Set primary or remove images already on this product."
+              />
+              <ProductEditExistingImages
+                productId={productId}
+                images={productQuery.data?.images ?? []}
+                disabled={busy}
+                onChanged={() => {
+                  void productQuery.refetch();
+                  void queryClient.invalidateQueries({
+                    queryKey: ["merchant-product", productId],
+                  });
+                }}
+              />
+            </div>
+          ) : null}
+          <SectionTitle
+            title={isEdit ? "Add images" : "Product images"}
+            description={
+              isEdit
+                ? "Upload additional images (optional)."
+                : "Optional product photos for your storefront."
+            }
           />
+          <div className={isEdit ? "mt-4" : undefined}>
+            <ProductCreateImagesField
+              items={images}
+              primaryClientId={primaryClientId}
+              disabled={busy}
+              error={imagesError}
+              onChange={setImages}
+              onPrimaryChange={setPrimaryClientId}
+              onValidationError={(message) => toast.error(message)}
+            />
+          </div>
         </DashboardSurface>
 
         <DashboardSurface className="p-5">
@@ -762,7 +874,7 @@ export function ProductCreateScreen() {
             asChild
           >
             <Link
-              href={`${dashboardRoutePrefix}/products`}
+              href={detailHref}
               onClick={(event) => {
                 if (!isDirty) {
                   return;
@@ -793,9 +905,13 @@ export function ProductCreateScreen() {
                 ? "Uploading images…"
                 : submitPhase === "creating"
                   ? "Creating product…"
-                  : submitPhase === "associating"
-                    ? "Saving images…"
-                    : "Save product"}
+                  : submitPhase === "updating"
+                    ? "Saving changes…"
+                    : submitPhase === "associating"
+                      ? "Saving images…"
+                      : isEdit
+                        ? "Save changes"
+                        : "Save product"}
             </span>
           </Button>
         </div>
@@ -804,53 +920,10 @@ export function ProductCreateScreen() {
   );
 }
 
-const selectClassName =
-  "h-10 w-full rounded-xl border border-[#e8eaef] bg-[#fafbfc] px-3 text-sm text-[#1a1f2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a34a]/30 disabled:cursor-not-allowed disabled:opacity-60";
-
-function SectionTitle({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <div>
-      <h2 className="text-base font-semibold text-[#1a1f2e]">{title}</h2>
-      <p className="mt-0.5 text-xs text-[#9ca3af]">{description}</p>
-    </div>
-  );
+export function ProductCreateScreen() {
+  return <ProductFormScreen mode="create" />;
 }
 
-function Field({
-  label,
-  required,
-  error,
-  hint,
-  className,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  error?: string;
-  hint?: string;
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <label className={cn("flex flex-col gap-1.5", className)}>
-      <span className="text-sm font-medium text-[#1a1f2e]">
-        {label}
-        {required ? (
-          <span className="text-red-600" aria-hidden>
-            {" "}
-            *
-          </span>
-        ) : null}
-      </span>
-      {children}
-      {hint ? <span className="text-xs text-[#9ca3af]">{hint}</span> : null}
-      {error ? <span className="text-xs text-red-600">{error}</span> : null}
-    </label>
-  );
+export function ProductEditScreen({ productId }: { productId: string }) {
+  return <ProductFormScreen mode="edit" productId={productId} />;
 }

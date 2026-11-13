@@ -121,6 +121,66 @@ export type MerchantProductImageAssociateInput = {
   isPrimary: boolean;
 };
 
+export type MerchantProductUpdateBody = {
+  name: string;
+  brand?: string;
+  description?: string;
+  categoryId: string;
+  subcategoryId?: string;
+  sellingPrice: number;
+  mrp?: number;
+  unit: MerchantProductUnit;
+  unitValue: number;
+  stockQuantity: number;
+  sku?: string;
+  barcode?: string;
+  taxPercentage?: number;
+  minOrderQuantity?: number;
+  maxOrderQuantity?: number;
+  displayOrder: number;
+  isFeatured: boolean;
+  isActive: boolean;
+};
+
+export function productUpdateToJson(
+  input: MerchantProductUpdateBody,
+): Record<string, unknown> {
+  return {
+    name: input.name.trim(),
+    category_id: input.categoryId.trim(),
+    selling_price: input.sellingPrice,
+    unit: input.unit,
+    unit_value: input.unitValue,
+    stock_quantity: input.stockQuantity,
+    display_order: input.displayOrder,
+    is_featured: input.isFeatured,
+    is_active: input.isActive,
+    subcategory_id: input.subcategoryId?.trim()
+      ? input.subcategoryId.trim()
+      : null,
+    description: input.description?.trim() ? input.description.trim() : null,
+    mrp:
+      input.mrp != null && Number.isFinite(input.mrp) ? input.mrp : null,
+    sku: input.sku?.trim() ? input.sku.trim() : null,
+    barcode: input.barcode?.trim() ? input.barcode.trim() : null,
+    brand: input.brand?.trim() ? input.brand.trim() : null,
+    tax_percentage:
+      input.taxPercentage != null && Number.isFinite(input.taxPercentage)
+        ? input.taxPercentage
+        : null,
+    min_order_quantity:
+      input.minOrderQuantity != null &&
+      Number.isFinite(input.minOrderQuantity)
+        ? input.minOrderQuantity
+        : null,
+    max_order_quantity:
+      input.maxOrderQuantity != null &&
+      Number.isFinite(input.maxOrderQuantity)
+        ? input.maxOrderQuantity
+        : null,
+  };
+}
+
 export function productCreateToJson(
   input: MerchantProductCreateInput,
 ): Record<string, unknown> {

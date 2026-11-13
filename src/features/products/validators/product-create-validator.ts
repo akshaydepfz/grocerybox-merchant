@@ -1,4 +1,7 @@
-import type { MerchantProductUnit } from "../types/merchant-product";
+import type {
+  MerchantProduct,
+  MerchantProductUnit,
+} from "../types/merchant-product";
 
 export const MERCHANT_PRODUCT_NAME_MAX_LEN = 255;
 export const MERCHANT_PRODUCT_SKU_MAX_LEN = 100;
@@ -39,6 +42,38 @@ export type ProductCreateFormValues = {
 export type ProductCreateFieldErrors = Partial<
   Record<keyof ProductCreateFormValues, string>
 >;
+
+export function productFormValuesFromProduct(
+  product: MerchantProduct,
+): ProductCreateFormValues {
+  return {
+    name: product.name,
+    brand: product.brand ?? "",
+    description: product.description ?? "",
+    categoryId: product.categoryId,
+    subcategoryId: product.subcategoryId ?? "",
+    sellingPrice: String(product.sellingPrice),
+    mrp: product.mrp != null ? String(product.mrp) : "",
+    unit: product.unit,
+    unitValue: String(product.unitValue),
+    stockQuantity: String(product.stockQuantity),
+    sku: product.sku ?? "",
+    barcode: product.barcode ?? "",
+    taxPercentage:
+      product.taxPercentage != null ? String(product.taxPercentage) : "",
+    minOrderQuantity:
+      product.minOrderQuantity != null
+        ? String(product.minOrderQuantity)
+        : "",
+    maxOrderQuantity:
+      product.maxOrderQuantity != null
+        ? String(product.maxOrderQuantity)
+        : "",
+    displayOrder: String(product.displayOrder),
+    isFeatured: product.isFeatured,
+    isActive: product.isActive,
+  };
+}
 
 export const defaultProductCreateForm = (): ProductCreateFormValues => ({
   name: "",

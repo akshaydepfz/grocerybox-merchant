@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { ProductFormPlaceholderScreen } from "@/features/products/components";
+import { ProductEditScreen } from "@/features/products/components";
 
 type EditProductPageProps = {
   params: Promise<{ productId: string }>;
@@ -13,5 +13,5 @@ export const metadata: Metadata = {
 
 export default async function EditProductPage({ params }: EditProductPageProps) {
   const { productId } = await params;
-  return <ProductFormPlaceholderScreen mode="edit" productId={productId} />;
+  return <ProductEditScreen productId={productId} />;
 }

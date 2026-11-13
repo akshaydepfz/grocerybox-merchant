@@ -2,9 +2,12 @@ export {
   associateMerchantProductImages,
   createMerchantProduct,
   deleteMerchantProduct,
+  deleteMerchantProductImage,
   friendlyProductError,
   getMerchantProduct,
   listMerchantProducts,
+  setPrimaryMerchantProductImage,
+  updateMerchantProduct,
 } from "./product-service";
 
 export {
