@@ -39,6 +39,7 @@ export const API_ENDPOINTS = {
   merchantCategoryImageUpload: `${API_V1_PREFIX}/merchant/categories/images/upload`,
   merchantProducts: `${API_V1_PREFIX}/merchant/products`,
   merchantProductImageUpload: `${API_V1_PREFIX}/merchant/products/images/upload`,
+  merchantOrders: `${API_V1_PREFIX}/merchant/orders`,
 } as const satisfies Record<string, string>;
 
 export function merchantCategoryPath(
@@ -85,6 +86,14 @@ export function merchantProductPath(
 
 export function merchantProductImagesPath(productId: string): string {
   return `${merchantProductPath(productId)}/images`;
+}
+
+export function merchantOrderPath(orderId: string): string {
+  return `${API_ENDPOINTS.merchantOrders}/${orderId}`;
+}
+
+export function merchantOrderStatusPath(orderId: string): string {
+  return `${merchantOrderPath(orderId)}/status`;
 }
 
 export function merchantProductImagePath(
