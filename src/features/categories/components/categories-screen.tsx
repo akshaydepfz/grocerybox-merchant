@@ -28,6 +28,7 @@ import { Switch } from "@/components/ui/switch";
 import { ErrorState } from "@/components/shared/error-state";
 import { GroceryAnimatedLoader } from "@/components/shared/animated-loader";
 import { useAuth } from "@/features/auth/components/auth-provider";
+import { DashboardPage } from "@/features/dashboard/components/dashboard-page";
 import { DashboardSurface } from "@/features/dashboard/components/dashboard-surface";
 import { ApiError } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
@@ -292,13 +293,13 @@ export function CategoriesScreen() {
         ? friendlyCategoryError(listQuery.error)
         : "Unable to load categories.";
     return (
-      <div className="mx-auto w-full max-w-[1200px] py-8">
+      <DashboardPage className="py-4">
         <ErrorState
           title="Could not load categories"
           message={message}
           onRetry={() => void listQuery.refetch()}
         />
-      </div>
+      </DashboardPage>
     );
   }
 
@@ -309,7 +310,7 @@ export function CategoriesScreen() {
     toggleActiveMutation.variables?.category.id === categoryId;
 
   return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6">
+    <DashboardPage>
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-[#1a1f2e]">
@@ -620,7 +621,7 @@ export function CategoriesScreen() {
           void refreshList();
         }}
       />
-    </div>
+    </DashboardPage>
   );
 }
 

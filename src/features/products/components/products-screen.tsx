@@ -24,6 +24,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { GroceryAnimatedLoader } from "@/components/shared/animated-loader";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { listMerchantCategories } from "@/features/categories/services";
+import { DashboardPage } from "@/features/dashboard/components/dashboard-page";
 import { DashboardSurface } from "@/features/dashboard/components/dashboard-surface";
 import { listMerchantSubcategories } from "@/features/subcategories/services";
 import { ApiError } from "@/lib/api/types";
@@ -120,12 +121,12 @@ export function ProductsScreen() {
 
   if (!user) {
     return (
-      <div className="mx-auto w-full max-w-[1200px] py-8">
+      <DashboardPage className="py-4">
         <ErrorState
           title="Sign in required"
           message="Sign in to manage your products."
         />
-      </div>
+      </DashboardPage>
     );
   }
 
@@ -150,13 +151,13 @@ export function ProductsScreen() {
         ? friendlyProductError(listQuery.error)
         : "Unable to load products.";
     return (
-      <div className="mx-auto w-full max-w-[1200px] py-8">
+      <DashboardPage className="py-4">
         <ErrorState
           title="Could not load products"
           message={message}
           onRetry={() => void listQuery.refetch()}
         />
-      </div>
+      </DashboardPage>
     );
   }
 
@@ -178,7 +179,7 @@ export function ProductsScreen() {
       : "Add your first product to start selling.";
 
   return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6">
+    <DashboardPage>
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-[#1a1f2e]">
@@ -214,7 +215,7 @@ export function ProductsScreen() {
                 Search by name, SKU, barcode, or brand.
               </p>
             </div>
-            <div className="relative w-full sm:max-w-md">
+            <div className="relative w-full lg:max-w-xl">
               <Search
                 className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9ca3af]"
                 aria-hidden
@@ -524,7 +525,7 @@ export function ProductsScreen() {
           </div>
         ) : null}
       </DashboardSurface>
-    </div>
+    </DashboardPage>
   );
 }
 
