@@ -52,4 +52,20 @@ export function merchantCategoryImagesPath(categoryId: string): string {
   return `${merchantCategoryPath(categoryId)}/images`;
 }
 
+export function merchantSubcategoriesPath(categoryId: string): string {
+  return `${merchantCategoryPath(categoryId)}/subcategories`;
+}
+
+export function merchantSubcategoryPath(
+  categoryId: string,
+  subcategoryId: string,
+  action?: "activate" | "deactivate",
+): string {
+  const base = `${merchantSubcategoriesPath(categoryId)}/${subcategoryId}`;
+  if (action) {
+    return `${base}/${action}`;
+  }
+  return base;
+}
+
 export type ApiEndpointKey = keyof typeof API_ENDPOINTS;

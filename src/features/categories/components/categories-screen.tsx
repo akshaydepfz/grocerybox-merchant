@@ -19,6 +19,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -463,7 +464,12 @@ export function CategoriesScreen() {
                     </td>
                     <td className="px-3 py-4">
                       <p className="font-semibold text-[#1a1f2e]">
-                        {category.name}
+                        <Link
+                          href={`/dashboard/categories/${category.id}/subcategories`}
+                          className="transition hover:text-[#16a34a] hover:underline"
+                        >
+                          {category.name}
+                        </Link>
                       </p>
                       <p className="mt-0.5 text-xs text-[#9ca3af] sm:hidden">
                         /{category.slug}
@@ -518,6 +524,22 @@ export function CategoriesScreen() {
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-9 rounded-xl border-[#eceef2] px-3"
+                          asChild
+                        >
+                          <Link
+                            href={`/dashboard/categories/${category.id}/subcategories`}
+                          >
+                            <Layers className="size-3.5" aria-hidden />
+                            <span className="ml-1.5 hidden sm:inline">
+                              Subcategories
+                            </span>
+                          </Link>
+                        </Button>
                         <Button
                           type="button"
                           variant="outline"
