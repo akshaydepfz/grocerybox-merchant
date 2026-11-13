@@ -47,6 +47,7 @@ const STEP_OPTIONS: { value: "" | MerchantOrderTimelineStep; label: string }[] =
   { value: "packing", label: "Packing" },
   { value: "out_for_delivery", label: "Out for delivery" },
   { value: "delivered", label: "Delivered" },
+  { value: "cancelled", label: "Cancelled" },
 ];
 
 const PAYMENT_OPTIONS: { value: "" | MerchantOrderPaymentStatus; label: string }[] = [

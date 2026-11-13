@@ -96,6 +96,10 @@ export function merchantOrderStatusPath(orderId: string): string {
   return `${merchantOrderPath(orderId)}/status`;
 }
 
+export function merchantOrderCancelPath(orderId: string): string {
+  return `${merchantOrderPath(orderId)}/cancel`;
+}
+
 export function merchantProductImagePath(
   productId: string,
   imageId: string,

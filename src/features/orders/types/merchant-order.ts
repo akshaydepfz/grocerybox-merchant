@@ -4,7 +4,8 @@ export type MerchantOrderTimelineStep =
   | "confirmed"
   | "packing"
   | "out_for_delivery"
-  | "delivered";
+  | "delivered"
+  | "cancelled";
 
 export type MerchantOrderPaymentStatus =
   | "paid"
@@ -21,7 +22,12 @@ export const MERCHANT_ORDER_STEPS: {
   { id: "packing", title: "Packing" },
   { id: "out_for_delivery", title: "Out for delivery" },
   { id: "delivered", title: "Delivered" },
+  { id: "cancelled", title: "Cancelled" },
 ];
+
+export const MERCHANT_ORDER_FULFILLMENT_STEPS = MERCHANT_ORDER_STEPS.filter(
+  (step) => step.id !== "cancelled",
+);
 
 export type MerchantOrderListItem = {
   id: string;

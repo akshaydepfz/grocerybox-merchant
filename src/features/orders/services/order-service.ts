@@ -1,5 +1,6 @@
 import {
   API_ENDPOINTS,
+  merchantOrderCancelPath,
   merchantOrderPath,
   merchantOrderStatusPath,
 } from "@/lib/api/endpoints";
@@ -66,6 +67,11 @@ export async function updateMerchantOrderStatus(
   return assertOrderDetail(response.data, response.status);
 }
 
+export async function cancelMerchantOrder(id: string): Promise<MerchantOrderDetail> {
+  const response = await apiClient.post(merchantOrderCancelPath(id));
+  return assertOrderDetail(response.data, response.status);
+}
+
 export function friendlyOrderError(error: ApiError): string {
   if (error.status === 404) {
     return error.message.length > 0 ? error.message : "Order not found.";
@@ -80,6 +86,11 @@ export function friendlyOrderError(error: ApiError): string {
   }
   if (error.status === 400) {
     return error.message.length > 0 ? error.message : "Invalid order request.";
+  }
+  if (error.status === 409) {
+    return error.message.length > 0
+      ? error.message
+      : "This order cannot be updated in its current state.";
   }
   return error.message.length > 0 ? error.message : "Unable to process order request.";
 }

@@ -1,4 +1,5 @@
 export {
+  cancelMerchantOrder,
   friendlyOrderError,
   getMerchantOrder,
   listMerchantOrders,

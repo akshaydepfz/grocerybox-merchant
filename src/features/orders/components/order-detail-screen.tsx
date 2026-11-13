@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Ban, Loader2, Save } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -21,7 +21,7 @@ import {
   updateMerchantOrderStatus,
 } from "../services";
 import {
-  MERCHANT_ORDER_STEPS,
+  MERCHANT_ORDER_FULFILLMENT_STEPS,
   type MerchantOrderTimelineStep,
 } from "../types/merchant-order";
 import {
@@ -31,6 +31,7 @@ import {
   orderStepLabel,
 } from "../utils/format-order";
 
+import { OrderCancelDialog } from "./order-cancel-dialog";
 import { OrderStepBadge } from "./order-step-badge";
 
 type OrderDetailScreenProps = {
@@ -50,6 +51,7 @@ export function OrderDetailScreen({ orderId }: OrderDetailScreenProps) {
   });
 
   const [draftStep, setDraftStep] = useState<MerchantOrderTimelineStep | null>(null);
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   const updateMutation = useMutation({
     mutationFn: (step: MerchantOrderTimelineStep) =>
@@ -112,6 +114,9 @@ export function OrderDetailScreen({ orderId }: OrderDetailScreenProps) {
 
   const selectedStep = draftStep ?? order.currentStep;
   const dirty = selectedStep !== order.currentStep;
+  const isCancelled = order.currentStep === "cancelled";
+  const isDelivered = order.currentStep === "delivered";
+  const canCancel = !isCancelled && !isDelivered;
 
   const addressLines = [
     order.address.fullName,
@@ -133,12 +138,26 @@ export function OrderDetailScreen({ orderId }: OrderDetailScreenProps) {
           <ArrowLeft className="size-4" aria-hidden />
           Back to orders
         </Link>
-        {detailQuery.isFetching && !detailQuery.isLoading ? (
-          <div className="flex items-center gap-2 text-xs text-[#6b7280]">
-            <Loader2 className="size-3.5 animate-spin" aria-hidden />
-            Refreshing…
-          </div>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-2">
+          {detailQuery.isFetching && !detailQuery.isLoading ? (
+            <div className="flex items-center gap-2 text-xs text-[#6b7280]">
+              <Loader2 className="size-3.5 animate-spin" aria-hidden />
+              Refreshing…
+            </div>
+          ) : null}
+          {canCancel ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9 rounded-xl text-destructive hover:bg-destructive/5 hover:text-destructive"
+              onClick={() => setCancelOpen(true)}
+            >
+              <Ban className="size-3.5" aria-hidden />
+              Cancel order
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <header>
@@ -157,51 +176,61 @@ export function OrderDetailScreen({ orderId }: OrderDetailScreenProps) {
         </div>
       </header>
 
-      <DashboardSurface className="p-5">
-        <h2 className="text-base font-semibold text-[#1a1f2e]">
-          Fulfillment status
-        </h2>
-        <p className="mt-1 text-xs text-[#9ca3af]">
-          Same five steps customers see on order tracking: placed → confirmed →
-          packing → out for delivery → delivered.
-        </p>
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-          {MERCHANT_ORDER_STEPS.map((step) => {
-            const active = selectedStep === step.id;
-            return (
-              <button
-                key={step.id}
-                type="button"
-                disabled={updateMutation.isPending}
-                onClick={() => setDraftStep(step.id)}
-                className={cn(
-                  "rounded-xl border px-3 py-3 text-left text-sm transition",
-                  active
-                    ? "border-[#16a34a] bg-[#f0fdf4] text-[#15803d]"
-                    : "border-[#eceef2] bg-white text-[#4b5563] hover:border-[#d1d5db]",
-                )}
-              >
-                <p className="font-semibold">{step.title}</p>
-              </button>
-            );
-          })}
-        </div>
-        <div className="mt-4 flex justify-end">
-          <Button
-            type="button"
-            className="bg-[#16a34a] text-white hover:bg-[#15803d]"
-            disabled={!dirty || updateMutation.isPending}
-            onClick={() => updateMutation.mutate(selectedStep)}
-          >
-            {updateMutation.isPending ? (
-              <Loader2 className="size-4 animate-spin" aria-hidden />
-            ) : (
-              <Save className="size-4" aria-hidden />
-            )}
-            <span className="ml-2">Save status</span>
-          </Button>
-        </div>
-      </DashboardSurface>
+      {isCancelled ? (
+        <DashboardSurface className="border-red-200 bg-red-50/70 p-5">
+          <p className="text-sm font-semibold text-[#991b1b]">Order cancelled</p>
+          <p className="mt-1 text-sm text-[#b91c1c]">
+            Customers see this order as cancelled. Inventory from this order was
+            restored to your catalog.
+          </p>
+        </DashboardSurface>
+      ) : (
+        <DashboardSurface className="p-5">
+          <h2 className="text-base font-semibold text-[#1a1f2e]">
+            Fulfillment status
+          </h2>
+          <p className="mt-1 text-xs text-[#9ca3af]">
+            Same five steps customers see on order tracking: placed → confirmed →
+            packing → out for delivery → delivered.
+          </p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+            {MERCHANT_ORDER_FULFILLMENT_STEPS.map((step) => {
+              const active = selectedStep === step.id;
+              return (
+                <button
+                  key={step.id}
+                  type="button"
+                  disabled={updateMutation.isPending}
+                  onClick={() => setDraftStep(step.id)}
+                  className={cn(
+                    "rounded-xl border px-3 py-3 text-left text-sm transition",
+                    active
+                      ? "border-[#16a34a] bg-[#f0fdf4] text-[#15803d]"
+                      : "border-[#eceef2] bg-white text-[#4b5563] hover:border-[#d1d5db]",
+                  )}
+                >
+                  <p className="font-semibold">{step.title}</p>
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-4 flex justify-end">
+            <Button
+              type="button"
+              className="bg-[#16a34a] text-white hover:bg-[#15803d]"
+              disabled={!dirty || updateMutation.isPending}
+              onClick={() => updateMutation.mutate(selectedStep)}
+            >
+              {updateMutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden />
+              ) : (
+                <Save className="size-4" aria-hidden />
+              )}
+              <span className="ml-2">Save status</span>
+            </Button>
+          </div>
+        </DashboardSurface>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <DashboardSurface className="p-5">
@@ -268,6 +297,17 @@ export function OrderDetailScreen({ orderId }: OrderDetailScreenProps) {
           ))}
         </ul>
       </DashboardSurface>
+
+      <OrderCancelDialog
+        open={cancelOpen}
+        orderNumber={order.orderId}
+        orderId={order.id}
+        onOpenChange={setCancelOpen}
+        onCancelled={() => {
+          void detailQuery.refetch();
+          void queryClient.invalidateQueries({ queryKey: ["merchant-orders"] });
+        }}
+      />
     </div>
   );
 }
