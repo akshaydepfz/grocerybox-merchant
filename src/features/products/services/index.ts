@@ -1,6 +1,7 @@
 export {
   associateMerchantProductImages,
   createMerchantProduct,
+  deleteMerchantProduct,
   friendlyProductError,
   getMerchantProduct,
   listMerchantProducts,

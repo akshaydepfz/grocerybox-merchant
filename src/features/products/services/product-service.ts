@@ -92,6 +92,14 @@ export async function createMerchantProduct(
   return assertProductPayload(response.data, response.status);
 }
 
+export async function deleteMerchantProduct(id: string): Promise<void> {
+  const response = await apiClient.delete(merchantProductPath(id));
+  const envelope = parseApiEnvelope(response.data);
+  if (!envelope.success) {
+    throw new ApiError(envelopeErrorMessage(response.status, envelope), response.status);
+  }
+}
+
 export async function associateMerchantProductImages(
   productId: string,
   images: MerchantProductImageAssociateInput[],
@@ -107,6 +115,11 @@ export async function associateMerchantProductImages(
 }
 
 export function friendlyProductError(error: ApiError): string {
+  if (error.status === 409) {
+    return error.message.length > 0
+      ? error.message
+      : "This product cannot be deleted right now.";
+  }
   if (error.status === 404) {
     return error.message.length > 0 ? error.message : "Product not found.";
   }

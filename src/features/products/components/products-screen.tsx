@@ -14,6 +14,7 @@ import {
   Plus,
   RotateCcw,
   Search,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import { type ReactNode, useEffect, useState } from "react";
@@ -50,6 +51,7 @@ import {
   ProductActiveBadge,
   ProductFeaturedBadge,
 } from "./product-status-badges";
+import { ProductDeleteDialog } from "./product-delete-dialog";
 import { ProductThumbnail } from "./product-thumbnail";
 
 const CATEGORY_OPTIONS_LIMIT = 100;
@@ -60,6 +62,13 @@ export function ProductsScreen() {
     useProductListQueryParams();
 
   const [searchDraft, setSearchDraft] = useState(state.search);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<MerchantProduct | null>(null);
+
+  const openDelete = (product: MerchantProduct) => {
+    setDeleteTarget(product);
+    setDeleteOpen(true);
+  };
 
   useEffect(() => {
     const handle = window.setTimeout(() => {
@@ -473,7 +482,11 @@ export function ProductsScreen() {
                 </thead>
                 <tbody className="divide-y divide-[#f0f1f4]">
                   {items.map((product) => (
-                    <ProductTableRow key={product.id} product={product} />
+                    <ProductTableRow
+                      key={product.id}
+                      product={product}
+                      onDelete={() => openDelete(product)}
+                    />
                   ))}
                 </tbody>
               </table>
@@ -481,7 +494,11 @@ export function ProductsScreen() {
 
             <div className="flex flex-col gap-3 p-4 md:hidden">
               {items.map((product) => (
-                <ProductMobileCard key={product.id} product={product} />
+                <ProductMobileCard
+                  key={product.id}
+                  product={product}
+                  onDelete={() => openDelete(product)}
+                />
               ))}
             </div>
           </>
@@ -525,6 +542,16 @@ export function ProductsScreen() {
           </div>
         ) : null}
       </DashboardSurface>
+
+      <ProductDeleteDialog
+        open={deleteOpen}
+        productName={deleteTarget?.name ?? ""}
+        productId={deleteTarget?.id ?? null}
+        onOpenChange={setDeleteOpen}
+        onDeleted={() => {
+          void listQuery.refetch();
+        }}
+      />
     </DashboardPage>
   );
 }
@@ -587,7 +614,13 @@ function FilterSelect({
   );
 }
 
-function ProductTableRow({ product }: { product: MerchantProduct }) {
+function ProductTableRow({
+  product,
+  onDelete,
+}: {
+  product: MerchantProduct;
+  onDelete: () => void;
+}) {
   const detailHref = `${dashboardRoutePrefix}/products/${product.id}`;
   const editHref = `${dashboardRoutePrefix}/products/${product.id}/edit`;
 
@@ -672,13 +705,29 @@ function ProductTableRow({ product }: { product: MerchantProduct }) {
               <span className="ml-1.5 hidden lg:inline">Edit</span>
             </Link>
           </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 rounded-xl border-[#eceef2] px-3 text-destructive hover:bg-destructive/5 hover:text-destructive"
+            onClick={onDelete}
+          >
+            <Trash2 className="size-3.5" aria-hidden />
+            <span className="ml-1.5 hidden lg:inline">Delete</span>
+          </Button>
         </div>
       </td>
     </tr>
   );
 }
 
-function ProductMobileCard({ product }: { product: MerchantProduct }) {
+function ProductMobileCard({
+  product,
+  onDelete,
+}: {
+  product: MerchantProduct;
+  onDelete: () => void;
+}) {
   const detailHref = `${dashboardRoutePrefix}/products/${product.id}`;
 
   return (
@@ -748,6 +797,16 @@ function ProductMobileCard({ product }: { product: MerchantProduct }) {
           >
             <Pencil className="size-3.5" aria-hidden />
           </Link>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-9 rounded-xl text-destructive hover:bg-destructive/5 hover:text-destructive"
+          onClick={onDelete}
+          aria-label={`Delete ${product.name}`}
+        >
+          <Trash2 className="size-3.5" aria-hidden />
         </Button>
       </div>
     </article>

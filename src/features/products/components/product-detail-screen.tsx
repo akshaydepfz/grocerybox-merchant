@@ -1,9 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, Pencil } from "lucide-react";
+import { ArrowLeft, Loader2, Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -28,6 +29,7 @@ import {
   formatStockQuantity,
 } from "../utils/format-product";
 
+import { ProductDeleteDialog } from "./product-delete-dialog";
 import { ProductStatusBadges } from "./product-status-badges";
 
 type ProductDetailScreenProps = {
@@ -36,7 +38,9 @@ type ProductDetailScreenProps = {
 
 export function ProductDetailScreen({ productId }: ProductDetailScreenProps) {
   const { user, isRegistered } = useAuth();
+  const router = useRouter();
   const listHref = `${dashboardRoutePrefix}/products`;
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const detailQuery = useQuery({
     queryKey: ["merchant-product", productId],
@@ -129,6 +133,16 @@ export function ProductDetailScreen({ productId }: ProductDetailScreenProps) {
               <Pencil className="size-3.5" aria-hidden />
               Edit product
             </Link>
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 rounded-xl text-destructive hover:bg-destructive/5 hover:text-destructive"
+            onClick={() => setDeleteOpen(true)}
+          >
+            <Trash2 className="size-3.5" aria-hidden />
+            Delete
           </Button>
         </div>
       </div>
@@ -248,6 +262,16 @@ export function ProductDetailScreen({ productId }: ProductDetailScreenProps) {
           </p>
         </DashboardSurface>
       ) : null}
+
+      <ProductDeleteDialog
+        open={deleteOpen}
+        productName={product.name}
+        productId={product.id}
+        onOpenChange={setDeleteOpen}
+        onDeleted={() => {
+          router.push(listHref);
+        }}
+      />
     </div>
   );
 }
