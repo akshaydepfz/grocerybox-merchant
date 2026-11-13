@@ -33,6 +33,18 @@ export const API_ENDPOINTS = {
   merchantSubscriptionSelect: `${API_V1_PREFIX}/merchant/subscription/select`,
   merchantSubscriptionPaymentOrder: `${API_V1_PREFIX}/merchant/subscription/payment/order`,
   merchantSubscriptionPaymentVerify: `${API_V1_PREFIX}/merchant/subscription/payment/verify`,
+  merchantCategories: `${API_V1_PREFIX}/merchant/categories`,
 } as const satisfies Record<string, string>;
+
+export function merchantCategoryPath(
+  categoryId: string,
+  action?: "activate" | "deactivate",
+): string {
+  const base = `${API_ENDPOINTS.merchantCategories}/${categoryId}`;
+  if (action) {
+    return `${base}/${action}`;
+  }
+  return base;
+}
 
 export type ApiEndpointKey = keyof typeof API_ENDPOINTS;

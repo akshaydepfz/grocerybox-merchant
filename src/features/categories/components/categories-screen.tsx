@@ -1,121 +1,265 @@
 "use client";
 
 import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import {
+  ChevronLeft,
+  ChevronRight,
   FolderTree,
   Layers,
+  Loader2,
   MoreHorizontal,
-  Package,
   Plus,
   Search,
   Sparkles,
 } from "lucide-react";
+import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { GroceryAnimatedLoader } from "@/components/shared/animated-loader";
+import { useAuth } from "@/features/auth/components/auth-provider";
 import { DashboardSurface } from "@/features/dashboard/components/dashboard-surface";
+import { ApiError } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
-const STATS = [
-  {
-    label: "Total Categories",
-    value: "14",
-    hint: "3 added this month",
-    icon: FolderTree,
-    iconBg: "bg-[#dcfce7]",
-    iconColor: "text-[#16a34a]",
-    cardBg: "bg-[#f0fdf4]",
-  },
-  {
-    label: "Active",
-    value: "12",
-    hint: "Visible on storefront",
-    icon: Sparkles,
-    iconBg: "bg-[#f3e8ff]",
-    iconColor: "text-[#9333ea]",
-    cardBg: "bg-[#faf5ff]",
-  },
-  {
-    label: "Products Linked",
-    value: "486",
-    hint: "Across all categories",
-    icon: Package,
-    iconBg: "bg-[#ffedd5]",
-    iconColor: "text-[#ea580c]",
-    cardBg: "bg-[#fff7ed]",
-  },
-  {
-    label: "Empty Categories",
-    value: "2",
-    hint: "No products yet",
-    icon: Layers,
-    iconBg: "bg-[#fee2e2]",
-    iconColor: "text-[#dc2626]",
-    cardBg: "bg-[#fef2f2]",
-  },
-] as const;
+import {
+  activateMerchantCategory,
+  deactivateMerchantCategory,
+  friendlyCategoryError,
+  listMerchantCategories,
+} from "../services";
+import type { MerchantCategory } from "../types/merchant-category";
+import { formatRelativeTime } from "../utils/format-relative-time";
 
-const CATEGORIES = [
-  {
-    id: "cat-1",
-    name: "Fruits & Vegetables",
-    slug: "fruits-vegetables",
-    products: 86,
-    status: "Active" as const,
-    emoji: "🥬",
-    updated: "2 hours ago",
-  },
-  {
-    id: "cat-2",
-    name: "Dairy & Eggs",
-    slug: "dairy-eggs",
-    products: 42,
-    status: "Active" as const,
-    emoji: "🥛",
-    updated: "Yesterday",
-  },
-  {
-    id: "cat-3",
-    name: "Bakery & Bread",
-    slug: "bakery-bread",
-    products: 28,
-    status: "Active" as const,
-    emoji: "🍞",
-    updated: "Yesterday",
-  },
-  {
-    id: "cat-4",
-    name: "Staples & Grains",
-    slug: "staples-grains",
-    products: 64,
-    status: "Active" as const,
-    emoji: "🍚",
-    updated: "3 days ago",
-  },
-  {
-    id: "cat-5",
-    name: "Snacks & Beverages",
-    slug: "snacks-beverages",
-    products: 51,
-    status: "Active" as const,
-    emoji: "🥤",
-    updated: "3 days ago",
-  },
-  {
-    id: "cat-6",
-    name: "Household Essentials",
-    slug: "household-essentials",
-    products: 0,
-    status: "Draft" as const,
-    emoji: "🧴",
-    updated: "1 week ago",
-  },
-] as const;
+import { CategoryDeleteDialog } from "./category-delete-dialog";
+import { CategoryFormDialog } from "./category-form-dialog";
+
+const LIST_LIMIT = 20;
+
+type ActiveFilter = "all" | "active" | "inactive";
 
 const STATUS_STYLES = {
-  Active: "bg-[#dcfce7] text-[#15803d]",
-  Draft: "bg-[#f3f4f6] text-[#4b5563]",
+  active: "bg-[#dcfce7] text-[#15803d]",
+  inactive: "bg-[#f3f4f6] text-[#4b5563]",
 } as const;
 
+function resolveIsActiveFilter(
+  filter: ActiveFilter,
+): boolean | undefined {
+  if (filter === "active") {
+    return true;
+  }
+  if (filter === "inactive") {
+    return false;
+  }
+  return undefined;
+}
+
 export function CategoriesScreen() {
+  const queryClient = useQueryClient();
+  const { user, isRegistered } = useAuth();
+
+  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter>("all");
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [formMode, setFormMode] = useState<"create" | "edit">("create");
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [formSession, setFormSession] = useState(0);
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<MerchantCategory | null>(null);
+
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      setDebouncedSearch(searchInput.trim());
+      setPage(1);
+    }, 300);
+    return () => window.clearTimeout(handle);
+  }, [searchInput]);
+
+  const listQueryKey = [
+    "merchant-categories",
+    page,
+    LIST_LIMIT,
+    debouncedSearch,
+    activeFilter,
+  ] as const;
+
+  const listEnabled = Boolean(user && isRegistered);
+
+  const listQuery = useQuery({
+    queryKey: listQueryKey,
+    queryFn: () =>
+      listMerchantCategories({
+        page,
+        limit: LIST_LIMIT,
+        search: debouncedSearch || undefined,
+        isActive: resolveIsActiveFilter(activeFilter),
+      }),
+    enabled: listEnabled,
+    placeholderData: keepPreviousData,
+    refetchOnWindowFocus: false,
+  });
+
+  const summaryQuery = useQuery({
+    queryKey: ["merchant-categories-summary"],
+    queryFn: () => listMerchantCategories({ page: 1, limit: 1 }),
+    enabled: listEnabled,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+
+  const activeTotalQuery = useQuery({
+    queryKey: ["merchant-categories-active-total"],
+    queryFn: () =>
+      listMerchantCategories({ page: 1, limit: 1, isActive: true }),
+    enabled: listEnabled,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+
+  useEffect(() => {
+    if (listQuery.error) {
+      toast.error(
+        listQuery.error instanceof ApiError
+          ? friendlyCategoryError(listQuery.error)
+          : "Unable to load categories.",
+      );
+    }
+  }, [listQuery.error]);
+
+  const refreshList = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["merchant-categories"] }),
+      queryClient.invalidateQueries({ queryKey: ["merchant-categories-summary"] }),
+      queryClient.invalidateQueries({
+        queryKey: ["merchant-categories-active-total"],
+      }),
+    ]);
+  };
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({
+      category,
+      nextActive,
+    }: {
+      category: MerchantCategory;
+      nextActive: boolean;
+    }) => {
+      if (nextActive) {
+        return activateMerchantCategory(category.id);
+      }
+      return deactivateMerchantCategory(category.id);
+    },
+    onSuccess: (_data, variables) => {
+      toast.success(
+        variables.nextActive ? "Category activated." : "Category deactivated.",
+      );
+      void refreshList();
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof ApiError
+          ? friendlyCategoryError(error)
+          : "Unable to update category status.",
+      );
+    },
+  });
+
+  const items = listQuery.data?.items ?? [];
+  const pagination = listQuery.data?.pagination;
+  const totalCount = summaryQuery.data?.pagination.total ?? 0;
+  const activeCount = activeTotalQuery.data?.pagination.total ?? 0;
+  const inactiveCount = Math.max(0, totalCount - activeCount);
+  const filteredTotal = pagination?.total ?? 0;
+
+  const stats = useMemo(
+    () => [
+      {
+        label: "Total Categories",
+        value: String(totalCount),
+        hint:
+          debouncedSearch || activeFilter !== "all"
+            ? `${filteredTotal} matching filters`
+            : "All categories",
+        icon: FolderTree,
+        iconBg: "bg-[#dcfce7]",
+        iconColor: "text-[#16a34a]",
+        cardBg: "bg-[#f0fdf4]",
+      },
+      {
+        label: "Active",
+        value: String(activeCount),
+        hint: "Visible on storefront",
+        icon: Sparkles,
+        iconBg: "bg-[#f3e8ff]",
+        iconColor: "text-[#9333ea]",
+        cardBg: "bg-[#faf5ff]",
+      },
+      {
+        label: "Inactive",
+        value: String(inactiveCount),
+        hint: "Hidden from customers",
+        icon: Layers,
+        iconBg: "bg-[#ffedd5]",
+        iconColor: "text-[#ea580c]",
+        cardBg: "bg-[#fff7ed]",
+      },
+    ],
+    [activeCount, activeFilter, debouncedSearch, filteredTotal, inactiveCount, totalCount],
+  );
+
+  const openCreate = () => {
+    setFormMode("create");
+    setEditingCategoryId(null);
+    setFormSession((value) => value + 1);
+    setFormOpen(true);
+  };
+
+  const openEdit = (category: MerchantCategory) => {
+    setFormMode("edit");
+    setEditingCategoryId(category.id);
+    setFormSession((value) => value + 1);
+    setFormOpen(true);
+  };
+
+  const openDelete = (category: MerchantCategory) => {
+    setDeleteTarget(category);
+    setDeleteOpen(true);
+  };
+
+  const initialLoading = listQuery.isLoading && !listQuery.data;
+
+  if (initialLoading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center py-16">
+        <GroceryAnimatedLoader
+          theme="dashboard"
+          label="Loading categories"
+          sublabel="Fetching your catalog"
+        />
+      </div>
+    );
+  }
+
+  const totalPages = pagination?.totalPages ?? 1;
+
   return (
     <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -130,15 +274,15 @@ export function CategoriesScreen() {
         <Button
           type="button"
           className="h-10 shrink-0 rounded-xl bg-[#16a34a] px-4 text-sm font-semibold text-white hover:bg-[#15803d]"
-          disabled
+          onClick={openCreate}
         >
           <Plus className="size-4" aria-hidden />
           Add Category
         </Button>
       </header>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {STATS.map((stat) => {
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {stats.map((stat) => {
           const Icon = stat.icon;
           return (
             <div
@@ -175,66 +319,213 @@ export function CategoriesScreen() {
               All Categories
             </h2>
             <p className="mt-0.5 text-xs text-[#9ca3af]">
-              Drag to reorder how they appear in your catalog (coming soon).
+              Sorted by display order, then name.
             </p>
           </div>
-          <div className="relative w-full sm:max-w-xs">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9ca3af]"
-              aria-hidden
-            />
-            <input
-              type="search"
-              placeholder="Search categories…"
-              disabled
-              className="h-10 w-full rounded-xl border border-[#e8eaef] bg-[#fafbfc] pl-10 pr-3 text-sm text-[#1a1f2e] placeholder:text-[#9ca3af] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a34a]/30"
-            />
+          <div className="flex w-full flex-col gap-2 sm:max-w-md sm:flex-row">
+            <div className="relative flex-1">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9ca3af]"
+                aria-hidden
+              />
+              <input
+                type="search"
+                placeholder="Search categories…"
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                className="h-10 w-full rounded-xl border border-[#e8eaef] bg-[#fafbfc] pl-10 pr-3 text-sm text-[#1a1f2e] placeholder:text-[#9ca3af] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a34a]/30"
+              />
+            </div>
+            <select
+              value={activeFilter}
+              onChange={(event) => {
+                setActiveFilter(event.target.value as ActiveFilter);
+                setPage(1);
+              }}
+              className="h-10 rounded-xl border border-[#e8eaef] bg-[#fafbfc] px-3 text-sm text-[#1a1f2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a34a]/30"
+              aria-label="Filter by status"
+            >
+              <option value="all">All statuses</option>
+              <option value="active">Active only</option>
+              <option value="inactive">Inactive only</option>
+            </select>
           </div>
         </div>
 
-        <ul className="divide-y divide-[#f0f1f4]">
-          {CATEGORIES.map((category) => (
-            <li
-              key={category.id}
-              className="flex items-center gap-3 px-5 py-4 transition hover:bg-[#fafbfc]"
-            >
-              <div
-                className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#f5f6f8] text-xl"
-                aria-hidden
-              >
-                {category.emoji}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-semibold text-[#1a1f2e]">
-                    {category.name}
-                  </p>
-                  <span
-                    className={cn(
-                      "rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                      STATUS_STYLES[category.status],
-                    )}
-                  >
-                    {category.status}
-                  </span>
-                </div>
-                <p className="mt-0.5 text-xs text-[#9ca3af]">
-                  /{category.slug} · {category.products} products · Updated{" "}
-                  {category.updated}
-                </p>
-              </div>
-              <button
+        {listQuery.isFetching && !listQuery.isLoading ? (
+          <div className="flex items-center gap-2 border-b border-[#f0f1f4] px-5 py-2 text-xs text-[#6b7280]">
+            <Loader2 className="size-3.5 animate-spin" aria-hidden />
+            Refreshing…
+          </div>
+        ) : null}
+
+        {items.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 px-5 py-16 text-center">
+            <p className="text-sm font-semibold text-[#1a1f2e]">
+              No categories found
+            </p>
+            <p className="max-w-sm text-sm text-[#6b7280]">
+              {debouncedSearch || activeFilter !== "all"
+                ? "Try adjusting your search or filters."
+                : "Create your first category to organize products."}
+            </p>
+            {!debouncedSearch && activeFilter === "all" ? (
+              <Button
                 type="button"
-                className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-[#eceef2] bg-white text-[#6b7280] transition hover:bg-[#fafbfc]"
-                aria-label={`Actions for ${category.name}`}
-                disabled
+                className="mt-2 bg-[#16a34a] text-white hover:bg-[#15803d]"
+                onClick={openCreate}
               >
-                <MoreHorizontal className="size-4" />
-              </button>
-            </li>
-          ))}
-        </ul>
+                <Plus className="size-4" aria-hidden />
+                Add Category
+              </Button>
+            ) : null}
+          </div>
+        ) : (
+          <ul className="divide-y divide-[#f0f1f4]">
+            {items.map((category) => (
+              <li
+                key={category.id}
+                className="flex items-center gap-3 px-5 py-4 transition hover:bg-[#fafbfc]"
+              >
+                <CategoryAvatar category={category} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-semibold text-[#1a1f2e]">
+                      {category.name}
+                    </p>
+                    <span
+                      className={cn(
+                        "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                        category.isActive
+                          ? STATUS_STYLES.active
+                          : STATUS_STYLES.inactive,
+                      )}
+                    >
+                      {category.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs text-[#9ca3af]">
+                    /{category.slug} · Order {category.displayOrder} · Updated{" "}
+                    {formatRelativeTime(category.updatedAt)}
+                  </p>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-[#eceef2] bg-white text-[#6b7280] transition hover:bg-[#fafbfc]"
+                      aria-label={`Actions for ${category.name}`}
+                    >
+                      <MoreHorizontal className="size-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuItem onClick={() => openEdit(category)}>
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        toggleActiveMutation.mutate({
+                          category,
+                          nextActive: !category.isActive,
+                        })
+                      }
+                      disabled={toggleActiveMutation.isPending}
+                    >
+                      {category.isActive ? "Deactivate" : "Activate"}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => openDelete(category)}
+                    >
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {totalPages > 1 ? (
+          <div className="flex items-center justify-between border-t border-[#f0f1f4] px-5 py-4">
+            <p className="text-xs text-[#6b7280]">
+              Page {pagination?.page ?? page} of {totalPages}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={page <= 1 || listQuery.isFetching}
+                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+              >
+                <ChevronLeft className="size-4" aria-hidden />
+                Previous
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages || listQuery.isFetching}
+                onClick={() => setPage((prev) => prev + 1)}
+              >
+                Next
+                <ChevronRight className="size-4" aria-hidden />
+              </Button>
+            </div>
+          </div>
+        ) : null}
       </DashboardSurface>
+
+      <CategoryFormDialog
+        key={`${formMode}-${editingCategoryId ?? "new"}-${formSession}`}
+        open={formOpen}
+        mode={formMode}
+        categoryId={editingCategoryId}
+        onOpenChange={setFormOpen}
+        onSuccess={() => {
+          void refreshList();
+        }}
+      />
+
+      <CategoryDeleteDialog
+        open={deleteOpen}
+        categoryName={deleteTarget?.name ?? ""}
+        categoryId={deleteTarget?.id ?? null}
+        onOpenChange={setDeleteOpen}
+        onDeleted={() => {
+          void refreshList();
+        }}
+      />
+    </div>
+  );
+}
+
+function CategoryAvatar({ category }: { category: MerchantCategory }) {
+  if (category.imageUrl) {
+    return (
+      <div className="relative size-12 shrink-0 overflow-hidden rounded-xl bg-[#f5f6f8]">
+        <Image
+          src={category.imageUrl}
+          alt=""
+          fill
+          className="object-cover"
+          sizes="48px"
+          unoptimized
+        />
+      </div>
+    );
+  }
+
+  const initial = category.name.trim().charAt(0).toUpperCase() || "?";
+  return (
+    <div
+      className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#f5f6f8] text-sm font-bold text-[#6b7280]"
+      aria-hidden
+    >
+      {initial}
     </div>
   );
 }
