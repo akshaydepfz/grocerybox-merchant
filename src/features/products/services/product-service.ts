@@ -1,4 +1,8 @@
-import { API_ENDPOINTS, merchantProductPath } from "@/lib/api/endpoints";
+import {
+  API_ENDPOINTS,
+  merchantProductImagesPath,
+  merchantProductPath,
+} from "@/lib/api/endpoints";
 import { apiClient } from "@/lib/api/client";
 import { envelopeErrorMessage, parseApiEnvelope } from "@/lib/api/envelope";
 import { ApiError } from "@/lib/api/types";
@@ -6,7 +10,11 @@ import { ApiError } from "@/lib/api/types";
 import {
   merchantProductFromJson,
   parseProductListData,
+  productCreateToJson,
+  productImagesAssociateToJson,
   type MerchantProduct,
+  type MerchantProductCreateInput,
+  type MerchantProductImageAssociateInput,
   type MerchantProductListParams,
   type MerchantProductListResult,
 } from "../types/merchant-product";
@@ -72,6 +80,30 @@ export async function listMerchantProducts(
 export async function getMerchantProduct(id: string): Promise<MerchantProduct> {
   const response = await apiClient.get(merchantProductPath(id));
   return assertProductPayload(response.data, response.status);
+}
+
+export async function createMerchantProduct(
+  input: MerchantProductCreateInput,
+): Promise<MerchantProduct> {
+  const response = await apiClient.post(
+    API_ENDPOINTS.merchantProducts,
+    productCreateToJson(input),
+  );
+  return assertProductPayload(response.data, response.status);
+}
+
+export async function associateMerchantProductImages(
+  productId: string,
+  images: MerchantProductImageAssociateInput[],
+): Promise<void> {
+  const response = await apiClient.post(
+    merchantProductImagesPath(productId),
+    productImagesAssociateToJson(images),
+  );
+  const envelope = parseApiEnvelope(response.data);
+  if (!envelope.success) {
+    throw new ApiError(envelopeErrorMessage(response.status, envelope), response.status);
+  }
 }
 
 export function friendlyProductError(error: ApiError): string {

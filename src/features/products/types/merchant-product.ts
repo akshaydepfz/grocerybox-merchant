@@ -94,6 +94,107 @@ export type MerchantProductListParams = {
   sortOrder?: MerchantProductSortOrder;
 };
 
+export type MerchantProductCreateInput = {
+  name: string;
+  categoryId: string;
+  subcategoryId?: string;
+  description?: string;
+  sellingPrice: number;
+  mrp?: number;
+  unitValue?: number;
+  unit: MerchantProductUnit;
+  stockQuantity?: number;
+  sku?: string;
+  barcode?: string;
+  brand?: string;
+  taxPercentage?: number;
+  minOrderQuantity?: number;
+  maxOrderQuantity?: number;
+  isFeatured?: boolean;
+  displayOrder?: number;
+  isActive?: boolean;
+};
+
+export type MerchantProductImageAssociateInput = {
+  imageUrl: string;
+  displayOrder: number;
+  isPrimary: boolean;
+};
+
+export function productCreateToJson(
+  input: MerchantProductCreateInput,
+): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    name: input.name.trim(),
+    category_id: input.categoryId.trim(),
+    selling_price: input.sellingPrice,
+    unit: input.unit,
+  };
+
+  if (input.subcategoryId?.trim()) {
+    body.subcategory_id = input.subcategoryId.trim();
+  }
+  if (input.description?.trim()) {
+    body.description = input.description.trim();
+  }
+  if (input.mrp != null && Number.isFinite(input.mrp)) {
+    body.mrp = input.mrp;
+  }
+  if (input.unitValue != null && Number.isFinite(input.unitValue)) {
+    body.unit_value = input.unitValue;
+  }
+  if (input.stockQuantity != null && Number.isFinite(input.stockQuantity)) {
+    body.stock_quantity = input.stockQuantity;
+  }
+  if (input.sku?.trim()) {
+    body.sku = input.sku.trim();
+  }
+  if (input.barcode?.trim()) {
+    body.barcode = input.barcode.trim();
+  }
+  if (input.brand?.trim()) {
+    body.brand = input.brand.trim();
+  }
+  if (input.taxPercentage != null && Number.isFinite(input.taxPercentage)) {
+    body.tax_percentage = input.taxPercentage;
+  }
+  if (
+    input.minOrderQuantity != null &&
+    Number.isFinite(input.minOrderQuantity)
+  ) {
+    body.min_order_quantity = input.minOrderQuantity;
+  }
+  if (
+    input.maxOrderQuantity != null &&
+    Number.isFinite(input.maxOrderQuantity)
+  ) {
+    body.max_order_quantity = input.maxOrderQuantity;
+  }
+  if (input.isFeatured != null) {
+    body.is_featured = input.isFeatured;
+  }
+  if (input.displayOrder != null) {
+    body.display_order = input.displayOrder;
+  }
+  if (input.isActive != null) {
+    body.is_active = input.isActive;
+  }
+
+  return body;
+}
+
+export function productImagesAssociateToJson(
+  images: MerchantProductImageAssociateInput[],
+): Record<string, unknown> {
+  return {
+    images: images.map((image) => ({
+      image_url: image.imageUrl,
+      display_order: image.displayOrder,
+      is_primary: image.isPrimary,
+    })),
+  };
+}
+
 function nullableString(value: unknown): string | null {
   if (value == null) return null;
   const text = String(value).trim();

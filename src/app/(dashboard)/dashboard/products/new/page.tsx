@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { ProductFormPlaceholderScreen } from "@/features/products/components";
+import { ProductCreateScreen } from "@/features/products/components";
 
 export const metadata: Metadata = {
   title: "Add Product | GroceryBox Merchant",
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function NewProductPage() {
-  return <ProductFormPlaceholderScreen mode="create" />;
+  return <ProductCreateScreen />;
 }

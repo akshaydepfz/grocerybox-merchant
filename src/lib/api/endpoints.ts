@@ -36,6 +36,7 @@ export const API_ENDPOINTS = {
   merchantCategories: `${API_V1_PREFIX}/merchant/categories`,
   merchantCategoryImageUpload: `${API_V1_PREFIX}/merchant/categories/images/upload`,
   merchantProducts: `${API_V1_PREFIX}/merchant/products`,
+  merchantProductImageUpload: `${API_V1_PREFIX}/merchant/products/images/upload`,
 } as const satisfies Record<string, string>;
 
 export function merchantCategoryPath(
@@ -78,6 +79,10 @@ export function merchantProductPath(
     return `${base}/${action}`;
   }
   return base;
+}
+
+export function merchantProductImagesPath(productId: string): string {
+  return `${merchantProductPath(productId)}/images`;
 }
 
 export type ApiEndpointKey = keyof typeof API_ENDPOINTS;
