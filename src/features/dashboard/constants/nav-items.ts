@@ -39,8 +39,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: "Orders",
     href: `${dashboardRoutePrefix}/orders`,
     icon: ShoppingCart,
-    available: false,
-    badge: 12,
+    available: true,
   },
   {
     id: "products",

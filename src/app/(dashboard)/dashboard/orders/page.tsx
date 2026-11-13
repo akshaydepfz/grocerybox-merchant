@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
+import { LoadingIndicator } from "@/components/shared/loading-indicator";
 import { OrdersScreen } from "@/features/orders/components";
 
 export const metadata: Metadata = {
@@ -8,5 +10,15 @@ export const metadata: Metadata = {
 };
 
 export default function OrdersPage() {
-  return <OrdersScreen />;
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[40vh] items-center justify-center">
+          <LoadingIndicator label="Loading orders" />
+        </div>
+      }
+    >
+      <OrdersScreen />
+    </Suspense>
+  );
 }
