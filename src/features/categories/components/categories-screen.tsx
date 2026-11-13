@@ -17,6 +17,7 @@ import {
   Search,
   Sparkles,
   Trash2,
+  ZoomIn,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -46,6 +47,7 @@ import type {
 
 import { CategoryDeleteDialog } from "./category-delete-dialog";
 import { CategoryFormDialog } from "./category-form-dialog";
+import { CategoryImagePreviewDialog } from "./category-image-preview-dialog";
 
 const LIST_LIMIT = 20;
 
@@ -84,6 +86,15 @@ export function CategoriesScreen() {
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<MerchantCategory | null>(null);
+
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
+  const [imagePreviewTarget, setImagePreviewTarget] =
+    useState<MerchantCategory | null>(null);
+
+  const openImagePreview = (category: MerchantCategory) => {
+    setImagePreviewTarget(category);
+    setImagePreviewOpen(true);
+  };
 
   useEffect(() => {
     const handle = window.setTimeout(() => {
@@ -461,7 +472,14 @@ export function CategoriesScreen() {
                     className="transition hover:bg-[#fafbfc]"
                   >
                     <td className="px-5 py-4">
-                      <CategoryAvatar category={category} />
+                      <CategoryAvatar
+                        category={category}
+                        onViewImage={
+                          category.imageUrl
+                            ? () => openImagePreview(category)
+                            : undefined
+                        }
+                      />
                     </td>
                     <td className="px-3 py-4">
                       <p className="font-semibold text-[#1a1f2e]">
@@ -525,6 +543,24 @@ export function CategoriesScreen() {
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-9 rounded-xl border-[#eceef2] px-3"
+                          disabled={!category.imageUrl}
+                          title={
+                            category.imageUrl
+                              ? "View category image"
+                              : "No category image"
+                          }
+                          onClick={() => openImagePreview(category)}
+                        >
+                          <ZoomIn className="size-3.5" aria-hidden />
+                          <span className="ml-1.5 hidden lg:inline">
+                            View image
+                          </span>
+                        </Button>
                         <Button
                           type="button"
                           variant="outline"
@@ -621,23 +657,54 @@ export function CategoriesScreen() {
           void refreshList();
         }}
       />
+
+      <CategoryImagePreviewDialog
+        open={imagePreviewOpen}
+        categoryName={imagePreviewTarget?.name ?? ""}
+        imageUrl={imagePreviewTarget?.imageUrl ?? null}
+        onOpenChange={setImagePreviewOpen}
+      />
     </DashboardPage>
   );
 }
 
-function CategoryAvatar({ category }: { category: MerchantCategory }) {
+function CategoryAvatar({
+  category,
+  onViewImage,
+}: {
+  category: MerchantCategory;
+  onViewImage?: () => void;
+}) {
   if (category.imageUrl) {
     return (
-      <div className="relative size-12 shrink-0 overflow-hidden rounded-xl bg-[#f5f6f8]">
+      <button
+        type="button"
+        onClick={onViewImage}
+        disabled={!onViewImage}
+        className={cn(
+          "group relative size-12 shrink-0 overflow-hidden rounded-xl bg-[#f5f6f8]",
+          onViewImage &&
+            "cursor-zoom-in ring-offset-2 transition hover:ring-2 hover:ring-[#16a34a]/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a34a]/40",
+        )}
+        aria-label={`View image for ${category.name}`}
+      >
         <Image
           src={category.imageUrl}
           alt=""
           fill
-          className="object-cover"
+          className="object-cover transition group-hover:scale-105"
           sizes="48px"
           unoptimized
         />
-      </div>
+        {onViewImage ? (
+          <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/25">
+            <ZoomIn
+              className="size-4 text-white opacity-0 drop-shadow transition group-hover:opacity-100"
+              aria-hidden
+            />
+          </span>
+        ) : null}
+      </button>
     );
   }
 
