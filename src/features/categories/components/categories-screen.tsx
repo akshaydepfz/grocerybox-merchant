@@ -12,23 +12,19 @@ import {
   FolderTree,
   Layers,
   Loader2,
-  MoreHorizontal,
+  Pencil,
   Plus,
   Search,
   Sparkles,
+  Trash2,
 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Switch } from "@/components/ui/switch";
+import { ErrorState } from "@/components/shared/error-state";
 import { GroceryAnimatedLoader } from "@/components/shared/animated-loader";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { DashboardSurface } from "@/features/dashboard/components/dashboard-surface";
@@ -41,8 +37,10 @@ import {
   friendlyCategoryError,
   listMerchantCategories,
 } from "../services";
-import type { MerchantCategory } from "../types/merchant-category";
-import { formatRelativeTime } from "../utils/format-relative-time";
+import type {
+  MerchantCategory,
+  MerchantCategoryListResult,
+} from "../types/merchant-category";
 
 import { CategoryDeleteDialog } from "./category-delete-dialog";
 import { CategoryFormDialog } from "./category-form-dialog";
@@ -167,18 +165,46 @@ export function CategoriesScreen() {
       }
       return deactivateMerchantCategory(category.id);
     },
+    onMutate: async ({ category, nextActive }) => {
+      await queryClient.cancelQueries({ queryKey: ["merchant-categories"] });
+      const previous = queryClient.getQueryData<MerchantCategoryListResult>(
+        listQueryKey,
+      );
+      queryClient.setQueryData<MerchantCategoryListResult>(
+        listQueryKey,
+        (current) => {
+          if (!current) {
+            return current;
+          }
+          return {
+            ...current,
+            items: current.items.map((item) =>
+              item.id === category.id
+                ? { ...item, isActive: nextActive }
+                : item,
+            ),
+          };
+        },
+      );
+      return { previous };
+    },
     onSuccess: (_data, variables) => {
       toast.success(
         variables.nextActive ? "Category activated." : "Category deactivated.",
       );
-      void refreshList();
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(listQueryKey, context.previous);
+      }
       toast.error(
         error instanceof ApiError
           ? friendlyCategoryError(error)
           : "Unable to update category status.",
       );
+    },
+    onSettled: () => {
+      void refreshList();
     },
   });
 
@@ -245,6 +271,7 @@ export function CategoriesScreen() {
   };
 
   const initialLoading = listQuery.isLoading && !listQuery.data;
+  const listFailed = listQuery.isError && !listQuery.data;
 
   if (initialLoading) {
     return (
@@ -258,7 +285,27 @@ export function CategoriesScreen() {
     );
   }
 
+  if (listFailed) {
+    const message =
+      listQuery.error instanceof ApiError
+        ? friendlyCategoryError(listQuery.error)
+        : "Unable to load categories.";
+    return (
+      <div className="mx-auto w-full max-w-[1200px] py-8">
+        <ErrorState
+          title="Could not load categories"
+          message={message}
+          onRetry={() => void listQuery.refetch()}
+        />
+      </div>
+    );
+  }
+
   const totalPages = pagination?.totalPages ?? 1;
+
+  const isToggling = (categoryId: string) =>
+    toggleActiveMutation.isPending &&
+    toggleActiveMutation.variables?.category.id === categoryId;
 
   return (
     <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6">
@@ -268,7 +315,7 @@ export function CategoriesScreen() {
             Categories
           </h1>
           <p className="mt-1 text-sm text-[#6b7280]">
-            Group products so customers can browse your store easily.
+            Manage the categories displayed in your store.
           </p>
         </div>
         <Button
@@ -345,9 +392,9 @@ export function CategoriesScreen() {
               className="h-10 rounded-xl border border-[#e8eaef] bg-[#fafbfc] px-3 text-sm text-[#1a1f2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a34a]/30"
               aria-label="Filter by status"
             >
-              <option value="all">All statuses</option>
-              <option value="active">Active only</option>
-              <option value="inactive">Inactive only</option>
+              <option value="all">All categories</option>
+              <option value="active">Active categories</option>
+              <option value="inactive">Inactive categories</option>
             </select>
           </div>
         </div>
@@ -381,71 +428,123 @@ export function CategoriesScreen() {
             ) : null}
           </div>
         ) : (
-          <ul className="divide-y divide-[#f0f1f4]">
-            {items.map((category) => (
-              <li
-                key={category.id}
-                className="flex items-center gap-3 px-5 py-4 transition hover:bg-[#fafbfc]"
-              >
-                <CategoryAvatar category={category} />
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-semibold text-[#1a1f2e]">
-                      {category.name}
-                    </p>
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                        category.isActive
-                          ? STATUS_STYLES.active
-                          : STATUS_STYLES.inactive,
-                      )}
-                    >
-                      {category.isActive ? "Active" : "Inactive"}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 text-xs text-[#9ca3af]">
-                    /{category.slug} · Order {category.displayOrder} · Updated{" "}
-                    {formatRelativeTime(category.updatedAt)}
-                  </p>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-[#eceef2] bg-white text-[#6b7280] transition hover:bg-[#fafbfc]"
-                      aria-label={`Actions for ${category.name}`}
-                    >
-                      <MoreHorizontal className="size-4" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44">
-                    <DropdownMenuItem onClick={() => openEdit(category)}>
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() =>
-                        toggleActiveMutation.mutate({
-                          category,
-                          nextActive: !category.isActive,
-                        })
-                      }
-                      disabled={toggleActiveMutation.isPending}
-                    >
-                      {category.isActive ? "Deactivate" : "Activate"}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      variant="destructive"
-                      onClick={() => openDelete(category)}
-                    >
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </li>
-            ))}
-          </ul>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+              <thead>
+                <tr className="border-b border-[#f0f1f4] bg-[#fafbfc] text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+                  <th className="px-5 py-3 font-semibold" scope="col">
+                    Image
+                  </th>
+                  <th className="px-3 py-3 font-semibold" scope="col">
+                    Name
+                  </th>
+                  <th className="hidden px-3 py-3 font-semibold sm:table-cell" scope="col">
+                    Slug
+                  </th>
+                  <th className="px-3 py-3 font-semibold" scope="col">
+                    Order
+                  </th>
+                  <th className="px-3 py-3 font-semibold" scope="col">
+                    Status
+                  </th>
+                  <th className="px-5 py-3 text-right font-semibold" scope="col">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#f0f1f4]">
+                {items.map((category) => (
+                  <tr
+                    key={category.id}
+                    className="transition hover:bg-[#fafbfc]"
+                  >
+                    <td className="px-5 py-4">
+                      <CategoryAvatar category={category} />
+                    </td>
+                    <td className="px-3 py-4">
+                      <p className="font-semibold text-[#1a1f2e]">
+                        {category.name}
+                      </p>
+                      <p className="mt-0.5 text-xs text-[#9ca3af] sm:hidden">
+                        /{category.slug}
+                      </p>
+                    </td>
+                    <td className="hidden px-3 py-4 text-[#6b7280] sm:table-cell">
+                      /{category.slug}
+                    </td>
+                    <td className="px-3 py-4 tabular-nums text-[#6b7280]">
+                      {category.displayOrder}
+                    </td>
+                    <td className="px-3 py-4">
+                      <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={category.isActive}
+                            disabled={isToggling(category.id)}
+                            aria-label={
+                              category.isActive
+                                ? `Deactivate ${category.name}`
+                                : `Activate ${category.name}`
+                            }
+                            className="data-[state=checked]:bg-[#16a34a]"
+                            onCheckedChange={(checked) => {
+                              if (isToggling(category.id)) {
+                                return;
+                              }
+                              toggleActiveMutation.mutate({
+                                category,
+                                nextActive: checked,
+                              });
+                            }}
+                          />
+                          {isToggling(category.id) ? (
+                            <Loader2
+                              className="size-3.5 animate-spin text-[#6b7280]"
+                              aria-hidden
+                            />
+                          ) : null}
+                        </div>
+                        <span
+                          className={cn(
+                            "inline-flex w-fit rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                            category.isActive
+                              ? STATUS_STYLES.active
+                              : STATUS_STYLES.inactive,
+                          )}
+                        >
+                          {category.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-9 rounded-xl border-[#eceef2] px-3"
+                          onClick={() => openEdit(category)}
+                        >
+                          <Pencil className="size-3.5" aria-hidden />
+                          <span className="ml-1.5 hidden sm:inline">Edit</span>
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-9 rounded-xl border-[#eceef2] px-3 text-destructive hover:bg-destructive/5 hover:text-destructive"
+                          onClick={() => openDelete(category)}
+                        >
+                          <Trash2 className="size-3.5" aria-hidden />
+                          <span className="ml-1.5 hidden sm:inline">Delete</span>
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {totalPages > 1 ? (

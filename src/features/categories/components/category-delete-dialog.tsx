@@ -61,9 +61,10 @@ export function CategoryDeleteDialog({
         <DialogHeader>
           <DialogTitle>Delete category</DialogTitle>
           <DialogDescription>
-            Delete &quot;{categoryName}&quot;? This cannot be undone. Categories
-            with linked products cannot be deleted until those products are
-            reassigned.
+            You are about to permanently delete &quot;{categoryName}&quot;.
+            This action cannot be undone. If products are assigned to this
+            category, deletion will be blocked until those products are
+            reassigned elsewhere.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2 sm:gap-0">

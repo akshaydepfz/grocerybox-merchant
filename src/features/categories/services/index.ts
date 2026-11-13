@@ -8,3 +8,8 @@ export {
   listMerchantCategories,
   updateMerchantCategory,
 } from "./category-service";
+
+export {
+  friendlyCategoryImageUploadMessage,
+  uploadMerchantCategoryImage,
+} from "./category-image-upload-service";

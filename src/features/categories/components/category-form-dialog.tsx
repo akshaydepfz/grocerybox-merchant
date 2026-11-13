@@ -22,10 +22,19 @@ import { ApiError } from "@/lib/api/types";
 import {
   createMerchantCategory,
   friendlyCategoryError,
+  friendlyCategoryImageUploadMessage,
   getMerchantCategory,
   updateMerchantCategory,
+  uploadMerchantCategoryImage,
 } from "../services";
 import type { MerchantCategory } from "../types/merchant-category";
+import { revokeCategoryPreview } from "../validators/category-image-validator";
+
+import {
+  CategoryImageUpload,
+  emptyCategoryImageField,
+  type CategoryImageFieldValue,
+} from "./category-image-upload";
 
 type CategoryFormDialogProps = {
   open: boolean;
@@ -37,14 +46,12 @@ type CategoryFormDialogProps = {
 
 type FormState = {
   name: string;
-  imageUrl: string;
   displayOrder: string;
   isActive: boolean;
 };
 
 const defaultForm = (): FormState => ({
   name: "",
-  imageUrl: "",
   displayOrder: "0",
   isActive: true,
 });
@@ -52,7 +59,6 @@ const defaultForm = (): FormState => ({
 function formFromCategory(category: MerchantCategory): FormState {
   return {
     name: category.name,
-    imageUrl: category.imageUrl ?? "",
     displayOrder: String(category.displayOrder),
     isActive: category.isActive,
   };
@@ -66,6 +72,11 @@ export function CategoryFormDialog({
   onSuccess,
 }: CategoryFormDialogProps) {
   const [draft, setDraft] = useState<FormState | null>(null);
+  const [imageField, setImageField] = useState<CategoryImageFieldValue>(
+    emptyCategoryImageField(),
+  );
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const editQuery = useQuery({
@@ -88,8 +99,9 @@ export function CategoryFormDialog({
     setDraft((prev) => ({ ...(prev ?? baseForm), ...patch }));
   };
 
-  const initialImageUrl = editQuery.data?.imageUrl ?? null;
+  const existingImageUrl = editQuery.data?.imageUrl ?? null;
   const loadingDetail = mode === "edit" && editQuery.isLoading;
+  const busy = submitting || uploadProgress != null;
 
   useEffect(() => {
     if (editQuery.error) {
@@ -102,9 +114,41 @@ export function CategoryFormDialog({
     }
   }, [editQuery.error, onOpenChange]);
 
+  useEffect(() => {
+    return () => {
+      revokeCategoryPreview(imageField.previewUrl);
+    };
+  }, [imageField.previewUrl]);
+
+  const resolveImageForSubmit = async (): Promise<{
+    imageUrl?: string | null;
+    touchImageUrl?: boolean;
+  }> => {
+    if (imageField.pendingFile) {
+      const uploaded = await uploadMerchantCategoryImage({
+        file: imageField.pendingFile,
+        categoryId: mode === "edit" ? categoryId ?? undefined : undefined,
+        onProgress: setUploadProgress,
+      });
+      return {
+        imageUrl: uploaded.imageUrl,
+        touchImageUrl: mode === "edit",
+      };
+    }
+
+    if (mode === "edit" && imageField.removed && existingImageUrl) {
+      return {
+        imageUrl: null,
+        touchImageUrl: true,
+      };
+    }
+
+    return {};
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (submitting || loadingDetail) {
+    if (busy || loadingDetail) {
       return;
     }
 
@@ -120,26 +164,47 @@ export function CategoryFormDialog({
       return;
     }
 
-    const trimmedImageUrl = form.imageUrl.trim();
     setSubmitting(true);
+    setImageError(null);
+    setUploadProgress(null);
+
+  let imagePatch: Awaited<ReturnType<typeof resolveImageForSubmit>> = {};
+
+    try {
+      imagePatch = await resolveImageForSubmit();
+    } catch (error) {
+      const message =
+        error instanceof ApiError
+          ? friendlyCategoryImageUploadMessage(error)
+          : "Unable to upload category image.";
+      setImageError(message);
+      toast.error(message);
+      setSubmitting(false);
+      setUploadProgress(null);
+      return;
+    }
+
     try {
       if (mode === "create") {
         await createMerchantCategory({
           name,
           displayOrder,
           isActive: form.isActive,
-          imageUrl: trimmedImageUrl.length > 0 ? trimmedImageUrl : null,
+          imageUrl:
+            imagePatch.imageUrl && imagePatch.imageUrl.length > 0
+              ? imagePatch.imageUrl
+              : null,
         });
         toast.success("Category created.");
       } else if (categoryId) {
-        const imageChanged =
-          trimmedImageUrl !== (initialImageUrl ?? "").trim();
         await updateMerchantCategory(categoryId, {
           name,
           displayOrder,
           isActive: form.isActive,
-          touchImageUrl: imageChanged,
-          imageUrl: trimmedImageUrl.length > 0 ? trimmedImageUrl : null,
+          touchImageUrl: imagePatch.touchImageUrl,
+          imageUrl: imagePatch.touchImageUrl
+            ? (imagePatch.imageUrl ?? null)
+            : undefined,
         });
         toast.success("Category updated.");
       } else {
@@ -155,6 +220,7 @@ export function CategoryFormDialog({
       toast.error(message);
     } finally {
       setSubmitting(false);
+      setUploadProgress(null);
     }
   };
 
@@ -166,7 +232,7 @@ export function CategoryFormDialog({
             {mode === "create" ? "Add category" : "Edit category"}
           </DialogTitle>
           <DialogDescription>
-            Categories group products on your storefront. Image URL is optional.
+            Categories group products on your storefront.
           </DialogDescription>
         </DialogHeader>
 
@@ -178,32 +244,32 @@ export function CategoryFormDialog({
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="space-y-2">
-              <Label htmlFor="category-name">Name</Label>
+              <Label htmlFor="category-name">Category name</Label>
               <Input
                 id="category-name"
                 value={form.name}
                 onChange={(event) => setForm({ name: event.target.value })}
                 placeholder="Fruits & Vegetables"
-                disabled={submitting}
+                disabled={busy}
                 autoFocus
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="category-image-url">Image URL (optional)</Label>
-              <Input
-                id="category-image-url"
-                value={form.imageUrl}
-                onChange={(event) => setForm({ imageUrl: event.target.value })}
-                placeholder="https://cdn.example.com/category.webp"
-                disabled={submitting}
-                inputMode="url"
-              />
-              <p className="text-xs text-[#9ca3af]">
-                Paste a hosted image URL. Merchant category file upload is not
-                exposed on the API yet (store branding uses multipart upload).
-              </p>
-            </div>
+            <CategoryImageUpload
+              existingUrl={existingImageUrl}
+              value={imageField}
+              onChange={(next) => {
+                setImageError(null);
+                setImageField(next);
+              }}
+              uploadProgress={uploadProgress}
+              error={imageError}
+              disabled={busy}
+              onValidationError={(message) => {
+                setImageError(message);
+                toast.error(message);
+              }}
+            />
 
             <div className="space-y-2">
               <Label htmlFor="category-display-order">Display order</Label>
@@ -215,7 +281,7 @@ export function CategoryFormDialog({
                 onChange={(event) =>
                   setForm({ displayOrder: event.target.value })
                 }
-                disabled={submitting}
+                disabled={busy}
               />
             </div>
 
@@ -229,7 +295,7 @@ export function CategoryFormDialog({
               <Switch
                 checked={form.isActive}
                 onCheckedChange={(checked) => setForm({ isActive: checked })}
-                disabled={submitting}
+                disabled={busy}
               />
             </div>
 
@@ -238,25 +304,25 @@ export function CategoryFormDialog({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                disabled={submitting}
+                disabled={busy}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 className="bg-[#16a34a] text-white hover:bg-[#15803d]"
-                disabled={submitting}
+                disabled={busy}
               >
-                {submitting ? (
+                {busy ? (
                   <>
                     <Loader2 className="size-4 animate-spin" aria-hidden />
-                    Saving…
+                    {uploadProgress != null ? "Uploading…" : "Saving…"}
                   </>
                 ) : mode === "create" ? (
                   "Create category"
-                ) :
+                ) : (
                   "Save changes"
-                }
+                )}
               </Button>
             </DialogFooter>
           </form>
