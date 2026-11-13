@@ -96,7 +96,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: "Store Settings",
     href: `${dashboardRoutePrefix}/settings`,
     icon: Settings,
-    available: false,
+    available: true,
   },
   {
     id: "payments",

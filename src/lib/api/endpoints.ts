@@ -29,6 +29,7 @@ export const API_ENDPOINTS = {
   merchantOnboardingReview: `${API_V1_PREFIX}/merchant/onboarding/review`,
   merchantStorePublish: `${API_V1_PREFIX}/merchant/store/publish`,
   merchantStoreConfig: `${API_V1_PREFIX}/merchant/store/config`,
+  merchantStoreSettings: `${API_V1_PREFIX}/merchant/store/settings`,
   subscriptionPlans: `${API_V1_PREFIX}/subscription/plans`,
   merchantSubscription: `${API_V1_PREFIX}/merchant/subscription`,
   merchantSubscriptionSelect: `${API_V1_PREFIX}/merchant/subscription/select`,
