@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
 import type { MerchantCoupon, MerchantCouponDraft } from "../types/merchant-coupon";
 
@@ -61,25 +61,17 @@ function getServerSnapshot(): MerchantCoupon[] {
   return [];
 }
 
-function getHydratedSnapshot(): boolean {
-  return true;
-}
-
-function getHydratedServerSnapshot(): boolean {
-  return false;
-}
-
 export function useMerchantCoupons() {
   const coupons = useSyncExternalStore(
     subscribe,
     getSnapshot,
     getServerSnapshot,
   );
-  const hydrated = useSyncExternalStore(
-    subscribe,
-    getHydratedSnapshot,
-    getHydratedServerSnapshot,
-  );
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   const addCoupon = useCallback((draft: MerchantCouponDraft) => {
     const next: MerchantCoupon = {
