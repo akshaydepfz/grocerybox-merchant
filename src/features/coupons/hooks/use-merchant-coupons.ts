@@ -7,33 +7,57 @@ import type { MerchantCoupon, MerchantCouponDraft } from "../types/merchant-coup
 const STORAGE_KEY = "grocerybox-merchant-coupons-v1";
 const COUPON_STORE_EVENT = "grocerybox-merchant-coupons-changed";
 
-function readStoredCoupons(): MerchantCoupon[] {
-  if (typeof window === "undefined") {
-    return [];
+const EMPTY_COUPONS: MerchantCoupon[] = [];
+
+function isMerchantCoupon(item: unknown): item is MerchantCoupon {
+  if (typeof item !== "object" || item === null) {
+    return false;
+  }
+  const c = item as MerchantCoupon;
+  return (
+    typeof c.id === "string" &&
+    typeof c.code === "string" &&
+    typeof c.title === "string" &&
+    (c.discountType === "percent" || c.discountType === "flat") &&
+    typeof c.discountValue === "number" &&
+    typeof c.usedCount === "number" &&
+    typeof c.isActive === "boolean"
+  );
+}
+
+function parseStoredCoupons(raw: string | null): MerchantCoupon[] {
+  if (!raw) {
+    return EMPTY_COUPONS;
   }
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return [];
-    }
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) {
-      return [];
+      return EMPTY_COUPONS;
     }
-    return parsed.filter(
-      (item): item is MerchantCoupon =>
-        typeof item === "object" &&
-        item !== null &&
-        typeof (item as MerchantCoupon).id === "string" &&
-        typeof (item as MerchantCoupon).code === "string",
-    );
+    const coupons = parsed.filter(isMerchantCoupon);
+    return coupons.length === 0 ? EMPTY_COUPONS : coupons;
   } catch {
-    return [];
+    return EMPTY_COUPONS;
   }
+}
+
+function readStoredCoupons(): MerchantCoupon[] {
+  if (typeof window === "undefined") {
+    return EMPTY_COUPONS;
+  }
+  return parseStoredCoupons(window.localStorage.getItem(STORAGE_KEY));
+}
+
+let cachedStorageRaw: string | null | undefined;
+let cachedSnapshot: MerchantCoupon[] = EMPTY_COUPONS;
+
+function invalidateCouponSnapshot() {
+  cachedStorageRaw = undefined;
 }
 
 function persistCoupons(coupons: MerchantCoupon[]) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(coupons));
+  invalidateCouponSnapshot();
 }
 
 function notifyCouponStore() {
@@ -44,7 +68,10 @@ function subscribe(onStoreChange: () => void) {
   if (typeof window === "undefined") {
     return () => {};
   }
-  const handler = () => onStoreChange();
+  const handler = () => {
+    invalidateCouponSnapshot();
+    onStoreChange();
+  };
   window.addEventListener(COUPON_STORE_EVENT, handler);
   window.addEventListener("storage", handler);
   return () => {
@@ -54,11 +81,20 @@ function subscribe(onStoreChange: () => void) {
 }
 
 function getSnapshot(): MerchantCoupon[] {
-  return readStoredCoupons();
+  if (typeof window === "undefined") {
+    return EMPTY_COUPONS;
+  }
+  const raw = window.localStorage.getItem(STORAGE_KEY);
+  if (cachedStorageRaw !== undefined && raw === cachedStorageRaw) {
+    return cachedSnapshot;
+  }
+  cachedStorageRaw = raw;
+  cachedSnapshot = parseStoredCoupons(raw);
+  return cachedSnapshot;
 }
 
 function getServerSnapshot(): MerchantCoupon[] {
-  return [];
+  return EMPTY_COUPONS;
 }
 
 export function useMerchantCoupons() {
