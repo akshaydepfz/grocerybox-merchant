@@ -26,8 +26,6 @@ import { AppLogoImage, GroceryBrandLogo } from "@/components/branding/app-logo";
 import { useAuth } from "./auth-provider";
 import { GoogleGlyph } from "./google-glyph";
 
-const MERCHANT_DETAILS_PATH = "/onboarding/merchant-details";
-
 export function LoginScreen() {
   const router = useRouter();
   const isWide = useMediaQuery("(min-width: 900px)");
@@ -79,8 +77,8 @@ export function LoginScreen() {
   }, [isGoogleSigningIn]);
 
   const handleEmailContinue = useCallback(() => {
-    router.push(MERCHANT_DETAILS_PATH);
-  }, [router]);
+    toast.message("Sign in with Google to register your merchant account.");
+  }, []);
 
   if (!isAuthReady) {
     return <FullScreenSpinner />;

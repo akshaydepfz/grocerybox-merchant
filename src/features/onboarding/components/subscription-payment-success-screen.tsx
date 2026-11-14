@@ -18,7 +18,11 @@ import {
 } from "./merchant-onboarding-layout";
 
 const PLAN_PATH = "/onboarding/plan";
+const MERCHANT_DETAILS_PATH = "/onboarding/merchant-details";
 const ONBOARDING_REVIEW_PATH = "/onboarding/review";
+const AFTER_PAYMENT_PATH = SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT
+  ? ONBOARDING_REVIEW_PATH
+  : MERCHANT_DETAILS_PATH;
 const PLAN_PROGRESS_STEP = 7;
 const PLAN_PROGRESS_TOTAL = 7;
 
@@ -49,8 +53,12 @@ export function SubscriptionPaymentSuccessScreen() {
       footer={
         <OnboardingFormFooter
           onBack={() => router.push(PLAN_PATH)}
-          onContinue={() => router.push(ONBOARDING_REVIEW_PATH)}
-          continueLabel="Continue to Review"
+          onContinue={() => router.push(AFTER_PAYMENT_PATH)}
+          continueLabel={
+            SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT
+              ? "Continue to Review"
+              : "Continue to setup"
+          }
         />
       }
     >

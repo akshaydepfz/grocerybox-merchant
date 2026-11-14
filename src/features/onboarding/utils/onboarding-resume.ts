@@ -24,15 +24,53 @@ export const ONBOARDING_SECTION_PATHS: Record<string, string> = {
 };
 
 export const ONBOARDING_REVIEW_PATH = "/onboarding/review";
+export const ONBOARDING_PLAN_PATH = ONBOARDING_SECTION_PATHS.subscription_plan;
+export const ONBOARDING_PLAN_SUCCESS_PATH = "/onboarding/plan/success";
+export const ONBOARDING_PAYMENT_PATHS = [
+  ONBOARDING_PLAN_PATH,
+  ONBOARDING_PLAN_SUCCESS_PATH,
+] as const;
 export const DASHBOARD_PATH = dashboardRoutePrefix;
 
-const DEFAULT_RESUME_PATH = ONBOARDING_SECTION_PATHS.business_information;
+const DEFAULT_RESUME_PATH = SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT
+  ? ONBOARDING_SECTION_PATHS.business_information
+  : ONBOARDING_PLAN_PATH;
 
+/** Post-sign-in resume order; subscription is checked right after account registration when payment is required. */
 function onboardingSectionOrder(): readonly (typeof ONBOARDING_SECTION_ORDER)[number][] {
   if (SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT) {
     return ONBOARDING_SECTION_ORDER.filter((key) => key !== "subscription_plan");
   }
-  return ONBOARDING_SECTION_ORDER;
+  return [
+    "merchant_account",
+    "subscription_plan",
+    "business_information",
+    "store_identity",
+    "store_branding",
+    "store_location",
+    "store_configuration",
+  ];
+}
+
+export function isSubscriptionOnboardingComplete(
+  review: OnboardingReview,
+): boolean {
+  if (SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT) {
+    return true;
+  }
+  const planSection = review.sections.find(
+    (section) => section.key === "subscription_plan",
+  );
+  if (planSection?.complete) {
+    return true;
+  }
+  return review.subscriptionPublishStatus === "active";
+}
+
+export function isOnboardingPaymentPath(pathname: string): boolean {
+  return ONBOARDING_PAYMENT_PATHS.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  );
 }
 
 export function findFirstIncompleteSection(

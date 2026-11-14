@@ -5,14 +5,18 @@ import { useMemo } from "react";
 
 import { useAuth } from "@/features/auth/components/auth-provider";
 
+import { SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT } from "../constants";
 import { fetchOnboardingReview } from "../services/onboarding-review-service";
 import {
   DASHBOARD_PATH,
+  ONBOARDING_PLAN_PATH,
   ONBOARDING_SECTION_PATHS,
   resolvePostAuthPath,
 } from "../utils/onboarding-resume";
 
-const FALLBACK_DESTINATION = ONBOARDING_SECTION_PATHS.business_information;
+const FALLBACK_DESTINATION = SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT
+  ? ONBOARDING_SECTION_PATHS.business_information
+  : ONBOARDING_PLAN_PATH;
 
 export function usePostAuthDestination() {
   const { user, isRegistered, isRegistering } = useAuth();
