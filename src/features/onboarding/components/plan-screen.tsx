@@ -37,6 +37,7 @@ import {
   RazorpayInfoBanner,
 } from "./plan-parts";
 
+const STORE_CONFIG_PATH = "/onboarding/store-config";
 const PLAN_SUCCESS_PATH = "/onboarding/plan/success";
 const ONBOARDING_REVIEW_PATH = "/onboarding/review";
 const PLAN_PROGRESS_STEP = 7;
@@ -245,6 +246,7 @@ export function PlanScreen() {
       currentStep={6}
       footer={
         <OnboardingFormFooter
+          onBack={() => router.push(STORE_CONFIG_PATH)}
           onContinue={
             isLoadingPlans ? undefined : () => void handleContinueToPayment()
           }

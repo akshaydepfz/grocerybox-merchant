@@ -1,6 +1,6 @@
 /**
  * Skip the Choose Plan / Razorpay step during onboarding (dev or promo registration).
- * When `false`, merchants must complete payment before other onboarding screens open.
+ * When `false`, payment is still the last onboarding step (after store configuration).
  */
 export const SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT = false;
 

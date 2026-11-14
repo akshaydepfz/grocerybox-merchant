@@ -32,24 +32,14 @@ export const ONBOARDING_PAYMENT_PATHS = [
 ] as const;
 export const DASHBOARD_PATH = dashboardRoutePrefix;
 
-const DEFAULT_RESUME_PATH = SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT
-  ? ONBOARDING_SECTION_PATHS.business_information
-  : ONBOARDING_PLAN_PATH;
+const DEFAULT_RESUME_PATH = ONBOARDING_SECTION_PATHS.business_information;
 
-/** Post-sign-in resume order; subscription is checked right after account registration when payment is required. */
+/** Same sequence as backend publish validation; payment is last when enabled. */
 function onboardingSectionOrder(): readonly (typeof ONBOARDING_SECTION_ORDER)[number][] {
   if (SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT) {
     return ONBOARDING_SECTION_ORDER.filter((key) => key !== "subscription_plan");
   }
-  return [
-    "merchant_account",
-    "subscription_plan",
-    "business_information",
-    "store_identity",
-    "store_branding",
-    "store_location",
-    "store_configuration",
-  ];
+  return ONBOARDING_SECTION_ORDER;
 }
 
 export function isSubscriptionOnboardingComplete(

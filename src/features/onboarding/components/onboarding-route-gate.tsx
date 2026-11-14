@@ -9,20 +9,23 @@ import { useAuth } from "@/features/auth/components/auth-provider";
 import { SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT } from "../constants";
 import { usePostAuthDestination } from "../hooks/use-post-auth-destination";
 import {
+  findFirstIncompleteSection,
   isOnboardingPaymentPath,
-  isSubscriptionOnboardingComplete,
-  ONBOARDING_PLAN_PATH,
+  ONBOARDING_SECTION_PATHS,
 } from "../utils/onboarding-resume";
 
 const LOGIN_PATH = "/login";
 
+/**
+ * Requires sign-in + merchant registration for onboarding routes.
+ * Keeps plan/payment as the last step — not before business/store setup.
+ */
 export function OnboardingRouteGate({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, isAuthReady, isRegistered, isRegistering } = useAuth();
   const { review, isResolving } = usePostAuthDestination();
 
-  const paymentRequired = !SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT;
   const onPaymentRoute = isOnboardingPaymentPath(pathname);
 
   useEffect(() => {
@@ -37,17 +40,19 @@ export function OnboardingRouteGate({ children }: { children: ReactNode }) {
       router.replace(LOGIN_PATH);
       return;
     }
-    if (!isRegistered || isRegistering || isResolving) {
+    if (!isRegistered || isRegistering || isResolving || !review) {
       return;
     }
-    if (!paymentRequired || !review) {
+    if (SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT || !onPaymentRoute) {
       return;
     }
-    if (
-      !isSubscriptionOnboardingComplete(review) &&
-      !onPaymentRoute
-    ) {
-      router.replace(ONBOARDING_PLAN_PATH);
+
+    const incomplete = findFirstIncompleteSection(review.sections);
+    if (incomplete && incomplete.key !== "subscription_plan") {
+      const resumePath = ONBOARDING_SECTION_PATHS[incomplete.key];
+      if (resumePath) {
+        router.replace(resumePath);
+      }
     }
   }, [
     isAuthReady,
@@ -55,7 +60,6 @@ export function OnboardingRouteGate({ children }: { children: ReactNode }) {
     isRegistering,
     isResolving,
     onPaymentRoute,
-    paymentRequired,
     review,
     router,
     user,
@@ -74,11 +78,11 @@ export function OnboardingRouteGate({ children }: { children: ReactNode }) {
       : isResolving
         ? {
             label: "Preparing onboarding",
-            sublabel: "Checking subscription and progress…",
+            sublabel: "Loading your progress…",
           }
         : {
             label: "Redirecting",
-            sublabel: "Complete payment to continue setup…",
+            sublabel: "Taking you to the right step…",
           };
 
   if (
@@ -87,22 +91,6 @@ export function OnboardingRouteGate({ children }: { children: ReactNode }) {
     isRegistering ||
     isResolving ||
     (!isRegistered && !isRegistering)
-  ) {
-    return (
-      <GroceryAnimatedLoader
-        fullScreen
-        theme="dashboard"
-        label={loadingCopy.label}
-        sublabel={loadingCopy.sublabel}
-      />
-    );
-  }
-
-  if (
-    paymentRequired &&
-    review &&
-    !isSubscriptionOnboardingComplete(review) &&
-    !onPaymentRoute
   ) {
     return (
       <GroceryAnimatedLoader
