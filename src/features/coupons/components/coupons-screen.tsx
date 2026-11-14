@@ -67,8 +67,14 @@ const LIFECYCLE_STYLES: Record<
 
 export function CouponsScreen() {
   const { user } = useAuth();
-  const { coupons, hydrated, removeCoupon, toggleCouponActive } =
-    useMerchantCoupons();
+  const {
+    coupons,
+    hydrated,
+    loading,
+    error,
+    removeCoupon,
+    toggleCouponActive,
+  } = useMerchantCoupons();
 
   const [searchInput, setSearchInput] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -232,7 +238,11 @@ export function CouponsScreen() {
           </div>
         </div>
 
-        {!hydrated ? (
+        {error ? (
+          <div className="px-5 py-16 text-center text-sm text-red-600">
+            {error}
+          </div>
+        ) : !hydrated || loading ? (
           <div className="px-5 py-16 text-center text-sm text-[#6b7280]">
             Loading coupons…
           </div>
@@ -249,12 +259,25 @@ export function CouponsScreen() {
                 coupon={coupon}
                 lifecycle={lifecycle}
                 onCopy={() => void copyCode(coupon.code)}
-                onToggleActive={(checked) =>
-                  toggleCouponActive(coupon.id, checked)
-                }
+                onToggleActive={(checked) => {
+                  void (async () => {
+                    try {
+                      await toggleCouponActive(coupon.id, checked);
+                      toast.success(checked ? "Coupon is live" : "Coupon paused");
+                    } catch {
+                      toast.error("Unable to update coupon status.");
+                    }
+                  })();
+                }}
                 onDelete={() => {
-                  removeCoupon(coupon.id);
-                  toast.success("Coupon removed");
+                  void (async () => {
+                    try {
+                      await removeCoupon(coupon.id);
+                      toast.success("Coupon removed");
+                    } catch {
+                      toast.error("Unable to remove coupon.");
+                    }
+                  })();
                 }}
               />
             ))}

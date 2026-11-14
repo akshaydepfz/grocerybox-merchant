@@ -40,6 +40,7 @@ export const API_ENDPOINTS = {
   merchantProducts: `${API_V1_PREFIX}/merchant/products`,
   merchantProductImageUpload: `${API_V1_PREFIX}/merchant/products/images/upload`,
   merchantOrders: `${API_V1_PREFIX}/merchant/orders`,
+  merchantCoupons: `${API_V1_PREFIX}/merchant/coupons`,
 } as const satisfies Record<string, string>;
 
 export function merchantCategoryPath(
@@ -90,6 +91,17 @@ export function merchantProductImagesPath(productId: string): string {
 
 export function merchantOrderPath(orderId: string): string {
   return `${API_ENDPOINTS.merchantOrders}/${orderId}`;
+}
+
+export function merchantCouponPath(
+  couponId: string,
+  action?: "activate" | "deactivate",
+): string {
+  const base = `${API_ENDPOINTS.merchantCoupons}/${couponId}`;
+  if (action) {
+    return `${base}/${action}`;
+  }
+  return base;
 }
 
 export function merchantOrderStatusPath(orderId: string): string {

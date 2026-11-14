@@ -13,8 +13,10 @@ import { DashboardPage } from "@/features/dashboard/components/dashboard-page";
 import { DashboardSurface } from "@/features/dashboard/components/dashboard-surface";
 import { dashboardRoutePrefix } from "@/config/routes";
 import { cn } from "@/lib/utils";
+import { ApiError } from "@/lib/api/types";
 
 import { useMerchantCoupons } from "../hooks/use-merchant-coupons";
+import { friendlyCouponError } from "../services/coupon-service";
 import type { CouponDiscountType } from "../types/merchant-coupon";
 
 const listHref = `${dashboardRoutePrefix}/coupons`;
@@ -44,7 +46,7 @@ export function CouponCreateScreen() {
     event.preventDefault();
   };
 
-  const onCreate = () => {
+  const onCreate = async () => {
     const trimmedCode = code.trim().toUpperCase();
     const trimmedTitle = title.trim();
     const value = Number.parseFloat(discountValue);
@@ -100,7 +102,7 @@ export function CouponCreateScreen() {
 
     setSubmitting(true);
     try {
-      addCoupon({
+      await addCoupon({
         code: trimmedCode,
         title: trimmedTitle,
         description: description.trim() || undefined,
@@ -116,6 +118,12 @@ export function CouponCreateScreen() {
       });
       toast.success("Coupon created");
       router.push(listHref);
+    } catch (err) {
+      const message =
+        err instanceof ApiError
+          ? friendlyCouponError(err)
+          : "Unable to create coupon.";
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
@@ -162,7 +170,8 @@ export function CouponCreateScreen() {
               Coupon details
             </h2>
             <p className="mt-0.5 text-xs text-[#9ca3af]">
-              Saved on this device until merchant coupon APIs are connected.
+              Customers can apply live coupon codes at checkout once validation
+              is enabled on the storefront.
             </p>
           </div>
 
