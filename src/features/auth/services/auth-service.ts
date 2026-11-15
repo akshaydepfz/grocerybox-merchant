@@ -5,6 +5,8 @@ import {
   type User,
 } from "firebase/auth";
 
+import { AUTH_ROUTES } from "@/features/auth/constants";
+
 import { getFirebaseAuth } from "@/lib/firebase/client";
 
 export class AuthError extends Error {
@@ -26,6 +28,27 @@ export async function signInWithGoogle(): Promise<User> {
 
 export async function signOut(): Promise<void> {
   await firebaseSignOut(getFirebaseAuth());
+}
+
+/**
+ * Signs out, clears browser session storage for this origin, and reloads into login
+ * (mirrors Flutter “clear data” on web).
+ */
+export async function signOutAndClearWebSession(): Promise<void> {
+  await firebaseSignOut(getFirebaseAuth());
+
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    sessionStorage.clear();
+    localStorage.clear();
+  } catch {
+    // Non-fatal if storage is unavailable.
+  }
+
+  window.location.assign(AUTH_ROUTES.login);
 }
 
 export function getCurrentUser(): User | null {

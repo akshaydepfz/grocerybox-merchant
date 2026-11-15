@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Crown } from "lucide-react";
+import { Crown, Loader2, LogOut } from "lucide-react";
+import { useCallback, useState } from "react";
+import { toast } from "sonner";
 
 import { AppLogoImage } from "@/components/branding/app-logo";
 import { Button } from "@/components/ui/button";
+import { signOutAndClearWebSession } from "@/features/auth/services/auth-service";
 import { cn } from "@/lib/utils";
 
 import { DASHBOARD_NAV_ITEMS } from "../constants/nav-items";
@@ -20,6 +23,21 @@ export function DashboardSidebar({
   className,
 }: DashboardSidebarProps) {
   const pathname = usePathname();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = useCallback(async () => {
+    if (isLoggingOut) {
+      return;
+    }
+    setIsLoggingOut(true);
+    onNavigate?.();
+    try {
+      await signOutAndClearWebSession();
+    } catch {
+      setIsLoggingOut(false);
+      toast.error("Could not sign out. Please try again.");
+    }
+  }, [isLoggingOut, onNavigate]);
 
   return (
     <div
@@ -93,7 +111,24 @@ export function DashboardSidebar({
         })}
       </nav>
 
-      <div className="shrink-0 p-4">
+      <div className="shrink-0 space-y-3 p-4">
+        <button
+          type="button"
+          onClick={() => void handleLogout()}
+          disabled={isLoggingOut}
+          className={cn(
+            "flex w-full items-center gap-3 rounded-xl border border-white/10 px-3 py-2.5 text-sm font-medium transition-colors",
+            "text-white/80 hover:bg-white/10 hover:text-white",
+            "disabled:cursor-not-allowed disabled:opacity-60",
+          )}
+        >
+          {isLoggingOut ? (
+            <Loader2 className="size-[18px] shrink-0 animate-spin" aria-hidden />
+          ) : (
+            <LogOut className="size-[18px] shrink-0 opacity-90" aria-hidden />
+          )}
+          {isLoggingOut ? "Signing out…" : "Log out"}
+        </button>
         <div className="rounded-2xl bg-[#062f27] p-4">
           <div className="flex items-start gap-2">
             <Crown className="size-4 shrink-0 text-amber-400" aria-hidden />
