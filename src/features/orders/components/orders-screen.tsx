@@ -11,6 +11,7 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -60,10 +61,12 @@ const PAYMENT_OPTIONS: { value: "" | MerchantOrderPaymentStatus; label: string }
 
 export function OrdersScreen() {
   const { user, isRegistered } = useAuth();
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("search")?.trim() ?? "";
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
-  const [searchDraft, setSearchDraft] = useState("");
-  const [search, setSearch] = useState("");
+  const [searchDraft, setSearchDraft] = useState(initialSearch);
+  const [search, setSearch] = useState(initialSearch);
   const [currentStep, setCurrentStep] = useState<"" | MerchantOrderTimelineStep>("");
   const [paymentStatus, setPaymentStatus] = useState<"" | MerchantOrderPaymentStatus>("");
 

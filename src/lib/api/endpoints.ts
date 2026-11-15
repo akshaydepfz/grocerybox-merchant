@@ -40,6 +40,7 @@ export const API_ENDPOINTS = {
   merchantProducts: `${API_V1_PREFIX}/merchant/products`,
   merchantProductImageUpload: `${API_V1_PREFIX}/merchant/products/images/upload`,
   merchantOrders: `${API_V1_PREFIX}/merchant/orders`,
+  merchantCustomers: `${API_V1_PREFIX}/merchant/customers`,
   merchantCoupons: `${API_V1_PREFIX}/merchant/coupons`,
 } as const satisfies Record<string, string>;
 

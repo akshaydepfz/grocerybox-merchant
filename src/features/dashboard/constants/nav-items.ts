@@ -67,7 +67,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: "Customers",
     href: `${dashboardRoutePrefix}/customers`,
     icon: Users,
-    available: false,
+    available: true,
   },
   {
     id: "coupons",
