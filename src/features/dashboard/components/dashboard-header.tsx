@@ -49,7 +49,7 @@ export function DashboardHeader({ className }: { className?: string }) {
           <AppLogoImage size={32} className="rounded-lg" />
           <div className="text-left">
             <p className="text-xs font-semibold text-[#1a1f2e]">Fresh Mart</p>
-            <p className="text-[10px] text-[#9ca3af]">freshmart.grocery.in</p>
+            <p className="text-[10px] text-[#9ca3af]">freshmart.grocerybox.in</p>
           </div>
           <ChevronDown className="size-4 text-[#9ca3af]" />
         </button>
