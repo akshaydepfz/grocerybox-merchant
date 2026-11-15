@@ -19,7 +19,7 @@ export function UploadActions({
   onDelete: () => void;
 }) {
   return (
-    <div className="flex shrink-0 gap-2">
+    <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
       <Button
         type="button"
         variant="outline"
@@ -97,10 +97,10 @@ export function LogoUploadCard({
   return (
     <div>
       <MerchantFieldLabel label="Store Logo" required />
-      <div className="rounded-2xl border border-gb-mo-gray-200 bg-white p-4">
+      <div className="rounded-2xl border border-gb-mo-gray-200 bg-white p-3.5 sm:p-4">
         {hasLogo ? (
-          <div className="flex gap-3.5">
-            <span className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#D2F3A4] bg-[#EAF7D7]">
+          <div className="flex flex-col gap-3 sm:flex-row sm:gap-3.5">
+            <span className="relative mx-auto flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#D2F3A4] bg-[#EAF7D7] sm:mx-0">
               {logoSrc ? (
                 <Image
                   src={logoSrc}
@@ -118,8 +118,8 @@ export function LogoUploadCard({
                 </span>
               )}
             </span>
-            <div className="min-w-0 flex-1">
-              <span className="flex items-center gap-1.5">
+            <div className="min-w-0 w-full flex-1 text-center sm:text-left">
+              <span className="flex items-center justify-center gap-1.5 sm:justify-start">
                 <span className="truncate text-sm font-bold text-gb-mo-gray-900">
                   {displayName}
                 </span>
@@ -140,7 +140,7 @@ export function LogoUploadCard({
                   />
                 </span>
               ) : null}
-              <span className="mt-2 flex">
+              <span className="mt-2 flex justify-center sm:justify-start">
                 <UploadActions
                   enabled={!isBusy}
                   onChange={onChange}
@@ -191,7 +191,7 @@ export function BannerUploadCard({
   return (
     <BannerCard>
       <MerchantFieldLabel label="Store Banner" optional />
-      <BannerInner className="rounded-2xl border border-gb-mo-gray-200 bg-white p-3">
+      <BannerInner className="rounded-2xl border border-gb-mo-gray-200 bg-white p-3 sm:p-3">
         {hasBanner ? (
           <div>
             <div className="relative mb-2.5 h-16 overflow-hidden rounded-xl">
@@ -218,9 +218,11 @@ export function BannerUploadCard({
                 />
               </span>
             ) : null}
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs text-gb-mo-gray-400">
-                {displayName} • 1440 × 480 px • max 10 MB
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <span className="text-[11px] leading-snug text-gb-mo-gray-400 sm:text-xs [overflow-wrap:anywhere]">
+                <span className="font-medium text-gb-mo-gray-600">{displayName}</span>
+                <span className="hidden sm:inline"> • </span>
+                <span className="block sm:inline">1440 × 480 px • max 10 MB</span>
               </span>
               <UploadActions
                 enabled={!isBusy}
@@ -386,35 +388,37 @@ export function StoreBrandingPreview({
   bannerSrc: string | null;
 }) {
   return (
-    <div className="rounded-2xl border border-[#DEEDD9] bg-[#F6FAF4] p-5">
-      <div className="mb-4 flex items-center gap-2">
+    <div className="rounded-2xl border border-[#DEEDD9] bg-[#F6FAF4] p-4 sm:p-5">
+      <div className="mb-3 flex items-center gap-2 sm:mb-4">
         <Eye className="size-4 text-gb-mo-gray-700" />
         <span className="text-xs font-bold text-gb-mo-gray-900">Store Preview</span>
       </div>
-      <div className="rounded-xl border border-gb-mo-gray-100 bg-white p-3">
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span
-            className="relative size-8 shrink-0 overflow-hidden rounded-lg"
-            style={{ backgroundColor: `${secondaryHex}59` }}
-          >
-            {logoSrc ? (
-              <Image src={logoSrc} alt="" fill unoptimized className="object-cover" />
-            ) : (
-              <span className="flex size-full items-center justify-center">🛍️</span>
-            )}
-          </span>
-          <span className="min-w-0">
-            <span className="block font-bold text-gb-mo-gray-900">{storeName}</span>
-            <span className="text-[10px] text-gb-mo-gray-400">
-              Grocery & Daily Essentials
+      <div className="rounded-xl border border-gb-mo-gray-100 bg-white p-2.5 sm:p-3">
+        <div className="flex flex-col gap-2.5 text-xs sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <span
+              className="relative size-8 shrink-0 overflow-hidden rounded-lg"
+              style={{ backgroundColor: `${secondaryHex}59` }}
+            >
+              {logoSrc ? (
+                <Image src={logoSrc} alt="" fill unoptimized className="object-cover" />
+              ) : (
+                <span className="flex size-full items-center justify-center">🛍️</span>
+              )}
             </span>
-          </span>
-          <span className="ml-auto flex items-center gap-2">
-            <span className="rounded-full border border-gb-mo-gray-200 bg-gb-mo-gray-100 px-2 py-1 text-[10px] text-gb-mo-gray-400">
+            <span className="min-w-0">
+              <span className="block font-bold text-gb-mo-gray-900">{storeName}</span>
+              <span className="text-[10px] text-gb-mo-gray-400">
+                Grocery & Daily Essentials
+              </span>
+            </span>
+          </div>
+          <span className="flex w-full items-center justify-between gap-2 sm:ml-auto sm:w-auto sm:justify-end">
+            <span className="min-w-0 flex-1 rounded-full border border-gb-mo-gray-200 bg-gb-mo-gray-100 px-2 py-1 text-[10px] text-gb-mo-gray-400 sm:flex-none">
               Search…
             </span>
             <span
-              className="relative flex size-5 items-center justify-center rounded-full text-[9px] font-bold text-white"
+              className="relative flex size-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white"
               style={{ backgroundColor: primaryHex }}
             >
               0
@@ -422,7 +426,7 @@ export function StoreBrandingPreview({
           </span>
         </div>
         {hasBanner ? (
-          <span className="relative mt-3 block h-28 overflow-hidden rounded-xl">
+          <span className="relative mt-3 block h-24 overflow-hidden rounded-xl sm:h-28">
             {bannerSrc ? (
               <Image src={bannerSrc} alt="" fill unoptimized className="object-cover" />
             ) : (

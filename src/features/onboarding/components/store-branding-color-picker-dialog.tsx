@@ -38,7 +38,7 @@ function ColorPickerFields({
 
   return (
     <>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <input
           type="color"
           value={pickerValue}

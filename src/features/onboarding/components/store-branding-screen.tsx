@@ -372,18 +372,18 @@ export function StoreBrandingScreen() {
           />
         }
       >
-        <OnboardingStepProgress currentStep={3} />
-        <h1 className="mt-5 text-[28px] font-extrabold tracking-tight text-gb-mo-gray-900">
+        <OnboardingStepProgress currentStep={3} useGradient />
+        <h1 className="mt-4 text-xl font-extrabold tracking-tight text-gb-mo-gray-900 sm:mt-5 sm:text-[28px]">
           Store Branding
         </h1>
-        <p className="mt-1 text-sm font-medium text-gb-mo-gray-500">
+        <p className="mt-1 text-xs font-medium leading-relaxed text-gb-mo-gray-500 sm:text-sm">
           Add your store logo, banner and choose your brand colours.
         </p>
 
-        <section className="mt-7 space-y-7">
+        <section className="mt-4 space-y-5 sm:mt-7 sm:space-y-7">
           <div
             className={
-              twoCol ? "grid grid-cols-2 gap-5" : "flex flex-col gap-5"
+              twoCol ? "grid grid-cols-2 gap-5" : "flex flex-col gap-4 sm:gap-5"
             }
           >
             <LogoUploadCard {...logoCardProps} />
@@ -392,14 +392,14 @@ export function StoreBrandingScreen() {
 
           <div>
             <p className="text-sm font-bold text-gb-mo-gray-900">Brand Colours</p>
-            <p className="mt-1 text-xs text-gb-mo-gray-400">
+            <p className="mt-1 text-xs leading-relaxed text-gb-mo-gray-400">
               Choose colours for your store theme and branding.
             </p>
             <div
               className={
                 wideColors
                   ? "mt-3 grid grid-cols-3 gap-5"
-                  : "mt-3 flex flex-col gap-4"
+                  : "mt-3 flex flex-col gap-3 sm:gap-4"
               }
             >
               <BrandColorSelector
@@ -471,7 +471,7 @@ export function StoreBrandingScreen() {
         open={deleteKind !== null}
         onOpenChange={(open) => !open && setDeleteKind(null)}
       >
-        <DialogContent>
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {deleteKind === "logo"
