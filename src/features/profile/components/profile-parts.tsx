@@ -1,17 +1,22 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import {
   Check,
   CheckCircle2,
   Circle,
   Copy,
   ExternalLink,
+  FolderTree,
+  Settings,
+  Ticket,
   type LucideIcon,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { dashboardRoutePrefix } from "@/config/routes";
 import { cn } from "@/lib/utils";
 
 import {
@@ -37,21 +42,21 @@ export function ProfileSection({
   return (
     <section
       className={cn(
-        "rounded-2xl border border-[#eceef2] bg-white p-4 shadow-[0_1px_3px_rgb(0_0_0_/0.04)] sm:p-6",
+        "rounded-xl border border-[#eceef2] bg-white p-3.5 shadow-[0_1px_3px_rgb(0_0_0_/0.04)] sm:rounded-2xl sm:p-6",
         className,
       )}
     >
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+      <div className="mb-3 flex flex-col gap-2.5 sm:mb-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-3">
         <div className="min-w-0 flex-1">
-          <h2 className="text-base font-bold text-[#1a1f2e]">{title}</h2>
+          <h2 className="text-sm font-bold text-[#1a1f2e] sm:text-base">{title}</h2>
           {description ? (
-            <p className="mt-1 text-xs leading-relaxed text-[#6b7280]">
+            <p className="mt-0.5 text-[11px] leading-relaxed text-[#6b7280] sm:mt-1 sm:text-xs">
               {description}
             </p>
           ) : null}
         </div>
         {action ? (
-          <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
+          <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end [&_a]:w-full [&_button]:w-full sm:[&_a]:w-auto sm:[&_button]:w-auto">
             {action}
           </div>
         ) : null}
@@ -63,7 +68,16 @@ export function ProfileSection({
 
 export function ProfileFieldGrid({ children }: { children: ReactNode }) {
   return (
-    <dl className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+    <dl
+      className={cn(
+        "grid grid-cols-1 gap-0 overflow-hidden rounded-xl border border-[#eceef2] bg-[#fafbfc]",
+        "sm:gap-4 sm:overflow-visible sm:rounded-none sm:border-0 sm:bg-transparent",
+        "sm:grid-cols-2 lg:grid-cols-3",
+        "[&>div]:border-b [&>div]:border-[#eceef2] [&>div]:px-3.5 [&>div]:py-3",
+        "[&>div:last-child]:border-b-0",
+        "sm:[&>div]:border-0 sm:[&>div]:px-0 sm:[&>div]:py-0",
+      )}
+    >
       {children}
     </dl>
   );
@@ -136,30 +150,29 @@ export function ProfileOnboardingProgress({
   const percent = onboardingProgressPercent(status);
 
   return (
-    <div className="rounded-2xl border border-[#dcefe0] bg-gradient-to-br from-[#f0fdf4] to-white p-4 sm:p-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#16a34a]">
+    <div className="rounded-xl border border-[#dcefe0] bg-gradient-to-br from-[#f0fdf4] to-white p-3.5 sm:rounded-2xl sm:p-6">
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#16a34a] sm:text-xs">
             Onboarding progress
           </p>
-          <p className="mt-1 text-sm text-[#4b5563]">
-            Current step:{" "}
+          <p className="mt-0.5 text-xs text-[#4b5563] sm:mt-1 sm:text-sm">
             <span className="font-semibold text-[#1a1f2e]">
               {status.replaceAll("_", " ")}
             </span>
           </p>
         </div>
-        <p className="text-2xl font-bold text-[#14532d]">{percent}%</p>
+        <p className="text-xl font-bold tabular-nums text-[#14532d] sm:text-2xl">{percent}%</p>
       </div>
 
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#e5efe8]">
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#e5efe8] sm:mt-4">
         <div
           className="h-full rounded-full bg-gradient-to-r from-[#16a34a] to-[#22c55e] transition-all"
           style={{ width: `${percent}%` }}
         />
       </div>
 
-      <ol className="mt-4 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 lg:grid-cols-4">
+      <ol className="mt-3 flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:mt-4 sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 lg:grid-cols-4 [&::-webkit-scrollbar]:hidden">
         {ONBOARDING_PROGRESS_STEPS.map((step) => {
           const complete = isOnboardingStepComplete(status, step.status);
           const isPublishStep = step.status === "published";
@@ -170,7 +183,7 @@ export function ProfileOnboardingProgress({
             <li
               key={step.status}
               className={cn(
-                "flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium",
+                "flex min-w-[9.5rem] shrink-0 snap-start items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium sm:min-w-0",
                 done
                   ? "border-[#bbf7d0] bg-white text-[#15803d]"
                   : "border-[#eceef2] bg-white/70 text-[#6b7280]",
@@ -202,15 +215,15 @@ export function ProfileStatusRow({
   detail?: string;
 }) {
   return (
-    <div className="flex flex-col gap-2.5 rounded-xl border border-[#eceef2] bg-[#fafbfc] px-3.5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-4">
-      <div className="flex min-w-0 items-center gap-3">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#4b5563] shadow-sm">
-          <Icon className="size-4" aria-hidden />
+    <div className="flex items-center justify-between gap-2 rounded-xl border border-[#eceef2] bg-[#fafbfc] px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
+      <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-[#4b5563] shadow-sm sm:size-9">
+          <Icon className="size-3.5 sm:size-4" aria-hidden />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-[#1a1f2e]">{label}</p>
+          <p className="text-xs font-semibold text-[#1a1f2e] sm:text-sm">{label}</p>
           {detail ? (
-            <p className="text-xs text-[#6b7280] break-words [overflow-wrap:anywhere]">
+            <p className="text-[11px] text-[#6b7280] break-words [overflow-wrap:anywhere] sm:text-xs">
               {detail}
             </p>
           ) : null}
@@ -218,9 +231,9 @@ export function ProfileStatusRow({
       </div>
       <ProfileBadge
         variant={enabled ? "success" : "neutral"}
-        className="self-start sm:shrink-0"
+        className="shrink-0"
       >
-        {enabled ? "Enabled" : "Disabled"}
+        {enabled ? "On" : "Off"}
       </ProfileBadge>
     </div>
   );
@@ -295,6 +308,49 @@ export function ColorSwatch({
         </p>
         <p className="text-sm font-medium text-[#1a1f2e]">{value}</p>
       </div>
+    </div>
+  );
+}
+
+const PROFILE_QUICK_LINKS = [
+  {
+    href: `${dashboardRoutePrefix}/settings`,
+    label: "Settings",
+    icon: Settings,
+  },
+  {
+    href: `${dashboardRoutePrefix}/coupons`,
+    label: "Coupons",
+    icon: Ticket,
+  },
+  {
+    href: `${dashboardRoutePrefix}/categories`,
+    label: "Categories",
+    icon: FolderTree,
+  },
+] as const;
+
+export function ProfileQuickLinks({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden",
+        className,
+      )}
+    >
+      {PROFILE_QUICK_LINKS.map((item) => {
+        const Icon = item.icon;
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="inline-flex min-h-[44px] shrink-0 snap-start items-center gap-2 rounded-xl border border-[#eceef2] bg-white px-3.5 py-2.5 text-xs font-semibold text-[#374151] shadow-sm transition active:scale-[0.98]"
+          >
+            <Icon className="size-4 text-[#16a34a]" aria-hidden />
+            {item.label}
+          </Link>
+        );
+      })}
     </div>
   );
 }

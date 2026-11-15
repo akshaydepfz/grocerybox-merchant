@@ -20,7 +20,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { ErrorState } from "@/components/shared/error-state";
-import { LoadingIndicator } from "@/components/shared/loading-indicator";
+import { GroceryAnimatedLoader } from "@/components/shared/animated-loader";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -57,6 +57,7 @@ import {
   ProfileFieldGrid,
   ProfileImagePreview,
   ProfileOnboardingProgress,
+  ProfileQuickLinks,
   ProfileSection,
   ProfileStatusRow,
 } from "./profile-parts";
@@ -89,12 +90,13 @@ function ProfileHeaderSection({
     <ProfileSection
       title="Account"
       description="Your merchant account and sign-in details"
+      className="overflow-hidden"
       action={
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="w-full gap-1.5 sm:w-auto"
+          className="h-10 w-full gap-1.5 rounded-xl sm:h-9 sm:w-auto"
           onClick={onEditName}
         >
           <Pencil className="size-3.5" />
@@ -102,53 +104,50 @@ function ProfileHeaderSection({
         </Button>
       }
     >
-      <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
-        <div className="relative size-20 shrink-0 overflow-hidden rounded-2xl border border-[#eceef2] bg-gradient-to-br from-[#16a34a] to-[#0a3d32] text-2xl font-bold text-white shadow-sm">
-          {imageUrl && !imageFailed ? (
-            <Image
-              src={imageUrl}
-              alt=""
-              fill
-              className="object-cover"
-              sizes="80px"
-              unoptimized
-              onError={() => setImageFailed(true)}
-            />
-          ) : (
-            <span className="flex size-full items-center justify-center">
-              {displayName.charAt(0).toUpperCase()}
-            </span>
-          )}
-        </div>
-
-        <div className="min-w-0 w-full flex-1 text-center sm:text-left">
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-            <h3 className="text-lg font-bold text-[#1a1f2e] sm:text-xl">
-              {displayName}
-            </h3>
-            {account?.emailVerified ? (
-              <ProfileBadge variant="success">Email verified</ProfileBadge>
+      <div className="-mx-3.5 mb-4 bg-gradient-to-br from-[#0a3d32] to-[#14532d] px-4 py-5 text-white sm:mx-0 sm:mb-5 sm:rounded-2xl">
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start sm:gap-5">
+          <div className="relative size-16 shrink-0 overflow-hidden rounded-2xl border-2 border-white/20 bg-white/10 text-xl font-bold shadow-sm sm:size-20 sm:text-2xl">
+            {imageUrl && !imageFailed ? (
+              <Image
+                src={imageUrl}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="80px"
+                unoptimized
+                onError={() => setImageFailed(true)}
+              />
             ) : (
-              <ProfileBadge variant="warning">Email not verified</ProfileBadge>
+              <span className="flex size-full items-center justify-center">
+                {displayName.charAt(0).toUpperCase()}
+              </span>
             )}
-            <ProfileBadge variant={accountStatusVariant(account?.accountStatus)}>
-              {displayOrDash(account?.accountStatus ?? "Unknown")}
-            </ProfileBadge>
           </div>
-          <p className="mt-1 text-sm text-[#6b7280]">
-            {displayOrDash(account?.email)}
-          </p>
-
-          <ProfileFieldGrid>
-            <ProfileField label="Merchant ID" value={displayOrDash(profile.merchantId)} />
-            <ProfileField
-              label="Member since"
-              value={formatProfileDate(account?.createdAt)}
-            />
-            <ProfileField label="Phone" value={displayOrDash(account?.phone)} />
-          </ProfileFieldGrid>
+          <div className="min-w-0 w-full flex-1 text-center sm:text-left">
+            <h3 className="text-lg font-bold sm:text-xl">{displayName}</h3>
+            <p className="mt-0.5 text-sm text-white/75">{displayOrDash(account?.email)}</p>
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5 sm:justify-start">
+              {account?.emailVerified ? (
+                <ProfileBadge variant="success">Email verified</ProfileBadge>
+              ) : (
+                <ProfileBadge variant="warning">Email not verified</ProfileBadge>
+              )}
+              <ProfileBadge variant={accountStatusVariant(account?.accountStatus)}>
+                {displayOrDash(account?.accountStatus ?? "Unknown")}
+              </ProfileBadge>
+            </div>
+          </div>
         </div>
       </div>
+
+      <ProfileFieldGrid>
+        <ProfileField label="Merchant ID" value={displayOrDash(profile.merchantId)} />
+        <ProfileField
+          label="Member since"
+          value={formatProfileDate(account?.createdAt)}
+        />
+        <ProfileField label="Phone" value={displayOrDash(account?.phone)} />
+      </ProfileFieldGrid>
     </ProfileSection>
   );
 }
@@ -181,11 +180,13 @@ export function MerchantProfileScreen() {
 
   if (profileQuery.isLoading) {
     return (
-      <LoadingIndicator
-        label="Loading profile"
-        sublabel="Fetching your merchant details…"
-        className="py-24"
-      />
+      <div className="flex min-h-[50vh] items-center justify-center py-16">
+        <GroceryAnimatedLoader
+          theme="dashboard"
+          label="Loading profile"
+          sublabel="Fetching your merchant details"
+        />
+      </div>
     );
   }
 
@@ -216,29 +217,31 @@ export function MerchantProfileScreen() {
 
   const actionButtonClass = "w-full gap-1.5 sm:w-auto";
 
+  const storeName =
+    store?.storeName?.trim() ||
+    business?.businessName?.trim() ||
+    "Your store";
+
   return (
-    <DashboardPage className="mx-auto max-w-6xl gap-4 sm:gap-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+    <DashboardPage className="mx-auto w-full max-w-6xl gap-3 sm:gap-5">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-[#16a34a]">
-            <UserRound className="size-5 shrink-0" aria-hidden />
-            <span className="text-xs font-semibold uppercase tracking-wide">
-              Merchant profile
-            </span>
+          <p className="text-xs font-medium text-[#16a34a]">{storeName}</p>
+          <div className="mt-0.5 flex items-center gap-2">
+            <UserRound className="size-5 shrink-0 text-[#16a34a] lg:hidden" aria-hidden />
+            <h1 className="text-xl font-bold tracking-tight text-[#1a1f2e] sm:text-2xl">
+              Profile
+            </h1>
           </div>
-          <h1 className="mt-1 text-xl font-bold tracking-tight text-[#1a1f2e] sm:text-2xl">
-            Your store identity
-          </h1>
-          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[#6b7280]">
-            View account, business, storefront, and subscription details from
-            your live backend profile.
+          <p className="mt-0.5 hidden text-sm leading-relaxed text-[#6b7280] sm:block">
+            Account, storefront, location, and subscription details.
           </p>
         </div>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className={actionButtonClass}
+          className={`${actionButtonClass} h-10 rounded-xl sm:h-9`}
           onClick={() => void profileQuery.refetch()}
           disabled={profileQuery.isFetching}
         >
@@ -248,6 +251,23 @@ export function MerchantProfileScreen() {
           Refresh
         </Button>
       </div>
+
+      <ProfileQuickLinks />
+
+      {storeUrl ? (
+        <div className="flex flex-col gap-2 rounded-xl border border-[#dcefe0] bg-[#f0fdf4] p-3 sm:hidden">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#15803d]">
+            Storefront
+          </p>
+          <p className="break-all font-mono text-xs text-[#14532d]">{storeUrl}</p>
+          <div className="grid grid-cols-2 gap-2">
+            <CopyStoreLinkButton url={storeUrl} className="!w-full" />
+            {profile.storePublished ? (
+              <OpenStoreLink url={storeUrl} className="!w-full text-center" />
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       <ProfileOnboardingProgress
         status={profile.onboardingStatus}
@@ -280,15 +300,12 @@ export function MerchantProfileScreen() {
         description="Public storefront identity"
         action={
           storeUrl ? (
-            <>
-              <CopyStoreLinkButton
-                url={storeUrl}
-                className={actionButtonClass}
-              />
+            <div className="hidden sm:contents">
+              <CopyStoreLinkButton url={storeUrl} className={actionButtonClass} />
               {profile.storePublished ? (
                 <OpenStoreLink url={storeUrl} className={actionButtonClass} />
               ) : null}
-            </>
+            </div>
           ) : null
         }
       >
@@ -329,7 +346,7 @@ export function MerchantProfileScreen() {
         )}
       </ProfileSection>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-3 sm:gap-5 lg:grid-cols-2">
         <ProfileSection title="Branding" description="Logo, banner, and theme colors">
           {branding ? (
             <div className="space-y-4">
@@ -389,7 +406,7 @@ export function MerchantProfileScreen() {
         description="Orders, payments, and delivery settings"
       >
         {config ? (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
             <ProfileStatusRow icon={MessageCircle} label="WhatsApp orders" enabled={config.whatsAppOrders} />
             <ProfileStatusRow icon={Globe} label="Website orders" enabled={config.websiteOrders} />
             <ProfileStatusRow icon={Truck} label="Home delivery" enabled={config.homeDelivery} />
@@ -419,7 +436,7 @@ export function MerchantProfileScreen() {
         description="Your active plan and billing cycle"
       >
         {subscription?.plan ? (
-          <div className="rounded-2xl border border-[#dcefe0] bg-gradient-to-br from-[#f8fcf9] to-white p-4 sm:p-5">
+          <div className="rounded-xl border border-[#dcefe0] bg-gradient-to-br from-[#f8fcf9] to-white p-3.5 sm:rounded-2xl sm:p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <p className="text-base font-bold text-[#1a1f2e] sm:text-lg">
