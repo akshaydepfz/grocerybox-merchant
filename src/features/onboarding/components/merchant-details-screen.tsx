@@ -133,14 +133,14 @@ export function MerchantDetailsScreen() {
         />
       }
     >
-      <OnboardingStepProgress currentStep={1} />
-      <h1 className="mt-5 text-2xl font-bold tracking-tight text-gb-mo-gray-900">
+      <OnboardingStepProgress currentStep={1} useGradient />
+      <h1 className="mt-4 text-xl font-bold tracking-tight text-gb-mo-gray-900 sm:mt-5 sm:text-2xl">
         Business Information
       </h1>
-      <p className="mt-1 text-xs text-gb-mo-gray-500">
+      <p className="mt-1 text-xs leading-relaxed text-gb-mo-gray-500">
         Tell us about your business and store.
       </p>
-      <section className="mt-6">
+      <section className="mt-4 sm:mt-6">
         <BusinessInformationForm values={formValues} onChange={patchForm} />
       </section>
     </MerchantOnboardingScreenLayout>

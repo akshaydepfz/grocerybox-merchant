@@ -37,9 +37,9 @@ export function MerchantOnboardingScreenLayout({
   const isWide = useMediaQuery("(min-width: 1024px)");
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-dvh flex-col bg-white">
       <MerchantOnboardingHeader email={signedInEmail} />
-      <LayoutPadding className="flex flex-1 px-5 pb-4 pt-2 lg:px-8">
+      <LayoutPadding className="flex flex-1 px-3 pb-3 pt-2 sm:px-5 sm:pb-4 lg:px-8">
         <div className="mx-auto flex w-full max-w-[1280px] flex-1 flex-col">
           <OnboardingCard
             className={cn(
@@ -58,9 +58,7 @@ export function MerchantOnboardingScreenLayout({
               </>
             ) : (
               <div className="flex min-h-0 flex-1 flex-col">
-                <div className="max-h-[320px] shrink-0 overflow-y-auto border-b border-gb-mo-gray-100">
-                  <OnboardingSidebar currentStep={currentStep} compact />
-                </div>
+                <OnboardingMobileStepHeader currentStep={currentStep} />
                 <MerchantOnboardingFormShell footer={footer}>
                   {children}
                 </MerchantOnboardingFormShell>
@@ -100,10 +98,10 @@ export function MerchantOnboardingFormShell({
 }) {
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 py-8 lg:px-8">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-8 lg:px-8">
         {children}
       </div>
-      <FormFooter className="border-t border-gb-mo-gray-100 px-6 pb-6 pt-5 lg:px-8">
+      <FormFooter className="sticky bottom-0 z-10 border-t border-gb-mo-gray-100 bg-white/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur-sm sm:static sm:bg-white sm:px-6 sm:pb-6 sm:pt-5 sm:backdrop-blur-none lg:px-8">
         {footer}
       </FormFooter>
     </div>
@@ -114,11 +112,29 @@ function FormFooter({ children, className }: { children: ReactNode; className?: 
   return <div className={className}>{children}</div>;
 }
 
+function OnboardingMobileStepHeader({ currentStep }: { currentStep: number }) {
+  const label = ONBOARDING_STEPS[currentStep - 1] ?? "Onboarding";
+
+  return (
+    <div className="shrink-0 border-b border-gb-mo-gray-100 bg-gb-mo-sidebar/50 px-4 py-3">
+      <div className="flex items-center gap-3">
+        <AppLogoImage size={44} alt="" className="shrink-0" />
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-gb-mo-gray-500">
+            Step {currentStep} of {ONBOARDING_TOTAL_STEPS}
+          </p>
+          <p className="truncate text-sm font-bold text-gb-mo-gray-900">{label}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MerchantOnboardingHeader({ email }: { email: string }) {
   const stackTitle = useMediaQuery("(max-width: 719px)");
 
   return (
-    <header className="px-6 py-4">
+    <header className="px-4 py-3 sm:px-6 sm:py-4">
       <div className="mx-auto max-w-[1280px]">
         {stackTitle ? (
           <div className="flex flex-col gap-3">
@@ -150,11 +166,20 @@ function HeaderBrandRow() {
 
 function SignedInPill({ email }: { email: string }) {
   const displayEmail = email || "Not signed in";
+  const compact = useMediaQuery("(max-width: 479px)");
+
   return (
-    <SignedInPillWrap className="inline-flex max-w-full items-center gap-2.5 rounded-full border border-gb-mo-gray-200/80 bg-white px-4 py-2">
+    <SignedInPillWrap
+      className={cn(
+        "inline-flex w-full max-w-full items-center gap-2 rounded-full border border-gb-mo-gray-200/80 bg-white py-2 sm:w-auto sm:gap-2.5 sm:px-4",
+        compact ? "px-3" : "px-4",
+      )}
+    >
       <GoogleGlyph size={16} />
-      <span className="text-xs text-gb-mo-gray-500">Signed in as</span>
-      <span className="truncate text-xs font-semibold text-gb-mo-gray-800">
+      {compact ? null : (
+        <span className="shrink-0 text-xs text-gb-mo-gray-500">Signed in as</span>
+      )}
+      <span className="min-w-0 flex-1 truncate text-xs font-semibold text-gb-mo-gray-800 sm:flex-none">
         {displayEmail}
       </span>
       <ChevronDown className="size-4 shrink-0 text-gb-mo-gray-600" />
@@ -326,7 +351,7 @@ export function OnboardingFormFooter({
   /** Tailwind background class for continue button (Flutter `continueColor`). */
   continueColor?: string;
 }) {
-  const stackActions = useMediaQuery("(max-width: 479px)");
+  const stackActions = useMediaQuery("(max-width: 639px)");
 
   return (
     <div

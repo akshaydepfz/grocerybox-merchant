@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { cn } from "@/lib/utils";
 
 import {
   BUSINESS_TYPE_OPTIONS,
@@ -42,7 +41,6 @@ export function BusinessInformationForm({
   onChange,
 }: BusinessInformationFormProps) {
   const twoCol = useMediaQuery("(min-width: 640px)");
-  const addressCols = useMediaQuery("(min-width: 520px)");
 
   return (
     <div className="space-y-4">
@@ -101,12 +99,7 @@ export function BusinessInformationForm({
         />
       </MerchantFieldBlock>
 
-      <AddressSection
-        twoColumn={twoCol}
-        addressCols={addressCols}
-        values={values}
-        onChange={onChange}
-      />
+      <AddressSection twoColumn={twoCol} values={values} onChange={onChange} />
     </div>
   );
 }
@@ -136,19 +129,23 @@ function MobileNumberField({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="flex overflow-hidden rounded-lg border border-gb-mo-input-border bg-white">
-      <MobilePrefix className="flex items-center gap-2 border-r border-gb-mo-gray-200 px-3 py-3">
-        <Phone className="size-3.5 text-gb-mo-gray-400" />
+    <div className="flex min-h-11 overflow-hidden rounded-lg border border-gb-mo-input-border bg-white">
+      <MobilePrefix className="flex shrink-0 items-center gap-1.5 border-r border-gb-mo-gray-200 px-2.5 py-3 sm:gap-2 sm:px-3">
+        <Phone className="size-3.5 text-gb-mo-gray-400" aria-hidden />
         <span className="text-xs font-medium text-gb-mo-gray-700">+91</span>
-        <ChevronDown className="size-3.5 text-gb-mo-gray-400" />
+        <ChevronDown
+          className="hidden size-3.5 text-gb-mo-gray-400 sm:block"
+          aria-hidden
+        />
       </MobilePrefix>
       <input
         type="tel"
         inputMode="numeric"
+        autoComplete="tel-national"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Enter mobile number"
-        className="min-w-0 flex-1 px-3 py-3 text-xs text-gb-mo-gray-800 outline-none placeholder:text-gb-mo-gray-400"
+        placeholder="Mobile number"
+        className="min-w-0 flex-1 px-3 py-3 text-base text-gb-mo-gray-800 outline-none placeholder:text-gb-mo-gray-400 sm:text-xs"
       />
     </div>
   );
@@ -160,17 +157,15 @@ function MobilePrefix({ children, className }: { children: React.ReactNode; clas
 
 function AddressSection({
   twoColumn,
-  addressCols,
   values,
   onChange,
 }: {
   twoColumn: boolean;
-  addressCols: boolean;
   values: BusinessInformationFormValues;
   onChange: (patch: Partial<BusinessInformationFormValues>) => void;
 }) {
   return (
-    <div className="rounded-xl border border-gb-mo-address-border bg-gb-mo-address-bg p-4">
+    <div className="rounded-xl border border-gb-mo-address-border bg-gb-mo-address-bg p-3.5 sm:p-4">
       <p className="text-xs font-bold text-gb-mo-gray-900">Business Address</p>
       <div className="mt-3.5 space-y-3.5">
         <FormRow twoColumn={twoColumn}>
@@ -194,12 +189,7 @@ function AddressSection({
           </MerchantFieldBlock>
         </FormRow>
 
-        <div
-          className={cn(
-            "gap-3",
-            addressCols ? "grid grid-cols-4" : "grid grid-cols-2",
-          )}
-        >
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <MerchantCompactSelect
             label="State"
             required
