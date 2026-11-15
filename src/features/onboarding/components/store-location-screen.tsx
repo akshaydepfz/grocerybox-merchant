@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Building2, MapPin } from "lucide-react";
+import { Building2, LandPlot, LocateFixed, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -15,21 +15,28 @@ import { AuthError, resolveSignedInEmail } from "@/features/auth/services/auth-s
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { ApiError } from "@/lib/api/types";
 
+import {
+  INDIAN_STATE_OPTIONS,
+  isIndianState,
+} from "../constants/indian-states";
+import {
+  hasPlaceAddressFields,
+  reverseGeocodeCoordinates,
+  type PlaceAddressFields,
+} from "../services/google-places-service";
 import { saveStoreLocation, fetchStoreLocation } from "../services/store-location-service";
 import type { StoreLocationData } from "../types/store-location";
 import { getBrowserCurrentPosition } from "../utils/device-location";
 import {
-  STORE_LOCATION_ALLOWED_CITIES,
-  STORE_LOCATION_ALLOWED_DISTRICTS,
-  STORE_LOCATION_ALLOWED_STATES,
   defaultStoreLocationFormState,
   normalizeAndValidateStoreLocation,
   roundMapCoordinate,
 } from "../validators/store-location-validator";
 
 import {
-  MerchantCompactSelect,
+  MerchantFieldBlock,
   MerchantFieldLabel,
+  MerchantIconSelect,
   MerchantIconTextField,
 } from "./merchant-form-fields";
 import {
@@ -57,25 +64,11 @@ function applyLoadedLocation(
     storeAddress: loc.storeAddress || prev.storeAddress,
     pinCode: loc.pinCode || prev.pinCode,
     state:
-      loc.state && STORE_LOCATION_ALLOWED_STATES.includes(
-        loc.state as (typeof STORE_LOCATION_ALLOWED_STATES)[number],
-      )
-        ? loc.state
+      loc.state?.trim() && isIndianState(loc.state.trim())
+        ? loc.state.trim()
         : prev.state,
-    district:
-      loc.district &&
-      STORE_LOCATION_ALLOWED_DISTRICTS.includes(
-        loc.district as (typeof STORE_LOCATION_ALLOWED_DISTRICTS)[number],
-      )
-        ? loc.district
-        : prev.district,
-    city:
-      loc.city &&
-      STORE_LOCATION_ALLOWED_CITIES.includes(
-        loc.city as (typeof STORE_LOCATION_ALLOWED_CITIES)[number],
-      )
-        ? loc.city
-        : prev.city,
+    district: loc.district?.trim() ?? prev.district,
+    city: loc.city?.trim() ?? prev.city,
   }));
 
   if (loc.latitude != null && loc.longitude != null) {
@@ -104,6 +97,7 @@ export function StoreLocationScreen() {
     hasPin: false,
   });
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+  const [isResolvingAddress, setIsResolvingAddress] = useState(false);
 
   const loadQuery = useQuery({
     queryKey: ["merchant-store-location"],
@@ -133,28 +127,80 @@ export function StoreLocationScreen() {
     }
   }, [loadQuery.error]);
 
-  const requestCurrentLocation = useCallback(async (showError: boolean) => {
-    if (isFetchingLocation) return;
-    setIsFetchingLocation(true);
-    const result = await getBrowserCurrentPosition();
-    setIsFetchingLocation(false);
+  const mergeAddressFields = useCallback(
+    (
+      prev: ReturnType<typeof defaultStoreLocationFormState>,
+      fields: PlaceAddressFields,
+    ) => {
+      const storeAddress =
+        fields.storeAddress?.trim() ||
+        fields.formattedAddress?.trim() ||
+        prev.storeAddress;
+      const state =
+        fields.state?.trim() && isIndianState(fields.state.trim())
+          ? fields.state.trim()
+          : prev.state;
+      return {
+        ...prev,
+        storeAddress,
+        state,
+        district: fields.district?.trim() || prev.district,
+        city: fields.city?.trim() || prev.city,
+        pinCode: fields.pinCode?.trim() || prev.pinCode,
+      };
+    },
+    [],
+  );
 
-    if (!result.success) {
-      if (showError) {
-        toast.error(result.errorMessage);
+  const applyMapPin = useCallback(
+    async (
+      latitude: number,
+      longitude: number,
+      prefilled?: PlaceAddressFields | null,
+    ) => {
+      const lat = roundMapCoordinate(latitude);
+      const lng = roundMapCoordinate(longitude);
+
+      if (!isApplyingLoadRef.current) {
+        userModifiedRef.current = true;
       }
-      return;
-    }
+      setMapCoords({ lat, lng, hasPin: true });
 
-    if (!isApplyingLoadRef.current) {
-      userModifiedRef.current = true;
-    }
-    setMapCoords({
-      lat: result.latitude,
-      lng: result.longitude,
-      hasPin: true,
-    });
-  }, [isFetchingLocation]);
+      let fields = prefilled;
+      if (!hasPlaceAddressFields(fields)) {
+        setIsResolvingAddress(true);
+        try {
+          fields = await reverseGeocodeCoordinates(lat, lng);
+        } finally {
+          setIsResolvingAddress(false);
+        }
+      }
+
+      if (hasPlaceAddressFields(fields)) {
+        setFormValues((prev) => mergeAddressFields(prev, fields));
+      }
+    },
+    [mergeAddressFields],
+  );
+
+  const requestCurrentLocation = useCallback(
+    async (showError: boolean) => {
+      if (isFetchingLocation || isResolvingAddress) return;
+      setIsFetchingLocation(true);
+      const result = await getBrowserCurrentPosition();
+      setIsFetchingLocation(false);
+
+      if (!result.success) {
+        if (showError) {
+          toast.error(result.errorMessage);
+        }
+        return;
+      }
+
+      await applyMapPin(result.latitude, result.longitude);
+    },
+    [applyMapPin, isFetchingLocation, isResolvingAddress],
+  );
 
   useEffect(() => {
     if (
@@ -175,13 +221,12 @@ export function StoreLocationScreen() {
     setFormValues((prev) => ({ ...prev, ...patch }));
   };
 
-  const onMapLocationChanged = (latitude: number, longitude: number) => {
-    userModifiedRef.current = true;
-    setMapCoords({
-      lat: roundMapCoordinate(latitude),
-      lng: roundMapCoordinate(longitude),
-      hasPin: true,
-    });
+  const onMapLocationChanged = (
+    latitude: number,
+    longitude: number,
+    addressFields?: PlaceAddressFields | null,
+  ) => {
+    void applyMapPin(latitude, longitude, addressFields);
   };
 
   const saveMutation = useMutation({
@@ -249,6 +294,15 @@ export function StoreLocationScreen() {
       ) : null}
 
       <section className="mt-7 max-w-2xl space-y-4">
+        <StoreLocationMapSection
+          latitude={mapCoords.lat}
+          longitude={mapCoords.lng}
+          enabled={!busy}
+          isFetchingLocation={isFetchingLocation || isResolvingAddress}
+          onLocationChanged={onMapLocationChanged}
+          onUseCurrentLocation={() => void requestCurrentLocation(true)}
+        />
+
         <div>
           <MerchantFieldLabel label="Store Address" required />
           <MerchantIconTextField
@@ -261,50 +315,47 @@ export function StoreLocationScreen() {
         </div>
 
         <div className={twoCol ? "grid grid-cols-2 gap-4" : "flex flex-col gap-4"}>
-          <MerchantCompactSelect
-            label="State"
-            required
-            value={formValues.state}
-            onValueChange={(state) => patchForm({ state })}
-            items={STORE_LOCATION_ALLOWED_STATES}
-          />
-          <MerchantCompactSelect
-            label="District"
-            required
-            value={formValues.district}
-            onValueChange={(district) => patchForm({ district })}
-            items={STORE_LOCATION_ALLOWED_DISTRICTS}
-          />
+          <MerchantFieldBlock label="State" required>
+            <MerchantIconSelect
+              icon={MapPin}
+              value={formValues.state}
+              onValueChange={(state) => patchForm({ state })}
+              placeholder="Select state"
+              items={INDIAN_STATE_OPTIONS}
+            />
+          </MerchantFieldBlock>
+          <MerchantFieldBlock label="District" required>
+            <MerchantIconTextField
+              icon={LandPlot}
+              value={formValues.district}
+              onChange={(e) => patchForm({ district: e.target.value })}
+              placeholder="e.g. Kozhikode"
+              readOnly={busy}
+            />
+          </MerchantFieldBlock>
         </div>
 
         <div className={twoCol ? "grid grid-cols-2 gap-4" : "flex flex-col gap-4"}>
-          <MerchantCompactSelect
-            label="City / Town"
-            required
-            value={formValues.city}
-            onValueChange={(city) => patchForm({ city })}
-            items={STORE_LOCATION_ALLOWED_CITIES}
-          />
-          <div>
-            <MerchantFieldLabel label="PIN Code" required />
+          <MerchantFieldBlock label="City / Town" required>
             <MerchantIconTextField
               icon={Building2}
+              value={formValues.city}
+              onChange={(e) => patchForm({ city: e.target.value })}
+              placeholder="e.g. Kozhikode"
+              readOnly={busy}
+            />
+          </MerchantFieldBlock>
+          <MerchantFieldBlock label="PIN Code" required>
+            <MerchantIconTextField
+              icon={LocateFixed}
               inputMode="numeric"
               value={formValues.pinCode}
               onChange={(e) => patchForm({ pinCode: e.target.value })}
+              placeholder="6-digit PIN"
               readOnly={busy}
             />
-          </div>
+          </MerchantFieldBlock>
         </div>
-
-        <StoreLocationMapSection
-          latitude={mapCoords.lat}
-          longitude={mapCoords.lng}
-          enabled={!busy}
-          isFetchingLocation={isFetchingLocation}
-          onLocationChanged={onMapLocationChanged}
-          onUseCurrentLocation={() => void requestCurrentLocation(true)}
-        />
       </section>
     </MerchantOnboardingScreenLayout>
   );

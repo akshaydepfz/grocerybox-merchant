@@ -1,31 +1,18 @@
+import {
+  DEFAULT_INDIAN_STATE,
+  INDIAN_STATES,
+  isIndianState,
+} from "../constants/indian-states";
 import type { StoreLocationFormValues } from "../types/store-location";
 
-/** Client-side validation aligned with Flutter `StoreLocationValidator`. */
+/** Client-side validation aligned with backend `ValidateStoreLocation`. */
 export const STORE_LOCATION_MAX_ADDRESS_LENGTH = 500;
+export const STORE_LOCATION_MAX_LOCALITY_LENGTH = 64;
 
-export const STORE_LOCATION_ALLOWED_STATES = [
-  "Kerala",
-  "Karnataka",
-  "Tamil Nadu",
-  "Maharashtra",
-] as const;
+/** @deprecated Use `INDIAN_STATES` from `indian-states.ts`. */
+export const STORE_LOCATION_ALLOWED_STATES = INDIAN_STATES;
 
-export const STORE_LOCATION_ALLOWED_DISTRICTS = [
-  "Kozhikode",
-  "Ernakulam",
-  "Thiruvananthapuram",
-  "Kannur",
-] as const;
-
-export const STORE_LOCATION_ALLOWED_CITIES = [
-  "Kozhikode",
-  "Vatakara",
-  "Koyilandy",
-] as const;
-
-export const STORE_LOCATION_DEFAULT_STATE = "Kerala";
-export const STORE_LOCATION_DEFAULT_DISTRICT = "Kozhikode";
-export const STORE_LOCATION_DEFAULT_CITY = "Kozhikode";
+export const STORE_LOCATION_DEFAULT_STATE = DEFAULT_INDIAN_STATE;
 
 const INDIAN_PIN_PATTERN = /^[0-9]{6}$/;
 
@@ -39,8 +26,8 @@ export function defaultStoreLocationFormState(): {
   return {
     storeAddress: "",
     state: STORE_LOCATION_DEFAULT_STATE,
-    district: STORE_LOCATION_DEFAULT_DISTRICT,
-    city: STORE_LOCATION_DEFAULT_CITY,
+    district: "",
+    city: "",
     pinCode: "",
   };
 }
@@ -74,6 +61,19 @@ export function roundMapCoordinate(value: number): number {
   return Number(value.toFixed(7));
 }
 
+function validateLocalityField(
+  value: string,
+  label: string,
+): string | null {
+  if (!value) {
+    return `${label} is required`;
+  }
+  if (value.length > STORE_LOCATION_MAX_LOCALITY_LENGTH) {
+    return `${label} is too long`;
+  }
+  return null;
+}
+
 export function normalizeAndValidateStoreLocation(input: {
   storeAddress: string;
   state: string;
@@ -100,27 +100,20 @@ export function normalizeAndValidateStoreLocation(input: {
   if (!stateValue) {
     return { values: null, error: "State is required" };
   }
-  if (!STORE_LOCATION_ALLOWED_STATES.includes(
-    stateValue as (typeof STORE_LOCATION_ALLOWED_STATES)[number],
-  )) {
-    return { values: null, error: "Invalid state selection" };
+  if (!isIndianState(stateValue)) {
+    return { values: null, error: "Please select a valid state" };
   }
-  if (!districtValue) {
-    return { values: null, error: "District is required" };
+
+  const districtError = validateLocalityField(districtValue, "District");
+  if (districtError) {
+    return { values: null, error: districtError };
   }
-  if (!STORE_LOCATION_ALLOWED_DISTRICTS.includes(
-    districtValue as (typeof STORE_LOCATION_ALLOWED_DISTRICTS)[number],
-  )) {
-    return { values: null, error: "Invalid district selection" };
+
+  const cityError = validateLocalityField(cityValue, "City / town");
+  if (cityError) {
+    return { values: null, error: cityError };
   }
-  if (!cityValue) {
-    return { values: null, error: "City / town is required" };
-  }
-  if (!STORE_LOCATION_ALLOWED_CITIES.includes(
-    cityValue as (typeof STORE_LOCATION_ALLOWED_CITIES)[number],
-  )) {
-    return { values: null, error: "Invalid city selection" };
-  }
+
   if (!pin) {
     return { values: null, error: "PIN code is required" };
   }

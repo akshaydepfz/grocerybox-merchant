@@ -123,7 +123,7 @@ export function MerchantIconSelect({
         >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="max-h-60">
         {items.map((item) => (
           <SelectItem key={item.value} value={item.value} className="text-xs">
             {item.label}
@@ -160,7 +160,7 @@ export function MerchantCompactSelect({
         >
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="max-h-60">
           {items.map((item) => (
             <SelectItem key={item} value={item} className="text-xs font-medium">
               {item}

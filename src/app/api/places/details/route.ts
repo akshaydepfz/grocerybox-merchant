@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { googleMapsApiKey } from "@/config/google-maps-config";
+import { parseIndianAddressFromGeocodeResult } from "@/features/onboarding/utils/parse-geocode-address";
 
 export async function GET(request: NextRequest) {
   const placeId = request.nextUrl.searchParams.get("placeId")?.trim() ?? "";
@@ -10,7 +11,7 @@ export async function GET(request: NextRequest) {
 
   const params = new URLSearchParams({
     place_id: placeId,
-    fields: "geometry,formatted_address",
+    fields: "geometry,formatted_address,address_components",
     key: googleMapsApiKey,
   });
 
@@ -26,6 +27,11 @@ export async function GET(request: NextRequest) {
     result?: {
       formatted_address?: string;
       geometry?: { location?: { lat?: number; lng?: number } };
+      address_components?: Array<{
+        long_name: string;
+        short_name: string;
+        types: string[];
+      }>;
     };
   };
 
@@ -39,11 +45,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ coordinates: null });
   }
 
+  const parsed = parseIndianAddressFromGeocodeResult({
+    formatted_address: json.result?.formatted_address,
+    address_components: json.result?.address_components,
+  });
+
   return NextResponse.json({
     coordinates: {
       latitude: lat,
       longitude: lng,
       formattedAddress: json.result?.formatted_address,
+      storeAddress: parsed?.storeAddress,
+      state: parsed?.state,
+      district: parsed?.district,
+      city: parsed?.city,
+      pinCode: parsed?.pinCode,
     },
   });
 }

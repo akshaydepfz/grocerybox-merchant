@@ -3,11 +3,33 @@ export type PlacePrediction = {
   description: string;
 };
 
+export type PlaceAddressFields = {
+  formattedAddress?: string;
+  storeAddress?: string;
+  state?: string;
+  district?: string;
+  city?: string;
+  pinCode?: string;
+};
+
 export type PlaceCoordinates = {
   latitude: number;
   longitude: number;
-  formattedAddress?: string;
-};
+} & PlaceAddressFields;
+
+function hasPlaceAddressFields(
+  fields: PlaceAddressFields | null | undefined,
+): fields is PlaceAddressFields {
+  if (!fields) return false;
+  return Boolean(
+    fields.storeAddress?.trim() ||
+      fields.formattedAddress?.trim() ||
+      fields.state?.trim() ||
+      fields.district?.trim() ||
+      fields.city?.trim() ||
+      fields.pinCode?.trim(),
+  );
+}
 
 /** Google Places Autocomplete + Details + Geocoding (REST, mirrors Flutter). */
 export async function autocompletePlaces(
@@ -54,3 +76,40 @@ export async function geocodeAddress(
   };
   return json.coordinates;
 }
+
+export async function reverseGeocodeCoordinates(
+  latitude: number,
+  longitude: number,
+): Promise<PlaceAddressFields | null> {
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return null;
+  }
+
+  const params = new URLSearchParams({
+    lat: String(latitude),
+    lng: String(longitude),
+  });
+  const response = await fetch(`/api/places/reverse-geocode?${params}`);
+  if (!response.ok) return null;
+
+  const json = (await response.json()) as {
+    address:
+      | (PlaceAddressFields & { latitude?: number; longitude?: number })
+      | null;
+  };
+
+  if (!json.address || !hasPlaceAddressFields(json.address)) {
+    return null;
+  }
+
+  return {
+    formattedAddress: json.address.formattedAddress,
+    storeAddress: json.address.storeAddress,
+    state: json.address.state,
+    district: json.address.district,
+    city: json.address.city,
+    pinCode: json.address.pinCode,
+  };
+}
+
+export { hasPlaceAddressFields };

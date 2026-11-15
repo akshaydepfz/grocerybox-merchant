@@ -12,6 +12,7 @@ import {
   autocompletePlaces,
   geocodeAddress,
   placeDetailsCoordinates,
+  type PlaceCoordinates,
   type PlacePrediction,
 } from "../services/google-places-service";
 import { roundMapCoordinate } from "../validators/store-location-validator";
@@ -30,7 +31,11 @@ type StoreLocationMapSectionProps = {
   longitude: number;
   enabled: boolean;
   isFetchingLocation: boolean;
-  onLocationChanged: (latitude: number, longitude: number) => void;
+  onLocationChanged: (
+    latitude: number,
+    longitude: number,
+    addressFields?: PlaceCoordinates | null,
+  ) => void;
   onUseCurrentLocation: () => void;
 };
 
@@ -77,8 +82,12 @@ export function StoreLocationMapSection({
     }, 350);
   };
 
-  const applyCoordinates = (lat: number, lng: number) => {
-    onLocationChanged(roundMapCoordinate(lat), roundMapCoordinate(lng));
+  const applyCoordinates = (coords: PlaceCoordinates) => {
+    onLocationChanged(
+      roundMapCoordinate(coords.latitude),
+      roundMapCoordinate(coords.longitude),
+      coords,
+    );
   };
 
   const selectPrediction = async (prediction: PlacePrediction) => {
@@ -88,7 +97,7 @@ export function StoreLocationMapSection({
 
     const coords = await placeDetailsCoordinates(prediction.placeId);
     if (!coords) return;
-    applyCoordinates(coords.latitude, coords.longitude);
+    applyCoordinates(coords);
   };
 
   const handleSearchSubmit = async (event: FormEvent) => {
@@ -106,7 +115,7 @@ export function StoreLocationMapSection({
       return;
     }
 
-    applyCoordinates(coords.latitude, coords.longitude);
+    applyCoordinates(coords);
   };
 
   return (

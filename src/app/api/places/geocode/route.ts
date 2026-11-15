@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { googleMapsApiKey } from "@/config/google-maps-config";
+import { parseIndianAddressFromGeocodeResult } from "@/features/onboarding/utils/parse-geocode-address";
 
 export async function GET(request: NextRequest) {
   const address = request.nextUrl.searchParams.get("address")?.trim() ?? "";
@@ -26,6 +27,11 @@ export async function GET(request: NextRequest) {
     results?: Array<{
       formatted_address?: string;
       geometry?: { location?: { lat?: number; lng?: number } };
+      address_components?: Array<{
+        long_name: string;
+        short_name: string;
+        types: string[];
+      }>;
     }>;
   };
 
@@ -40,11 +46,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ coordinates: null });
   }
 
+  const parsed = parseIndianAddressFromGeocodeResult(first);
+
   return NextResponse.json({
     coordinates: {
       latitude: lat,
       longitude: lng,
       formattedAddress: first.formatted_address,
+      storeAddress: parsed?.storeAddress,
+      state: parsed?.state,
+      district: parsed?.district,
+      city: parsed?.city,
+      pinCode: parsed?.pinCode,
     },
   });
 }
