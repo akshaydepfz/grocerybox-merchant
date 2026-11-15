@@ -5,143 +5,187 @@ import {
   Box,
   ExternalLink,
   Link2,
-  Megaphone,
+  Loader2,
   PackagePlus,
   Percent,
   ShoppingBag,
   ShoppingCart,
   Store,
+  Ticket,
   Users,
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { GroceryAnimatedLoader } from "@/components/shared/animated-loader";
+import { ErrorState } from "@/components/shared/error-state";
+import { merchantStorePublicUrl } from "@/config/store-domain";
+import { dashboardRoutePrefix } from "@/config/routes";
+import { useAuth } from "@/features/auth/components/auth-provider";
+import { OrderStepBadge } from "@/features/orders/components/order-step-badge";
+import { formatCustomerPhone, formatInr } from "@/features/orders/utils/format-order";
+import { useMerchantProfileQuery } from "@/features/profile/hooks/use-merchant-profile";
 import { cn } from "@/lib/utils";
+
+import { useDashboardData } from "../hooks/use-dashboard-data";
+import { formatRelativeTime } from "../utils/dashboard-metrics";
 
 import { DashboardHeader } from "./dashboard-header";
 import { DashboardSalesChart } from "./dashboard-sales-chart";
 import { DashboardSurface } from "./dashboard-surface";
 
-const STATS = [
-  {
-    label: "Total Sales",
-    value: "₹24,860",
-    delta: "+12.5% vs. last 7 days",
+const STAT_ICONS = {
+  "Total Sales": {
     icon: ShoppingBag,
     iconBg: "bg-[#dcfce7]",
     iconColor: "text-[#16a34a]",
     cardBg: "bg-[#f0fdf4]",
   },
-  {
-    label: "Total Orders",
-    value: "148",
-    delta: "+8.1% vs. last 7 days",
+  "Total Orders": {
     icon: ShoppingCart,
     iconBg: "bg-[#f3e8ff]",
     iconColor: "text-[#9333ea]",
     cardBg: "bg-[#faf5ff]",
   },
-  {
-    label: "Customers",
-    value: "312",
-    delta: "+16.4% vs. last 7 days",
+  Customers: {
     icon: Users,
     iconBg: "bg-[#ffedd5]",
     iconColor: "text-[#ea580c]",
     cardBg: "bg-[#fff7ed]",
   },
-  {
-    label: "Active Products",
-    value: "486",
-    delta: "+4.2% vs. last 7 days",
+  "Active Products": {
     icon: Box,
     iconBg: "bg-[#fee2e2]",
     iconColor: "text-[#dc2626]",
     cardBg: "bg-[#fef2f2]",
   },
-] as const;
-
-const RECENT_ORDERS = [
-  {
-    id: "GB2841",
-    customer: "Ananya R.",
-    items: "Tomatoes, Onions, Basmati Rice",
-    time: "15 min ago",
-    total: "₹1,240",
-    status: "Delivered" as const,
-    thumb: "from-orange-200 to-red-200",
-  },
-  {
-    id: "GB2840",
-    customer: "Rahul M.",
-    items: "Amul Milk, Bread, Eggs",
-    time: "32 min ago",
-    total: "₹520",
-    status: "Preparing" as const,
-    thumb: "from-sky-200 to-blue-200",
-  },
-  {
-    id: "GB2839",
-    customer: "Priya K.",
-    items: "Bananas, Apples, Spinach",
-    time: "48 min ago",
-    total: "₹780",
-    status: "Out for Delivery" as const,
-    thumb: "from-lime-200 to-green-200",
-  },
-] as const;
-
-const TOP_PRODUCTS = [
-  { name: "Fresh Bananas", orders: 86, revenue: "₹12,450", pct: 100, emoji: "🍌" },
-  { name: "Organic Tomatoes", orders: 72, revenue: "₹9,820", pct: 78, emoji: "🍅" },
-  { name: "Amul Butter 500g", orders: 58, revenue: "₹8,140", pct: 62, emoji: "🧈" },
-  { name: "Basmati Rice 5kg", orders: 41, revenue: "₹6,200", pct: 48, emoji: "🍚" },
-] as const;
-
-const QUICK_ACTIONS = [
-  { label: "Add Product", icon: PackagePlus },
-  { label: "Create Offer", icon: Percent },
-  { label: "View Store", icon: Store },
-  { label: "Share Link", icon: Link2 },
-] as const;
-
-const STATUS_STYLES = {
-  Delivered: "bg-[#dcfce7] text-[#15803d]",
-  Preparing: "bg-[#ffedd5] text-[#c2410c]",
-  "Out for Delivery": "bg-[#f3e8ff] text-[#7e22ce]",
 } as const;
 
+const THUMB_GRADIENTS = [
+  "from-orange-200 to-red-200",
+  "from-sky-200 to-blue-200",
+  "from-lime-200 to-green-200",
+  "from-violet-200 to-purple-200",
+  "from-amber-200 to-yellow-200",
+];
+
+function thumbGradientForId(id: string): string {
+  let hash = 0;
+  for (let i = 0; i < id.length; i += 1) {
+    hash = (hash + id.charCodeAt(i)) % THUMB_GRADIENTS.length;
+  }
+  return THUMB_GRADIENTS[hash] ?? THUMB_GRADIENTS[0]!;
+}
+
 export function DashboardHomeScreen() {
+  const { user, isRegistered } = useAuth();
+  const profileQuery = useMerchantProfileQuery();
+  const dashboard = useDashboardData();
+
+  const storefrontUrl = profileQuery.data?.store?.subdomain
+    ? merchantStorePublicUrl(profileQuery.data.store.subdomain)
+    : null;
+
+  const copyStoreLink = async () => {
+    if (!storefrontUrl) {
+      toast.error("Publish your store to get a shareable link.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(storefrontUrl);
+      toast.success("Store link copied.");
+    } catch {
+      toast.error("Could not copy link.");
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="mx-auto w-full max-w-[1200px] py-4">
+        <ErrorState
+          title="Sign in required"
+          message="Sign in to view your store dashboard."
+        />
+      </div>
+    );
+  }
+
+  if (!isRegistered) {
+    return (
+      <div className="mx-auto w-full max-w-[1200px] py-4">
+        <ErrorState
+          title="Complete onboarding"
+          message="Finish merchant registration to see live store metrics."
+          action={
+            <Button type="button" asChild>
+              <Link href="/onboarding">Continue onboarding</Link>
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
+  if (dashboard.loading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <GroceryAnimatedLoader
+          theme="dashboard"
+          label="Loading dashboard"
+          sublabel="Fetching orders and catalog"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6">
       <DashboardHeader />
 
+      {dashboard.isRefreshing ? (
+        <div className="flex items-center gap-2 text-xs text-[#6b7280]">
+          <Loader2 className="size-3.5 animate-spin" aria-hidden />
+          Refreshing metrics…
+        </div>
+      ) : null}
+
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {STATS.map((stat) => {
-          const Icon = stat.icon;
+        {dashboard.stats.map((stat) => {
+          const visual = STAT_ICONS[stat.label as keyof typeof STAT_ICONS];
+          const Icon = visual.icon;
           return (
             <div
               key={stat.label}
               className={cn(
                 "relative overflow-hidden rounded-2xl border border-[#e8f5e9] p-5",
-                stat.cardBg,
+                visual.cardBg,
               )}
             >
               <div
                 className={cn(
                   "absolute right-4 top-4 flex size-11 items-center justify-center rounded-xl",
-                  stat.iconBg,
+                  visual.iconBg,
                 )}
               >
-                <Icon className={cn("size-5", stat.iconColor)} aria-hidden />
+                <Icon className={cn("size-5", visual.iconColor)} aria-hidden />
               </div>
               <p className="text-sm font-medium text-[#6b7280]">{stat.label}</p>
               <p className="mt-2 text-2xl font-bold tracking-tight text-[#1a1f2e]">
                 {stat.value}
               </p>
-              <p className="mt-2 flex items-center gap-1 text-xs font-medium text-[#16a34a]">
-                <ArrowUpRight className="size-3.5" aria-hidden />
-                {stat.delta}
-              </p>
+              {stat.delta ? (
+                <p className="mt-2 flex items-center gap-1 text-xs font-medium text-[#16a34a]">
+                  <ArrowUpRight className="size-3.5" aria-hidden />
+                  {stat.delta}
+                </p>
+              ) : stat.footnote ? (
+                <p className="mt-2 text-xs text-[#9ca3af]">{stat.footnote}</p>
+              ) : null}
+              {stat.delta && stat.footnote ? (
+                <p className="mt-1 text-[10px] text-[#9ca3af]">{stat.footnote}</p>
+              ) : null}
             </div>
           );
         })}
@@ -154,176 +198,344 @@ export function DashboardHomeScreen() {
               <h2 className="text-base font-semibold text-[#1a1f2e]">
                 Sales Overview
               </h2>
-              <p className="mt-0.5 text-xs text-[#9ca3af]">Nov 6 – Nov 12</p>
+              <p className="mt-0.5 text-xs text-[#9ca3af]">
+                {dashboard.salesRangeLabel}
+              </p>
             </div>
             <Button
               type="button"
               variant="ghost"
               size="sm"
               className="text-[#6b7280]"
-              disabled
+              asChild
             >
-              View report
+              <Link href={`${dashboardRoutePrefix}/orders`}>View orders</Link>
             </Button>
           </div>
           <div className="mt-4 h-52 w-full">
-            <DashboardSalesChart />
+            <DashboardSalesChart
+              points={dashboard.salesSeries}
+              rangeLabel={dashboard.salesRangeLabel}
+            />
           </div>
         </DashboardSurface>
 
         <div className="flex flex-col gap-4">
           <div className="relative overflow-hidden rounded-2xl bg-[#bef264] p-5">
             <div className="pointer-events-none absolute -right-4 top-2 opacity-90">
-              <Megaphone className="size-20 text-[#0a3d32]/15" strokeWidth={1.2} />
+              <Ticket className="size-20 text-[#0a3d32]/15" strokeWidth={1.2} />
             </div>
-            <p className="text-lg font-bold text-[#0a3d32]">
-              Boost Your Sales!
+            <p className="text-lg font-bold text-[#0a3d32]">Coupons &amp; offers</p>
+            <p className="mt-1 max-w-[220px] text-xs leading-relaxed text-[#0a3d32]/80">
+              {dashboard.activeCoupons > 0
+                ? `${dashboard.activeCoupons} active coupon${dashboard.activeCoupons === 1 ? "" : "s"} running on your storefront.`
+                : "Create discount codes customers can apply at checkout."}
             </p>
-            <p className="mt-1 max-w-[200px] text-xs leading-relaxed text-[#0a3d32]/80">
-              Create seasonal offers and reach more customers in your delivery
-              zone.
-            </p>
-            <Button
-              type="button"
-              className="mt-4 h-9 rounded-xl bg-[#0a3d32] px-4 text-xs font-semibold text-white hover:bg-[#062f27]"
-              disabled
-            >
-              Create Offer
-            </Button>
+            <CouponCardActions
+              activeCoupons={dashboard.activeCoupons}
+              couponTotal={dashboard.couponTotal}
+            />
           </div>
 
           <DashboardSurface className="p-4">
-            <p className="px-1 text-sm font-semibold text-[#1a1f2e]">
-              Quick Actions
-            </p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              {QUICK_ACTIONS.map((action) => {
-                const Icon = action.icon;
-                return (
-                  <button
-                    key={action.label}
-                    type="button"
-                    disabled
-                    className="flex flex-col items-center gap-2 rounded-xl border border-[#f0f1f4] bg-[#fafbfc] px-2 py-4 text-center text-xs font-medium text-[#374151] transition hover:bg-white"
-                  >
-                    <span className="flex size-10 items-center justify-center rounded-xl bg-white shadow-sm">
-                      <Icon className="size-[18px] text-[#16a34a]" />
-                    </span>
-                    {action.label}
-                  </button>
-                );
-              })}
-            </div>
+            <p className="px-1 text-sm font-semibold text-[#1a1f2e]">Quick Actions</p>
+            <QuickActions
+              storefrontUrl={storefrontUrl}
+              onCopyStoreLink={() => void copyStoreLink()}
+            />
           </DashboardSurface>
         </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <DashboardSurface>
-          <div className="flex items-center justify-between border-b border-[#f0f1f4] px-5 py-4">
-            <h2 className="text-base font-semibold text-[#1a1f2e]">
-              Recent Orders
-            </h2>
-            <button
-              type="button"
-              className="flex items-center gap-1 text-xs font-medium text-[#16a34a]"
-              disabled
-            >
-              View all
-              <ExternalLink className="size-3" />
-            </button>
-          </div>
-          <ul className="divide-y divide-[#f0f1f4]">
-            {RECENT_ORDERS.map((order) => (
-              <li
-                key={order.id}
-                className="flex items-center gap-3 px-5 py-4"
-              >
-                <div
-                  className={cn(
-                    "size-12 shrink-0 rounded-xl bg-gradient-to-br",
-                    order.thumb,
-                  )}
-                  aria-hidden
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-semibold text-[#1a1f2e]">
-                      #{order.id}
-                    </span>
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                        STATUS_STYLES[order.status],
-                      )}
-                    >
-                      {order.status}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 truncate text-xs text-[#6b7280]">
-                    {order.items}
-                  </p>
-                  <p className="text-[10px] text-[#9ca3af]">
-                    {order.customer} · {order.time}
-                  </p>
-                </div>
-                <p className="shrink-0 text-sm font-bold text-[#1a1f2e]">
-                  {order.total}
-                </p>
-              </li>
-            ))}
-          </ul>
+          <RecentOrdersSection recentOrders={dashboard.recentOrders} />
         </DashboardSurface>
 
         <DashboardSurface>
-          <div className="flex items-center justify-between border-b border-[#f0f1f4] px-5 py-4">
-            <h2 className="text-base font-semibold text-[#1a1f2e]">
-              Top Selling Products
-            </h2>
-            <button
-              type="button"
-              className="text-xs font-medium text-[#16a34a]"
-              disabled
-            >
-              See all
-            </button>
-          </div>
-          <ul className="divide-y divide-[#f0f1f4]">
-            {TOP_PRODUCTS.map((product, index) => (
-              <li key={product.name} className="px-5 py-4">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={cn(
-                      "flex size-10 shrink-0 items-center justify-center rounded-xl text-lg",
-                      index === 0 && "bg-[#fef9c3]",
-                      index === 1 && "bg-[#ffedd5]",
-                      index === 2 && "bg-[#f3f4f6]",
-                      index === 3 && "bg-[#e0f2fe]",
-                    )}
-                    aria-hidden
-                  >
-                    {product.emoji}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-[#1a1f2e]">
-                      {product.name}
-                    </p>
-                    <p className="text-xs text-[#9ca3af]">
-                      {product.orders} orders · {product.revenue}
-                    </p>
-                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#f3f4f6]">
-                      <div
-                        className="h-full rounded-full bg-[#22c55e]"
-                        style={{ width: `${product.pct}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <TopProductsSection topProducts={dashboard.topProducts} />
         </DashboardSurface>
       </div>
+    </div>
+  );
+}
+
+function CouponCardActions({
+  activeCoupons,
+  couponTotal,
+}: {
+  activeCoupons: number;
+  couponTotal: number;
+}) {
+  return (
+    <div className="mt-4 flex flex-wrap gap-2">
+      <Button
+        type="button"
+        className="h-9 rounded-xl bg-[#0a3d32] px-4 text-xs font-semibold text-white hover:bg-[#062f27]"
+        asChild
+      >
+        <Link href={`${dashboardRoutePrefix}/coupons/new`}>Create coupon</Link>
+      </Button>
+      {couponTotal > 0 ? (
+        <Button
+          type="button"
+          variant="outline"
+          className="h-9 rounded-xl border-[#0a3d32]/20 bg-white/60 px-4 text-xs font-semibold text-[#0a3d32]"
+          asChild
+        >
+          <Link href={`${dashboardRoutePrefix}/coupons`}>
+            {activeCoupons > 0 ? "Manage coupons" : "View coupons"}
+          </Link>
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
+function QuickActions({
+  storefrontUrl,
+  onCopyStoreLink,
+}: {
+  storefrontUrl: string | null;
+  onCopyStoreLink: () => void;
+}) {
+  type QuickAction =
+    | {
+        label: string;
+        icon: typeof PackagePlus;
+        kind: "link";
+        href: string;
+        external?: boolean;
+      }
+    | {
+        label: string;
+        icon: typeof Link2;
+        kind: "button";
+        onClick: () => void;
+      };
+
+  const actions: QuickAction[] = [
+    {
+      label: "Add Product",
+      icon: PackagePlus,
+      kind: "link",
+      href: `${dashboardRoutePrefix}/products/new`,
+    },
+    {
+      label: "Add Coupon",
+      icon: Percent,
+      kind: "link",
+      href: `${dashboardRoutePrefix}/coupons/new`,
+    },
+    {
+      label: "View Store",
+      icon: Store,
+      kind: "link",
+      href: storefrontUrl ?? `${dashboardRoutePrefix}/profile`,
+      external: Boolean(storefrontUrl),
+    },
+    {
+      label: "Share Link",
+      icon: Link2,
+      kind: "button",
+      onClick: onCopyStoreLink,
+    },
+  ];
+
+  return (
+    <div className="mt-3 grid grid-cols-2 gap-2">
+      {actions.map((action) => {
+        const Icon = action.icon;
+        const inner = (
+          <>
+            <span className="flex size-10 items-center justify-center rounded-xl bg-white shadow-sm">
+              <Icon className="size-[18px] text-[#16a34a]" />
+            </span>
+            {action.label}
+          </>
+        );
+
+        if (action.kind === "link") {
+          return (
+            <Link
+              key={action.label}
+              href={action.href}
+              target={action.external ? "_blank" : undefined}
+              rel={action.external ? "noopener noreferrer" : undefined}
+              className="flex flex-col items-center gap-2 rounded-xl border border-[#f0f1f4] bg-[#fafbfc] px-2 py-4 text-center text-xs font-medium text-[#374151] transition hover:bg-white"
+            >
+              {inner}
+            </Link>
+          );
+        }
+
+        return (
+          <button
+            key={action.label}
+            type="button"
+            onClick={action.onClick}
+            className="flex flex-col items-center gap-2 rounded-xl border border-[#f0f1f4] bg-[#fafbfc] px-2 py-4 text-center text-xs font-medium text-[#374151] transition hover:bg-white"
+          >
+            {inner}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function RecentOrdersSection({
+  recentOrders,
+}: {
+  recentOrders: ReturnType<typeof useDashboardData>["recentOrders"];
+}) {
+  return (
+    <>
+      <div className="flex items-center justify-between border-b border-[#f0f1f4] px-5 py-4">
+        <h2 className="text-base font-semibold text-[#1a1f2e]">Recent Orders</h2>
+        <Link
+          href={`${dashboardRoutePrefix}/orders`}
+          className="flex items-center gap-1 text-xs font-medium text-[#16a34a]"
+        >
+          View all
+          <ExternalLink className="size-3" />
+        </Link>
+      </div>
+      {recentOrders.length === 0 ? (
+        <p className="px-5 py-10 text-center text-sm text-[#6b7280]">
+          Storefront orders will show up here once customers check out.
+        </p>
+      ) : (
+        <ul className="divide-y divide-[#f0f1f4]">
+          {recentOrders.map((order) => (
+            <li key={order.id} className="flex items-center gap-3 px-5 py-4">
+              <div
+                className={cn(
+                  "size-12 shrink-0 rounded-xl bg-gradient-to-br",
+                  thumbGradientForId(order.id),
+                )}
+                aria-hidden
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Link
+                    href={`${dashboardRoutePrefix}/orders/${order.id}`}
+                    className="text-sm font-semibold text-[#1a1f2e] hover:text-[#16a34a]"
+                  >
+                    #{order.orderNumber}
+                  </Link>
+                  <OrderStepBadge step={order.currentStep} />
+                </div>
+                <p className="mt-0.5 truncate text-xs text-[#6b7280]">
+                  {order.lineCount} line{order.lineCount === 1 ? "" : "s"} ·{" "}
+                  {order.deliveryLabel || order.fulfillmentMethod.replace(/_/g, " ")}
+                </p>
+                <p className="text-[10px] text-[#9ca3af]">
+                  {formatCustomerPhone(order.customerPhone)} ·{" "}
+                  {formatRelativeTime(order.placedAt)}
+                </p>
+              </div>
+              <p className="shrink-0 text-sm font-bold text-[#1a1f2e]">
+                {formatInr(order.toPay)}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
+function TopProductsSection({
+  topProducts,
+}: {
+  topProducts: ReturnType<typeof useDashboardData>["topProducts"];
+}) {
+  return (
+    <>
+      <div className="flex items-center justify-between border-b border-[#f0f1f4] px-5 py-4">
+        <h2 className="text-base font-semibold text-[#1a1f2e]">
+          Top Selling Products
+        </h2>
+        <Link
+          href={`${dashboardRoutePrefix}/products`}
+          className="text-xs font-medium text-[#16a34a]"
+        >
+          See all
+        </Link>
+      </div>
+      {topProducts.length === 0 ? (
+        <p className="px-5 py-10 text-center text-sm text-[#6b7280]">
+          Top sellers appear from your latest storefront orders.
+        </p>
+      ) : (
+        <ul className="divide-y divide-[#f0f1f4]">
+          {topProducts.map((product, index) => (
+            <li key={product.name} className="px-5 py-4">
+              <div className="flex items-center gap-3">
+                <ProductThumb product={product} index={index} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-[#1a1f2e]">
+                    {product.name}
+                  </p>
+                  <p className="text-xs text-[#9ca3af]">
+                    {product.orderLines} order line
+                    {product.orderLines === 1 ? "" : "s"} · {formatInr(product.revenue)}
+                  </p>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#f3f4f6]">
+                    <div
+                      className="h-full rounded-full bg-[#22c55e]"
+                      style={{ width: `${product.pct}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
+function ProductThumb({
+  product,
+  index,
+}: {
+  product: ReturnType<typeof useDashboardData>["topProducts"][number];
+  index: number;
+}) {
+  if (product.imageUrl) {
+    return (
+      <div className="relative size-10 shrink-0 overflow-hidden rounded-xl bg-[#f3f4f6]">
+        <Image
+          src={product.imageUrl}
+          alt=""
+          fill
+          className="object-cover"
+          sizes="40px"
+          unoptimized
+        />
+      </div>
+    );
+  }
+
+  return <ProductThumbFallback index={index} name={product.name} />;
+}
+
+function ProductThumbFallback({ index, name }: { index: number; name: string }) {
+  return (
+    <div
+      className={cn(
+        "flex size-10 shrink-0 items-center justify-center rounded-xl text-sm font-semibold text-[#374151]",
+        index === 0 && "bg-[#fef9c3]",
+        index === 1 && "bg-[#ffedd5]",
+        index === 2 && "bg-[#f3f4f6]",
+        index === 3 && "bg-[#e0f2fe]",
+      )}
+      aria-hidden
+    >
+      {name.charAt(0).toUpperCase()}
     </div>
   );
 }

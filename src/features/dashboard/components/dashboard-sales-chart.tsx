@@ -1,16 +1,6 @@
 "use client";
 
-const POINTS = [
-  { x: 0, y: 0.42 },
-  { x: 1, y: 0.55 },
-  { x: 2, y: 0.48 },
-  { x: 3, y: 0.62 },
-  { x: 4, y: 0.58 },
-  { x: 5, y: 0.78 },
-  { x: 6, y: 0.95 },
-] as const;
-
-const LABELS = ["Nov 6", "Nov 7", "Nov 8", "Nov 9", "Nov 10", "Nov 11", "Nov 12"];
+import type { SalesChartPoint } from "../utils/dashboard-metrics";
 
 const W = 560;
 const H = 200;
@@ -18,32 +8,61 @@ const PAD = { top: 16, right: 12, bottom: 28, left: 44 };
 const innerW = W - PAD.left - PAD.right;
 const innerH = H - PAD.top - PAD.bottom;
 
-function toPath(): string {
-  return POINTS.map((p, i) => {
-    const x = PAD.left + (p.x / 6) * innerW;
-    const y = PAD.top + innerH - p.y * innerH;
-    return `${i === 0 ? "M" : "L"} ${x} ${y}`;
-  }).join(" ");
+function toPath(points: SalesChartPoint[], maxValue: number): string {
+  if (points.length === 0) {
+    return "";
+  }
+  const denom = Math.max(points.length - 1, 1);
+  const scaleMax = maxValue > 0 ? maxValue : 1;
+
+  return points
+    .map((point, i) => {
+      const x = PAD.left + (i / denom) * innerW;
+      const y = PAD.top + innerH - (point.value / scaleMax) * innerH;
+      return `${i === 0 ? "M" : "L"} ${x} ${y}`;
+    })
+    .join(" ");
 }
 
-function toAreaPath(): string {
-  const line = toPath();
+function toAreaPath(points: SalesChartPoint[], maxValue: number): string {
+  if (points.length === 0) {
+    return "";
+  }
+  const line = toPath(points, maxValue);
   const xEnd = PAD.left + innerW;
   const yBase = PAD.top + innerH;
   const xStart = PAD.left;
   return `${line} L ${xEnd} ${yBase} L ${xStart} ${yBase} Z`;
 }
 
-export function DashboardSalesChart() {
-  const path = toPath();
-  const area = toAreaPath();
+function formatAxisAmount(value: number): string {
+  if (value >= 100_000) {
+    return `${(value / 100_000).toFixed(value >= 1_000_000 ? 0 : 1)}L`;
+  }
+  if (value >= 1_000) {
+    return `${Math.round(value / 1_000)}K`;
+  }
+  return String(Math.round(value));
+}
+
+type DashboardSalesChartProps = {
+  points: SalesChartPoint[];
+  rangeLabel: string;
+};
+
+export function DashboardSalesChart({ points, rangeLabel }: DashboardSalesChartProps) {
+  const maxValue = Math.max(...points.map((p) => p.value), 0);
+  const path = toPath(points, maxValue);
+  const area = toAreaPath(points, maxValue);
+  const ticks = [0, 0.25, 0.5, 0.75, 1];
+  const denom = Math.max(points.length - 1, 1);
 
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
       className="h-full w-full"
       role="img"
-      aria-label="Sales trend Nov 6 to Nov 12"
+      aria-label={`Sales trend ${rangeLabel}`}
     >
       <defs>
         <linearGradient id="sales-area" x1="0" y1="0" x2="0" y2="1">
@@ -52,9 +71,9 @@ export function DashboardSalesChart() {
         </linearGradient>
       </defs>
 
-      {[0, 0.25, 0.5, 0.75, 1].map((t) => {
+      {ticks.map((t) => {
         const y = PAD.top + innerH - t * innerH;
-        const label = `${Math.round(t * 30)}K`;
+        const label = formatAxisAmount(maxValue * t);
         return (
           <g key={t}>
             <line
@@ -77,44 +96,48 @@ export function DashboardSalesChart() {
         );
       })}
 
-      <path d={area} fill="url(#sales-area)" />
-      <path
-        d={path}
-        fill="none"
-        stroke="#16a34a"
-        strokeWidth={2.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-
-      {POINTS.map((p, i) => {
-        const x = PAD.left + (p.x / 6) * innerW;
-        const y = PAD.top + innerH - p.y * innerH;
-        return (
-          <circle
-            key={LABELS[i]}
-            cx={x}
-            cy={y}
-            r={i === POINTS.length - 1 ? 5 : 0}
-            fill="#16a34a"
-            stroke="#fff"
-            strokeWidth={2}
+      {path ? (
+        <>
+          <path d={area} fill="url(#sales-area)" />
+          <path
+            d={path}
+            fill="none"
+            stroke="#16a34a"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
-        );
-      })}
+        </>
+      ) : (
+        <text
+          x={W / 2}
+          y={H / 2}
+          textAnchor="middle"
+          className="fill-[#9ca3af] text-[12px]"
+        >
+          No sales in this period
+        </text>
+      )}
 
-      {LABELS.map((label, i) => {
-        const x = PAD.left + (i / 6) * innerW;
+      {points.map((point, i) => {
+        const x = PAD.left + (i / denom) * innerW;
+        const scaleMax = maxValue > 0 ? maxValue : 1;
+        const y = PAD.top + innerH - (point.value / scaleMax) * innerH;
+        const showDot = i === points.length - 1 && point.value > 0;
         return (
-          <text
-            key={label}
-            x={x}
-            y={H - 6}
-            textAnchor="middle"
-            className="fill-[#9ca3af] text-[10px]"
-          >
-            {label}
-          </text>
+          <g key={point.dateKey}>
+            {showDot ? (
+              <circle cx={x} cy={y} r={5} fill="#16a34a" stroke="#fff" strokeWidth={2} />
+            ) : null}
+            <text
+              x={x}
+              y={H - 6}
+              textAnchor="middle"
+              className="fill-[#9ca3af] text-[10px]"
+            >
+              {point.label}
+            </text>
+          </g>
         );
       })}
     </svg>
