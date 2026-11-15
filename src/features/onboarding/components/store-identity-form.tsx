@@ -136,7 +136,7 @@ function SubdomainField({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder="subdomain"
-            className="w-full px-4 py-3.5 text-sm font-medium text-gb-mo-gray-800 outline-none placeholder:text-gb-mo-gray-400"
+            className="w-full px-4 py-3.5 text-sm font-medium text-gb-mo-gray-800 outline-none placeholder:font-normal placeholder:text-gb-mo-gray-300"
           />
           {showCheckmark ? (
             <span className="absolute top-1/2 right-2 flex size-5 -translate-y-1/2 items-center justify-center rounded-full bg-gb-onboard-brand">
@@ -241,7 +241,7 @@ function DescriptionField({
             maxLength={maxLength}
             rows={3}
             placeholder="Describe your grocery store..."
-            className="min-h-[72px] w-full resize-y text-sm leading-relaxed text-gb-mo-gray-800 outline-none placeholder:text-gb-mo-gray-400"
+            className="min-h-[72px] w-full resize-y text-sm leading-relaxed text-gb-mo-gray-800 outline-none placeholder:font-normal placeholder:text-gb-mo-gray-300"
           />
         </div>
         <p className="text-right text-[11px] font-medium text-gb-mo-gray-400">

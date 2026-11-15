@@ -5,12 +5,6 @@ export type BusinessInformationFormValues = {
   mobileNumber: string;
   email: string;
   gstin: string;
-  addressLine1: string;
-  addressLine2: string;
-  state: string;
-  district: string;
-  city: string;
-  pinCode: string;
 };
 
 export type BusinessInformationData = {
@@ -28,6 +22,7 @@ export type BusinessInformationData = {
   pinCode: string;
 };
 
+/** Address is collected on the store location step; business API accepts empty address fields. */
 export function businessInformationToJson(
   values: BusinessInformationFormValues,
 ): Record<string, string | null> {
@@ -38,12 +33,12 @@ export function businessInformationToJson(
     mobile_number: values.mobileNumber,
     email: values.email,
     gstin: values.gstin,
-    address_line1: values.addressLine1,
-    address_line2: values.addressLine2,
-    state: values.state,
-    district: values.district,
-    city: values.city,
-    pin_code: values.pinCode,
+    address_line1: "",
+    address_line2: "",
+    state: "",
+    district: "",
+    city: "",
+    pin_code: "",
   };
 }
 
@@ -77,11 +72,18 @@ export function defaultBusinessFormValues(
     mobileNumber: "",
     email: signedInEmail,
     gstin: "",
-    addressLine1: "",
-    addressLine2: "",
-    state: "Kerala",
-    district: "Kozhikode",
-    city: "Kozhikode",
-    pinCode: "673001",
+  };
+}
+
+export function businessDataToFormValues(
+  data: BusinessInformationData,
+): BusinessInformationFormValues {
+  return {
+    businessName: data.businessName,
+    businessType: data.businessType || null,
+    ownerFullName: data.ownerFullName,
+    mobileNumber: data.mobileNumber,
+    email: data.email,
+    gstin: data.gstin,
   };
 }

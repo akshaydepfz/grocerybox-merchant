@@ -14,8 +14,8 @@ import {
   saveBusiness,
 } from "../services/business-information-service";
 import {
+  businessDataToFormValues,
   defaultBusinessFormValues,
-  type BusinessInformationData,
   type BusinessInformationFormValues,
 } from "../types/business-information";
 import { normalizeAndValidateBusinessInformation } from "../validators/business-information-validator";
@@ -28,23 +28,6 @@ import {
 } from "./merchant-onboarding-layout";
 
 const STORE_IDENTITY_PATH = "/onboarding/store-identity";
-
-function dataToFormValues(data: BusinessInformationData): BusinessInformationFormValues {
-  return {
-    businessName: data.businessName,
-    businessType: data.businessType || null,
-    ownerFullName: data.ownerFullName,
-    mobileNumber: data.mobileNumber,
-    email: data.email,
-    gstin: data.gstin,
-    addressLine1: data.addressLine1,
-    addressLine2: data.addressLine2,
-    state: data.state || "Kerala",
-    district: data.district || "Kozhikode",
-    city: data.city || "Kozhikode",
-    pinCode: data.pinCode || "673001",
-  };
-}
 
 export function MerchantDetailsScreen() {
   const router = useRouter();
@@ -75,7 +58,7 @@ export function MerchantDetailsScreen() {
     if (!loadQuery.data || userModifiedRef.current) {
       return;
     }
-    setFormValues(dataToFormValues(loadQuery.data));
+    setFormValues(businessDataToFormValues(loadQuery.data));
   }, [loadQuery.data]);
 
   const patchForm = useCallback((patch: Partial<BusinessInformationFormValues>) => {
@@ -138,7 +121,7 @@ export function MerchantDetailsScreen() {
         Business Information
       </h1>
       <p className="mt-1 text-xs leading-relaxed text-gb-mo-gray-500">
-        Tell us about your business and store.
+        Tell us about your business. Store address is added in the location step.
       </p>
       <section className="mt-4 sm:mt-6">
         <BusinessInformationForm values={formValues} onChange={patchForm} />

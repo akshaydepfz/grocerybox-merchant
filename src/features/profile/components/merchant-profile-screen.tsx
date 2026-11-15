@@ -267,12 +267,6 @@ export function MerchantProfileScreen() {
             <ProfileField label="Owner name" value={displayOrDash(business.ownerFullName)} />
             <ProfileField label="Mobile" value={displayOrDash(business.mobileNumber)} />
             <ProfileField label="GSTIN" value={displayOrDash(business.gstin)} />
-            <ProfileField label="Address line 1" value={displayOrDash(business.addressLine1)} />
-            <ProfileField label="Address line 2" value={displayOrDash(business.addressLine2)} />
-            <ProfileField label="City" value={displayOrDash(business.city)} />
-            <ProfileField label="District" value={displayOrDash(business.district)} />
-            <ProfileField label="State" value={displayOrDash(business.state)} />
-            <ProfileField label="PIN code" value={displayOrDash(business.pinCode)} />
           </ProfileFieldGrid>
         ) : (
           <p className="text-sm text-[#6b7280]">

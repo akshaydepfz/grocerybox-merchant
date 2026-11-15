@@ -14,7 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const fieldBase =
-  "h-auto rounded-lg border-gb-mo-input-border text-xs text-gb-mo-gray-800 shadow-none focus-visible:border-gb-mo-focus-ring focus-visible:ring-[1.5px] focus-visible:ring-gb-mo-focus-ring/40";
+  "h-auto rounded-lg border-gb-mo-input-border text-xs text-gb-mo-gray-800 shadow-none placeholder:font-normal placeholder:text-gb-mo-gray-300 focus-visible:border-gb-mo-focus-ring focus-visible:ring-[1.5px] focus-visible:ring-gb-mo-focus-ring/40";
 
 export function MerchantFieldLabel({
   label,
@@ -118,7 +118,7 @@ export function MerchantIconSelect({
             fieldBase,
             "h-auto w-full justify-between pl-9",
             dense ? "py-2.5" : "py-3",
-            !value && "text-gb-mo-gray-500",
+            !value && "text-gb-mo-gray-300",
           )}
         >
           <SelectValue placeholder={placeholder} />

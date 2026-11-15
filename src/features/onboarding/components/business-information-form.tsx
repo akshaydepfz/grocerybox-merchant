@@ -1,31 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
-import {
-  Building2,
-  ChevronDown,
-  FileText,
-  LocateFixed,
-  Mail,
-  MapPin,
-  Phone,
-  Store,
-  Tag,
-  UserRound,
-} from "lucide-react";
+import { ChevronDown, FileText, Mail, Phone, Store, Tag, UserRound } from "lucide-react";
 
 import { useMediaQuery } from "@/hooks/use-media-query";
 
-import {
-  BUSINESS_TYPE_OPTIONS,
-  CITY_OPTIONS,
-  DISTRICT_OPTIONS,
-  STATE_OPTIONS,
-} from "../constants";
+import { BUSINESS_TYPE_OPTIONS } from "../constants";
 import type { BusinessInformationFormValues } from "../types/business-information";
 
 import {
-  MerchantCompactSelect,
   MerchantFieldBlock,
   MerchantIconSelect,
   MerchantIconTextField,
@@ -98,8 +81,6 @@ export function BusinessInformationForm({
           placeholder="e.g. 32ABCDE1234F1Z5"
         />
       </MerchantFieldBlock>
-
-      <AddressSection twoColumn={twoCol} values={values} onChange={onChange} />
     </div>
   );
 }
@@ -117,7 +98,13 @@ function FormRow({
   return <div className="grid grid-cols-2 gap-4">{children}</div>;
 }
 
-function FormRowStack({ children, className }: { children: React.ReactNode; className?: string }) {
+function FormRowStack({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return <div className={className}>{children}</div>;
 }
 
@@ -145,83 +132,18 @@ function MobileNumberField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Mobile number"
-        className="min-w-0 flex-1 px-3 py-3 text-base text-gb-mo-gray-800 outline-none placeholder:text-gb-mo-gray-400 sm:text-xs"
+        className="min-w-0 flex-1 px-3 py-3 text-base text-gb-mo-gray-800 outline-none placeholder:font-normal placeholder:text-gb-mo-gray-300 sm:text-xs"
       />
     </div>
   );
 }
 
-function MobilePrefix({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={className}>{children}</div>;
-}
-
-function AddressSection({
-  twoColumn,
-  values,
-  onChange,
+function MobilePrefix({
+  children,
+  className,
 }: {
-  twoColumn: boolean;
-  values: BusinessInformationFormValues;
-  onChange: (patch: Partial<BusinessInformationFormValues>) => void;
+  children: React.ReactNode;
+  className?: string;
 }) {
-  return (
-    <div className="rounded-xl border border-gb-mo-address-border bg-gb-mo-address-bg p-3.5 sm:p-4">
-      <p className="text-xs font-bold text-gb-mo-gray-900">Business Address</p>
-      <div className="mt-3.5 space-y-3.5">
-        <FormRow twoColumn={twoColumn}>
-          <MerchantFieldBlock label="Address Line 1" required>
-            <MerchantIconTextField
-              icon={MapPin}
-              dense
-              value={values.addressLine1}
-              onChange={(e) => onChange({ addressLine1: e.target.value })}
-              placeholder="House / Building / Street"
-            />
-          </MerchantFieldBlock>
-          <MerchantFieldBlock label="Address Line 2" optional>
-            <MerchantIconTextField
-              icon={Building2}
-              dense
-              value={values.addressLine2}
-              onChange={(e) => onChange({ addressLine2: e.target.value })}
-              placeholder="Area / Landmark"
-            />
-          </MerchantFieldBlock>
-        </FormRow>
-
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <MerchantCompactSelect
-            label="State"
-            required
-            value={values.state}
-            onValueChange={(state) => onChange({ state })}
-            items={STATE_OPTIONS}
-          />
-          <MerchantCompactSelect
-            label="District"
-            required
-            value={values.district}
-            onValueChange={(district) => onChange({ district })}
-            items={DISTRICT_OPTIONS}
-          />
-          <MerchantCompactSelect
-            label="City / Town"
-            required
-            value={values.city}
-            onValueChange={(city) => onChange({ city })}
-            items={CITY_OPTIONS}
-          />
-          <MerchantFieldBlock label="PIN Code" required>
-            <MerchantIconTextField
-              icon={LocateFixed}
-              dense
-              inputMode="numeric"
-              value={values.pinCode}
-              onChange={(e) => onChange({ pinCode: e.target.value })}
-            />
-          </MerchantFieldBlock>
-        </div>
-      </div>
-    </div>
-  );
+  return <div className={className}>{children}</div>;
 }
