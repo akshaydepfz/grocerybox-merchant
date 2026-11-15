@@ -11,7 +11,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Sign in",
   description:
-    "Sign in with Google to create and manage your Grocery.in merchant store.",
+    "Sign in with Google to create and manage your Grocerybox.in merchant store.",
 };
 
 /** Merchant sign-in (Flutter `OnboardScreen` / route `/onboard`). */
