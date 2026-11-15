@@ -19,6 +19,11 @@ const PLAN_VISUALS: Record<
   string,
   { icon: LucideIcon; iconColor: string; background: string }
 > = {
+  basic: {
+    icon: Leaf,
+    iconColor: "#059669",
+    background: "#ECFDF5",
+  },
   starter: {
     icon: Leaf,
     iconColor: "#059669",
@@ -36,8 +41,26 @@ const PLAN_VISUALS: Record<
   },
 };
 
+const PLAN_TIER_BY_SLUG: Record<string, string> = {
+  basic: "BASIC",
+  starter: "BASIC",
+  growth: "GROWTH",
+  pro: "PRO",
+};
+
 function planVisual(slug: string) {
   return PLAN_VISUALS[slug] ?? PLAN_VISUALS.growth;
+}
+
+function planTierLabel(plan: SubscriptionPlan): string {
+  const tier =
+    PLAN_TIER_BY_SLUG[plan.slug.toLowerCase()] ?? plan.slug.toUpperCase();
+  const order = String(plan.displayOrder).padStart(2, "0");
+  return `PLAN ${order} · ${tier}`;
+}
+
+function isPopularGrowthPlan(plan: SubscriptionPlan): boolean {
+  return plan.slug.toLowerCase() === "growth";
 }
 
 export function PlanStatusBanner({
@@ -112,16 +135,21 @@ function PlanFeatureList({ features }: { features: string[] }) {
   }
 
   return (
-    <ul className="space-y-2.5">
-      {features.map((feature) => (
-        <li key={feature} className="flex items-start gap-2">
-          <Check className="mt-0.5 size-[18px] shrink-0 text-gb-mo-brand-dark" />
-          <span className="text-xs font-medium text-gb-mo-gray-600">
-            {feature}
-          </span>
-        </li>
-      ))}
-    </ul>
+    <div>
+      <p className="mb-3 text-xs font-bold text-gb-mo-gray-800">
+        Features included
+      </p>
+      <ul className="space-y-2.5">
+        {features.map((feature) => (
+          <li key={feature} className="flex items-start gap-2">
+            <Check className="mt-0.5 size-[18px] shrink-0 text-gb-mo-brand-dark" />
+            <span className="text-xs font-medium text-gb-mo-gray-600">
+              {feature}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -137,29 +165,41 @@ export function PlanCard({
   const visual = planVisual(plan.slug);
   const Icon = visual.icon;
 
+  const popular = isPopularGrowthPlan(plan);
+
   return (
     <div
       className={cn(
-        "rounded-2xl border bg-white p-5 shadow-sm",
+        "relative rounded-2xl border bg-white p-5 shadow-sm",
         selected ? "border-gb-onboard-brand" : "border-gb-mo-gray-200",
       )}
     >
+      {popular ? (
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gb-mo-continue px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-gb-mo-gray-900">
+          Popular
+        </span>
+      ) : null}
+      <p className="text-[10px] font-bold uppercase tracking-wider text-gb-mo-gray-500">
+        {planTierLabel(plan)}
+      </p>
       <span
-        className="flex size-10 items-center justify-center rounded-xl"
+        className="mt-3 flex size-10 items-center justify-center rounded-xl"
         style={{ backgroundColor: visual.background }}
       >
         <Icon className="size-[22px]" style={{ color: visual.iconColor }} />
       </span>
       <h3 className="mt-4 text-lg font-bold text-gb-mo-gray-900">{plan.name}</h3>
-      <p className="mt-1 text-xs text-gb-mo-gray-400">
-        {plan.description || plan.slug}
-      </p>
       <p className="mt-4 flex items-baseline gap-1">
         <span className="text-[32px] font-extrabold tracking-tight text-gb-mo-gray-900">
           ₹{plan.price}
         </span>
-        <span className="text-xs text-gb-mo-gray-400">/ {plan.billingInterval}</span>
+        <span className="text-xs text-gb-mo-gray-400">/ month</span>
       </p>
+      {plan.description ? (
+        <p className="mt-3 text-xs leading-relaxed text-gb-mo-gray-500">
+          {plan.description}
+        </p>
+      ) : null}
       <div className="mt-5">
         <PlanFeatureList features={plan.features} />
       </div>
@@ -174,7 +214,7 @@ export function PlanCard({
         )}
         variant={selected ? "default" : "outline"}
       >
-        Choose Plan
+        ₹{plan.price} / Month
       </Button>
     </div>
   );
