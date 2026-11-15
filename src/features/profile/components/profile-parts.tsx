@@ -37,18 +37,24 @@ export function ProfileSection({
   return (
     <section
       className={cn(
-        "rounded-2xl border border-[#eceef2] bg-white p-5 shadow-[0_1px_3px_rgb(0_0_0_/0.04)] sm:p-6",
+        "rounded-2xl border border-[#eceef2] bg-white p-4 shadow-[0_1px_3px_rgb(0_0_0_/0.04)] sm:p-6",
         className,
       )}
     >
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-        <div>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
           <h2 className="text-base font-bold text-[#1a1f2e]">{title}</h2>
           {description ? (
-            <p className="mt-1 text-xs text-[#6b7280]">{description}</p>
+            <p className="mt-1 text-xs leading-relaxed text-[#6b7280]">
+              {description}
+            </p>
           ) : null}
         </div>
-        {action}
+        {action ? (
+          <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
+            {action}
+          </div>
+        ) : null}
       </div>
       {children}
     </section>
@@ -57,7 +63,9 @@ export function ProfileSection({
 
 export function ProfileFieldGrid({ children }: { children: ReactNode }) {
   return (
-    <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</dl>
+    <dl className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+      {children}
+    </dl>
   );
 }
 
@@ -65,17 +73,24 @@ export function ProfileField({
   label,
   value,
   className,
+  valueClassName,
 }: {
   label: string;
   value: ReactNode;
   className?: string;
+  valueClassName?: string;
 }) {
   return (
     <div className={cn("min-w-0", className)}>
       <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">
         {label}
       </dt>
-      <dd className="mt-1 text-sm font-medium text-[#1a1f2e] break-words">
+      <dd
+        className={cn(
+          "mt-1 text-sm font-medium break-words text-[#1a1f2e] [overflow-wrap:anywhere]",
+          valueClassName,
+        )}
+      >
         {value}
       </dd>
     </div>
@@ -85,9 +100,11 @@ export function ProfileField({
 export function ProfileBadge({
   children,
   variant = "neutral",
+  className,
 }: {
   children: ReactNode;
   variant?: "success" | "warning" | "danger" | "neutral";
+  className?: string;
 }) {
   const styles = {
     success: "bg-[#ecfdf3] text-[#15803d] border-[#bbf7d0]",
@@ -101,6 +118,7 @@ export function ProfileBadge({
       className={cn(
         "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
         styles,
+        className,
       )}
     >
       {children}
@@ -118,8 +136,8 @@ export function ProfileOnboardingProgress({
   const percent = onboardingProgressPercent(status);
 
   return (
-    <div className="rounded-2xl border border-[#dcefe0] bg-gradient-to-br from-[#f0fdf4] to-white p-5 sm:p-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="rounded-2xl border border-[#dcefe0] bg-gradient-to-br from-[#f0fdf4] to-white p-4 sm:p-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-[#16a34a]">
             Onboarding progress
@@ -141,7 +159,7 @@ export function ProfileOnboardingProgress({
         />
       </div>
 
-      <ol className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <ol className="mt-4 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 lg:grid-cols-4">
         {ONBOARDING_PROGRESS_STEPS.map((step) => {
           const complete = isOnboardingStepComplete(status, step.status);
           const isPublishStep = step.status === "published";
@@ -184,19 +202,24 @@ export function ProfileStatusRow({
   detail?: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-[#eceef2] bg-[#fafbfc] px-4 py-3">
+    <div className="flex flex-col gap-2.5 rounded-xl border border-[#eceef2] bg-[#fafbfc] px-3.5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-4">
       <div className="flex min-w-0 items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-lg bg-white text-[#4b5563] shadow-sm">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#4b5563] shadow-sm">
           <Icon className="size-4" aria-hidden />
         </div>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-[#1a1f2e]">{label}</p>
           {detail ? (
-            <p className="text-xs text-[#6b7280]">{detail}</p>
+            <p className="text-xs text-[#6b7280] break-words [overflow-wrap:anywhere]">
+              {detail}
+            </p>
           ) : null}
         </div>
       </div>
-      <ProfileBadge variant={enabled ? "success" : "neutral"}>
+      <ProfileBadge
+        variant={enabled ? "success" : "neutral"}
+        className="self-start sm:shrink-0"
+      >
         {enabled ? "Enabled" : "Disabled"}
       </ProfileBadge>
     </div>
@@ -223,7 +246,7 @@ export function ProfileImagePreview({
       <div
         className={cn(
           "flex items-center justify-center rounded-xl border border-dashed border-[#d1d5db] bg-[#f9fafb] text-xs font-semibold text-[#9ca3af]",
-          aspect === "banner" ? "h-28 w-full" : "size-24",
+          aspect === "banner" ? "h-28 w-full" : "mx-auto size-24 w-full max-w-[7rem] sm:mx-0 sm:w-24",
         )}
       >
         {fallbackLabel}
@@ -235,7 +258,7 @@ export function ProfileImagePreview({
     <div
       className={cn(
         "relative overflow-hidden rounded-xl border border-[#eceef2] bg-[#f5f6f8]",
-        aspect === "banner" ? "h-28 w-full" : "size-24",
+        aspect === "banner" ? "h-28 w-full" : "mx-auto size-24 w-full max-w-[7rem] sm:mx-0 sm:w-24",
       )}
     >
       <Image
@@ -276,13 +299,22 @@ export function ColorSwatch({
   );
 }
 
-export function CopyStoreLinkButton({ url }: { url: string }) {
+export function CopyStoreLinkButton({
+  url,
+  className,
+}: {
+  url: string;
+  className?: string;
+}) {
   const [copied, setCopied] = useState(false);
 
   return (
     <button
       type="button"
-      className="inline-flex items-center gap-1.5 rounded-lg border border-[#dcefe0] bg-[#f0fdf4] px-3 py-1.5 text-xs font-semibold text-[#15803d] transition hover:bg-[#dcfce7]"
+      className={cn(
+        "inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#dcefe0] bg-[#f0fdf4] px-3 py-2.5 text-xs font-semibold text-[#15803d] transition hover:bg-[#dcfce7] sm:py-1.5",
+        className,
+      )}
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(url);
@@ -304,13 +336,22 @@ export function CopyStoreLinkButton({ url }: { url: string }) {
   );
 }
 
-export function OpenStoreLink({ url }: { url: string }) {
+export function OpenStoreLink({
+  url,
+  className,
+}: {
+  url: string;
+  className?: string;
+}) {
   return (
     <a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1.5 rounded-lg bg-[#16a34a] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#15803d]"
+      className={cn(
+        "inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#16a34a] px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-[#15803d] sm:py-1.5",
+        className,
+      )}
     >
       Open store
       <ExternalLink className="size-3.5" aria-hidden />

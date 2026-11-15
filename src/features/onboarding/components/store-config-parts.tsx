@@ -126,7 +126,7 @@ export function ToggleSettingCard({
   onChange: (value: boolean) => void;
 }) {
   return (
-    <div className="flex items-start gap-3.5 rounded-xl border border-gb-mo-gray-200 bg-white p-4">
+    <div className="flex items-start gap-3 rounded-xl border border-gb-mo-gray-200 bg-white p-3.5 sm:gap-3.5 sm:p-4">
       <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gb-mo-gray-100/80">
         <Icon className="size-5 text-gb-mo-gray-700" />
       </span>

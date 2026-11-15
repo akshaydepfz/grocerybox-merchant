@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { merchantStorePublicUrl } from "@/config/store-domain";
+import { DashboardPage } from "@/features/dashboard/components/dashboard-page";
 import { ApiError } from "@/lib/api/types";
 
 import {
@@ -93,7 +94,7 @@ function ProfileHeaderSection({
           type="button"
           variant="outline"
           size="sm"
-          className="gap-1.5"
+          className="w-full gap-1.5 sm:w-auto"
           onClick={onEditName}
         >
           <Pencil className="size-3.5" />
@@ -101,7 +102,7 @@ function ProfileHeaderSection({
         </Button>
       }
     >
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+      <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
         <div className="relative size-20 shrink-0 overflow-hidden rounded-2xl border border-[#eceef2] bg-gradient-to-br from-[#16a34a] to-[#0a3d32] text-2xl font-bold text-white shadow-sm">
           {imageUrl && !imageFailed ? (
             <Image
@@ -120,9 +121,11 @@ function ProfileHeaderSection({
           )}
         </div>
 
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-xl font-bold text-[#1a1f2e]">{displayName}</h3>
+        <div className="min-w-0 w-full flex-1 text-center sm:text-left">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+            <h3 className="text-lg font-bold text-[#1a1f2e] sm:text-xl">
+              {displayName}
+            </h3>
             {account?.emailVerified ? (
               <ProfileBadge variant="success">Email verified</ProfileBadge>
             ) : (
@@ -211,20 +214,22 @@ export function MerchantProfileScreen() {
     ? merchantStorePublicUrl(store.subdomain)
     : null;
 
+  const actionButtonClass = "w-full gap-1.5 sm:w-auto";
+
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
+    <DashboardPage className="mx-auto max-w-6xl gap-4 sm:gap-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="min-w-0">
           <div className="flex items-center gap-2 text-[#16a34a]">
-            <UserRound className="size-5" aria-hidden />
+            <UserRound className="size-5 shrink-0" aria-hidden />
             <span className="text-xs font-semibold uppercase tracking-wide">
               Merchant profile
             </span>
           </div>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#1a1f2e]">
+          <h1 className="mt-1 text-xl font-bold tracking-tight text-[#1a1f2e] sm:text-2xl">
             Your store identity
           </h1>
-          <p className="mt-1 max-w-2xl text-sm text-[#6b7280]">
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[#6b7280]">
             View account, business, storefront, and subscription details from
             your live backend profile.
           </p>
@@ -233,7 +238,7 @@ export function MerchantProfileScreen() {
           type="button"
           variant="outline"
           size="sm"
-          className="gap-1.5"
+          className={actionButtonClass}
           onClick={() => void profileQuery.refetch()}
           disabled={profileQuery.isFetching}
         >
@@ -281,10 +286,15 @@ export function MerchantProfileScreen() {
         description="Public storefront identity"
         action={
           storeUrl ? (
-            <div className="flex flex-wrap gap-2">
-              <CopyStoreLinkButton url={storeUrl} />
-              {profile.storePublished ? <OpenStoreLink url={storeUrl} /> : null}
-            </div>
+            <>
+              <CopyStoreLinkButton
+                url={storeUrl}
+                className={actionButtonClass}
+              />
+              {profile.storePublished ? (
+                <OpenStoreLink url={storeUrl} className={actionButtonClass} />
+              ) : null}
+            </>
           ) : null
         }
       >
@@ -307,7 +317,12 @@ export function MerchantProfileScreen() {
               <ProfileField label="Store name" value={displayOrDash(store.storeName)} />
               <ProfileField label="Subdomain" value={displayOrDash(store.subdomain)} />
               <ProfileField label="Store ID" value={displayOrDash(profile.storeId)} />
-              <ProfileField label="Public URL" value={storeUrl ?? "—"} className="sm:col-span-2" />
+              <ProfileField
+                label="Public URL"
+                value={storeUrl ?? "—"}
+                className="sm:col-span-2 lg:col-span-3"
+                valueClassName="font-mono text-xs sm:text-sm"
+              />
               <ProfileField
                 label="Description"
                 value={displayOrDash(store.description)}
@@ -410,18 +425,18 @@ export function MerchantProfileScreen() {
         description="Your active plan and billing cycle"
       >
         {subscription?.plan ? (
-          <div className="rounded-2xl border border-[#dcefe0] bg-gradient-to-br from-[#f8fcf9] to-white p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-lg font-bold text-[#1a1f2e]">
+          <div className="rounded-2xl border border-[#dcefe0] bg-gradient-to-br from-[#f8fcf9] to-white p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-base font-bold text-[#1a1f2e] sm:text-lg">
                   {displayOrDash(subscription.plan.name)}
                 </p>
-                <p className="mt-1 text-sm text-[#6b7280]">
+                <p className="mt-1 text-sm leading-relaxed text-[#6b7280]">
                   {displayOrDash(subscription.plan.description)}
                 </p>
               </div>
-              <div className="text-right">
-                <p className="text-xl font-bold text-[#14532d]">
+              <div className="shrink-0 sm:text-right">
+                <p className="text-lg font-bold text-[#14532d] sm:text-xl">
                   {formatProfileMoney(
                     subscription.plan.price,
                     subscription.plan.currency,
@@ -487,6 +502,6 @@ export function MerchantProfileScreen() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </DashboardPage>
   );
 }

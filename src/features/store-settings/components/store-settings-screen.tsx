@@ -180,15 +180,15 @@ export function StoreSettingsScreen() {
 
   return (
     <DashboardPage className="mx-auto max-w-6xl">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="min-w-0">
           <div className="flex items-center gap-2 text-[#16a34a]">
             <Settings2 className="size-5" aria-hidden />
             <span className="text-xs font-semibold uppercase tracking-wide">
               Store settings
             </span>
           </div>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#1a1f2e]">
+          <h1 className="mt-1 text-xl font-bold tracking-tight text-[#1a1f2e] sm:text-2xl">
             Orders, payments & delivery
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-[#6b7280]">
@@ -196,12 +196,12 @@ export function StoreSettingsScreen() {
             deliveries.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="gap-1.5"
+            className="w-full gap-1.5 sm:w-auto"
             onClick={() => void settingsQuery.refetch()}
             disabled={settingsQuery.isFetching || busy}
           >
@@ -215,7 +215,7 @@ export function StoreSettingsScreen() {
           <Button
             type="button"
             size="sm"
-            className="gap-1.5 bg-[#16a34a] text-white hover:bg-[#15803d]"
+            className="w-full gap-1.5 bg-[#16a34a] text-white hover:bg-[#15803d] sm:w-auto"
             onClick={() => void handleSave()}
             disabled={busy}
           >
@@ -382,10 +382,10 @@ export function StoreSettingsScreen() {
         </ProfileSection>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-stretch sm:justify-end">
         <Button
           type="button"
-          className="gap-1.5 bg-[#16a34a] text-white hover:bg-[#15803d]"
+          className="w-full gap-1.5 bg-[#16a34a] text-white hover:bg-[#15803d] sm:w-auto"
           onClick={() => void handleSave()}
           disabled={busy}
         >
