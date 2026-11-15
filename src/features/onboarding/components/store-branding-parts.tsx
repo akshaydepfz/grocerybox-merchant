@@ -19,14 +19,14 @@ export function UploadActions({
   onDelete: () => void;
 }) {
   return (
-    <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
+    <div className="flex w-full max-w-full flex-col gap-2 sm:w-auto sm:max-w-none sm:flex-row sm:flex-wrap">
       <Button
         type="button"
         variant="outline"
         size="sm"
         disabled={!enabled}
         onClick={onChange}
-        className="h-8 gap-1.5 text-xs font-semibold"
+        className="h-8 w-full min-w-0 shrink gap-1.5 text-xs font-semibold sm:w-auto sm:shrink-0"
       >
         <Upload className="size-3.5" />
         Change
@@ -37,7 +37,7 @@ export function UploadActions({
         size="sm"
         disabled={!enabled}
         onClick={onDelete}
-        className="h-8 px-2 text-red-600"
+        className="h-8 w-full min-w-0 shrink px-2 text-red-600 sm:w-auto sm:shrink-0"
       >
         <Trash2 className="size-4" />
       </Button>
@@ -95,11 +95,11 @@ export function LogoUploadCard({
   onDelete: () => void;
 }) {
   return (
-    <div>
+    <div className="min-w-0 max-w-full">
       <MerchantFieldLabel label="Store Logo" required />
-      <div className="rounded-2xl border border-gb-mo-gray-200 bg-white p-3.5 sm:p-4">
+      <div className="max-w-full overflow-hidden rounded-2xl border border-gb-mo-gray-200 bg-white p-3.5 sm:p-4">
         {hasLogo ? (
-          <div className="flex flex-col gap-3 sm:flex-row sm:gap-3.5">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:gap-3.5">
             <span className="relative mx-auto flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#D2F3A4] bg-[#EAF7D7] sm:mx-0">
               {logoSrc ? (
                 <Image
@@ -118,9 +118,9 @@ export function LogoUploadCard({
                 </span>
               )}
             </span>
-            <div className="min-w-0 w-full flex-1 text-center sm:text-left">
-              <span className="flex items-center justify-center gap-1.5 sm:justify-start">
-                <span className="truncate text-sm font-bold text-gb-mo-gray-900">
+            <div className="min-w-0 w-full max-w-full flex-1 text-center sm:text-left">
+              <span className="flex max-w-full items-center justify-center gap-1.5 sm:justify-start">
+                <span className="min-w-0 truncate text-sm font-bold text-gb-mo-gray-900">
                   {displayName}
                 </span>
                 {logoSrc ? (
@@ -129,8 +129,8 @@ export function LogoUploadCard({
                   </span>
                 ) : null}
               </span>
-              <span className="mt-0.5 block text-xs text-gb-mo-gray-400">
-                512 × 512 px (PNG, JPG, WebP) • max 5 MB
+              <span className="mt-0.5 block text-[10px] leading-snug break-words text-gb-mo-gray-400 sm:text-xs">
+                512×512 px · PNG, JPG, WebP · max 5 MB
               </span>
               {isUploading && uploadProgress > 0 ? (
                 <span className="mt-2 block h-1 overflow-hidden rounded bg-gb-mo-gray-100">
@@ -140,7 +140,7 @@ export function LogoUploadCard({
                   />
                 </span>
               ) : null}
-              <span className="mt-2 flex justify-center sm:justify-start">
+              <span className="mt-2 flex w-full max-w-full justify-center sm:justify-start">
                 <UploadActions
                   enabled={!isBusy}
                   onChange={onChange}
@@ -191,10 +191,10 @@ export function BannerUploadCard({
   return (
     <BannerCard>
       <MerchantFieldLabel label="Store Banner" optional />
-      <BannerInner className="rounded-2xl border border-gb-mo-gray-200 bg-white p-3 sm:p-3">
+      <BannerInner className="max-w-full overflow-hidden rounded-2xl border border-gb-mo-gray-200 bg-white p-3">
         {hasBanner ? (
-          <div>
-            <div className="relative mb-2.5 h-16 overflow-hidden rounded-xl">
+          <div className="min-w-0">
+            <div className="relative mb-2.5 h-16 w-full max-w-full overflow-hidden rounded-xl">
               {bannerSrc ? (
                 <Image
                   src={bannerSrc}
@@ -218,11 +218,15 @@ export function BannerUploadCard({
                 />
               </span>
             ) : null}
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <span className="text-[11px] leading-snug text-gb-mo-gray-400 sm:text-xs [overflow-wrap:anywhere]">
-                <span className="font-medium text-gb-mo-gray-600">{displayName}</span>
-                <span className="hidden sm:inline"> • </span>
-                <span className="block sm:inline">1440 × 480 px • max 10 MB</span>
+            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <span className="min-w-0 text-[10px] leading-snug break-words text-gb-mo-gray-400 sm:text-xs">
+                <span className="font-medium break-all text-gb-mo-gray-600">
+                  {displayName}
+                </span>
+                <span className="block sm:inline">
+                  {" "}
+                  1440×480 px · max 10 MB
+                </span>
               </span>
               <UploadActions
                 enabled={!isBusy}
@@ -246,7 +250,7 @@ export function BannerUploadCard({
 }
 
 function BannerCard({ children }: { children: ReactNode }) {
-  return <div>{children}</div>;
+  return <div className="min-w-0 max-w-full">{children}</div>;
 }
 
 function BannerInner({ children, className }: { children: ReactNode; className?: string }) {
@@ -262,21 +266,23 @@ function DefaultBannerGradient({
 }) {
   return (
     <div
-      className="flex h-full items-center justify-between px-4 text-white"
+      className="flex h-full min-w-0 items-center justify-between gap-2 overflow-hidden px-2 text-white sm:px-4"
       style={{
         background: `linear-gradient(90deg, ${primaryHex}f2, #166534)`,
       }}
     >
-      <span>
-        <span className="block text-[13px] font-black">Fresh Groceries</span>
+      <span className="min-w-0">
+        <span className="block truncate text-[11px] font-black sm:text-[13px]">
+          Fresh Groceries
+        </span>
         <span
-          className="block text-[11px] font-semibold"
+          className="block truncate text-[10px] font-semibold sm:text-[11px]"
           style={{ color: secondaryHex }}
         >
           at Your Doorstep
         </span>
       </span>
-      <span className="text-xl">🥦🍎🍌🥛</span>
+      <span className="hidden shrink-0 text-lg sm:inline sm:text-xl">🥦🍎🍌🥛</span>
     </div>
   );
 }
@@ -301,13 +307,13 @@ export function BrandColorSelector({
         type="button"
         disabled={disabled}
         onClick={onClick}
-        className="flex w-full items-center gap-2.5 rounded-xl border border-gb-mo-gray-200 bg-white px-3 py-2.5 text-left disabled:opacity-50"
+        className="flex w-full max-w-full min-w-0 items-center gap-2.5 rounded-xl border border-gb-mo-gray-200 bg-white px-3 py-2.5 text-left disabled:opacity-50"
       >
         <span
           className="size-6 shrink-0 rounded-md border border-black/10"
           style={{ backgroundColor: hex }}
         />
-        <span className="flex-1 text-xs font-bold text-gb-mo-gray-900">
+        <span className="min-w-0 flex-1 truncate text-xs font-bold text-gb-mo-gray-900">
           {hex}
         </span>
         <ChevronDown className="size-4 text-gb-mo-gray-400" />
@@ -317,7 +323,7 @@ export function BrandColorSelector({
 }
 
 function BrandColorField({ children }: { children: ReactNode }) {
-  return <div>{children}</div>;
+  return <div className="min-w-0 max-w-full">{children}</div>;
 }
 
 export function QuickPickSwatches({
@@ -339,7 +345,7 @@ export function QuickPickSwatches({
   return (
     <QuickPickField>
       <MerchantFieldLabel label="Quick Picks" />
-      <QuickPickWrap className="flex flex-wrap gap-2.5">
+      <QuickPickWrap className="-mx-0.5 flex max-w-full flex-wrap gap-2 px-0.5 py-1">
         {colors.map((color, index) => (
           <button
             key={color}
@@ -347,8 +353,8 @@ export function QuickPickSwatches({
             disabled={disabled}
             onClick={() => onSelect(index)}
             className={cn(
-              "size-6 rounded-full disabled:opacity-50",
-              selectedIndex === index && "ring-2 ring-offset-2",
+              "size-6 shrink-0 rounded-full disabled:opacity-50",
+              selectedIndex === index && "ring-2 ring-offset-1 sm:ring-offset-2",
             )}
             style={{
               backgroundColor: color,
@@ -365,7 +371,7 @@ export function QuickPickSwatches({
 }
 
 function QuickPickField({ children }: { children: ReactNode }) {
-  return <div>{children}</div>;
+  return <div className="min-w-0 max-w-full">{children}</div>;
 }
 
 function QuickPickWrap({ children, className }: { children: ReactNode; className?: string }) {
@@ -388,13 +394,13 @@ export function StoreBrandingPreview({
   bannerSrc: string | null;
 }) {
   return (
-    <div className="rounded-2xl border border-[#DEEDD9] bg-[#F6FAF4] p-4 sm:p-5">
+    <div className="max-w-full overflow-hidden rounded-2xl border border-[#DEEDD9] bg-[#F6FAF4] p-4 sm:p-5">
       <div className="mb-3 flex items-center gap-2 sm:mb-4">
         <Eye className="size-4 text-gb-mo-gray-700" />
         <span className="text-xs font-bold text-gb-mo-gray-900">Store Preview</span>
       </div>
-      <div className="rounded-xl border border-gb-mo-gray-100 bg-white p-2.5 sm:p-3">
-        <div className="flex flex-col gap-2.5 text-xs sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+      <div className="max-w-full overflow-hidden rounded-xl border border-gb-mo-gray-100 bg-white p-2.5 sm:p-3">
+        <div className="flex min-w-0 flex-col gap-2.5 text-xs sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <span
               className="relative size-8 shrink-0 overflow-hidden rounded-lg"
@@ -406,8 +412,10 @@ export function StoreBrandingPreview({
                 <span className="flex size-full items-center justify-center">🛍️</span>
               )}
             </span>
-            <span className="min-w-0">
-              <span className="block font-bold text-gb-mo-gray-900">{storeName}</span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate font-bold text-gb-mo-gray-900">
+                {storeName}
+              </span>
               <span className="text-[10px] text-gb-mo-gray-400">
                 Grocery & Daily Essentials
               </span>

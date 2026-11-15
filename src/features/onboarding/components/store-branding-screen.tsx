@@ -380,17 +380,19 @@ export function StoreBrandingScreen() {
           Add your store logo, banner and choose your brand colours.
         </p>
 
-        <section className="mt-4 space-y-5 sm:mt-7 sm:space-y-7">
+        <section className="mt-4 min-w-0 max-w-full space-y-5 overflow-x-hidden sm:mt-7 sm:space-y-7">
           <div
             className={
-              twoCol ? "grid grid-cols-2 gap-5" : "flex flex-col gap-4 sm:gap-5"
+              twoCol
+                ? "grid grid-cols-2 gap-5"
+                : "flex min-w-0 max-w-full flex-col gap-4 sm:gap-5"
             }
           >
             <LogoUploadCard {...logoCardProps} />
             <BannerUploadCard {...bannerCardProps} />
           </div>
 
-          <div>
+          <div className="min-w-0 max-w-full">
             <p className="text-sm font-bold text-gb-mo-gray-900">Brand Colours</p>
             <p className="mt-1 text-xs leading-relaxed text-gb-mo-gray-400">
               Choose colours for your store theme and branding.

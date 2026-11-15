@@ -57,7 +57,7 @@ export function MerchantOnboardingScreenLayout({
                 </MerchantOnboardingFormShell>
               </>
             ) : (
-              <div className="flex min-h-0 flex-1 flex-col">
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                 <OnboardingMobileStepHeader currentStep={currentStep} />
                 <MerchantOnboardingFormShell footer={footer}>
                   {children}
@@ -98,7 +98,7 @@ export function MerchantOnboardingFormShell({
 }) {
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-8 lg:px-8">
+      <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-5 sm:px-6 sm:py-8 lg:px-8">
         {children}
       </div>
       <FormFooter className="sticky bottom-0 z-10 border-t border-gb-mo-gray-100 bg-white/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur-sm sm:static sm:bg-white sm:px-6 sm:pb-6 sm:pt-5 sm:backdrop-blur-none lg:px-8">
