@@ -44,11 +44,6 @@ const ONBOARDING_REVIEW_PATH = "/onboarding/review";
 const PLAN_PROGRESS_STEP = 7;
 const PLAN_PROGRESS_TOTAL = 7;
 
-function defaultSelectedPlan(plans: SubscriptionPlan[]): SubscriptionPlan | null {
-  if (plans.length === 0) return null;
-  return plans.length > 1 ? plans[1] : plans[0];
-}
-
 export function PlanScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -61,6 +56,7 @@ export function PlanScreen() {
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const verifyingSignatureRef = useRef<string | null>(null);
   const checkoutOpenRef = useRef(false);
+  const checkoutOutcomeRef = useRef<"idle" | "success" | "failure">("idle");
 
   const plansQuery = useQuery({
     queryKey: ["subscription-plans"],
@@ -80,8 +76,7 @@ export function PlanScreen() {
 
   const plans = plansQuery.data ?? [];
   const selectedPlan =
-    plans.find((plan) => plan.planId === selectedPlanId) ??
-    defaultSelectedPlan(plans);
+    plans.find((plan) => plan.planId === selectedPlanId) ?? null;
   const currentSubscription = subscriptionQuery.data ?? null;
 
   useEffect(() => {
@@ -120,6 +115,9 @@ export function PlanScreen() {
       try {
         const subscription = await verifySubscriptionPayment(payload);
         queryClient.setQueryData(["merchant-subscription"], subscription);
+        await queryClient.invalidateQueries({
+          queryKey: ["merchant-onboarding-review"],
+        });
         if (isActiveSubscription(subscription)) {
           setPendingMessage(null);
           router.replace(PLAN_SUCCESS_PATH);
@@ -164,6 +162,7 @@ export function PlanScreen() {
 
       setIsPaymentBusy(true);
       setPendingMessage(null);
+      checkoutOutcomeRef.current = "idle";
 
       try {
         await selectSubscriptionPlan(plan.planId);
@@ -211,16 +210,21 @@ export function PlanScreen() {
         customerEmail: signedInEmail || undefined,
         onSuccess: (success) => {
           checkoutOpenRef.current = false;
+          checkoutOutcomeRef.current = "success";
           void verifyCheckout(success);
         },
         onFailure: (failure) => {
           checkoutOpenRef.current = false;
+          checkoutOutcomeRef.current = "failure";
           toast.error(
             failure.description || "Payment failed. Please try again.",
           );
         },
         onDismiss: () => {
           checkoutOpenRef.current = false;
+          if (checkoutOutcomeRef.current !== "idle") {
+            return;
+          }
           setPendingMessage(
             "Payment was not completed. You can retry checkout when ready.",
           );
@@ -235,8 +239,21 @@ export function PlanScreen() {
       toast.error("Select a subscription plan to continue.");
       return;
     }
-  void openCheckoutForPlan(selectedPlan);
+    void openCheckoutForPlan(selectedPlan);
   }, [openCheckoutForPlan, selectedPlan]);
+
+  const handlePlanAction = useCallback(
+    (plan: SubscriptionPlan) => {
+      if (isPaymentBusy) return;
+
+      if (selectedPlanId === plan.planId) {
+        void openCheckoutForPlan(plan);
+        return;
+      }
+      setSelectedPlanId(plan.planId);
+    },
+    [isPaymentBusy, openCheckoutForPlan, selectedPlanId],
+  );
 
   const isLoadingPlans = plansQuery.isLoading && plans.length === 0;
   const hasActiveSubscription = isActiveSubscription(currentSubscription);
@@ -264,7 +281,8 @@ export function PlanScreen() {
         Choose a Plan to Publish
       </h1>
       <p className="mt-1 text-sm font-medium text-gb-mo-gray-500">
-        Select a plan that fits your business. You can upgrade anytime.
+        Tap a plan to select it, then tap the price again to pay. You can
+        upgrade anytime.
       </p>
 
       {hasActiveSubscription ? (
@@ -309,8 +327,9 @@ export function PlanScreen() {
           <PlanPricingGrid
             twoCol={wideGrid}
             plans={plans}
-            selectedPlanId={selectedPlan?.planId ?? null}
-            onSelectPlan={(plan) => setSelectedPlanId(plan.planId)}
+            selectedPlanId={selectedPlanId}
+            paymentBusy={isPaymentBusy}
+            onPlanAction={handlePlanAction}
           />
         )}
       </section>

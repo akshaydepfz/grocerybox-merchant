@@ -27,6 +27,8 @@ export async function runSubscriptionCheckout(options: {
     return;
   }
 
+  let checkoutSettled = false;
+
   await openRazorpayCheckout({
     keyId: order.keyId,
     amountPaise: order.amount,
@@ -36,14 +38,19 @@ export async function runSubscriptionCheckout(options: {
     description: `${options.plan.name} subscription`,
     customerEmail: options.customerEmail,
     onSuccess: (success) => {
+      checkoutSettled = true;
       options.onVerifying();
       options.onSuccess(success);
     },
     onFailure: (failure) => {
+      checkoutSettled = true;
       options.onFailure(
         failure.description || "Payment failed. Please try again.",
       );
     },
-    onDismiss: options.onDismiss,
+    onDismiss: () => {
+      if (checkoutSettled) return;
+      options.onDismiss();
+    },
   });
 }

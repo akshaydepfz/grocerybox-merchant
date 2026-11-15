@@ -177,6 +177,9 @@ export function OnboardingReviewScreen() {
   }, [plansQuery.data, router, signedInEmail, subscriptionQuery.data, verifyCheckout]);
 
   const review = reviewQuery.data;
+  const subscriptionPublishStatus = isActiveSubscription(subscriptionQuery.data)
+    ? "active"
+    : review?.subscriptionPublishStatus;
   const isLoading = reviewQuery.isLoading && !review;
   const canPublish =
     canPublishStore(review) && !publishMutation.isPending;
@@ -226,7 +229,7 @@ export function OnboardingReviewScreen() {
           <>
             {!SKIP_ONBOARDING_SUBSCRIPTION_PAYMENT ? (
               <SubscriptionStatusCard
-                status={review.subscriptionPublishStatus}
+                status={subscriptionPublishStatus ?? "missing"}
                 onSelectPlan={() => router.push(PLAN_PATH)}
                 onResumeCheckout={() => void resumeCheckout()}
               />

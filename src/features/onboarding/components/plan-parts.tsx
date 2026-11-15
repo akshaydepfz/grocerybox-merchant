@@ -156,10 +156,12 @@ function PlanFeatureList({ features }: { features: string[] }) {
 export function PlanCard({
   plan,
   selected,
+  disabled,
   onChoose,
 }: {
   plan: SubscriptionPlan;
   selected: boolean;
+  disabled?: boolean;
   onChoose: () => void;
 }) {
   const visual = planVisual(plan.slug);
@@ -205,6 +207,7 @@ export function PlanCard({
       </div>
       <Button
         type="button"
+        disabled={disabled}
         onClick={onChoose}
         className={cn(
           "mt-5 h-auto w-full rounded-full py-3 text-xs font-bold",
@@ -214,7 +217,9 @@ export function PlanCard({
         )}
         variant={selected ? "default" : "outline"}
       >
-        ₹{plan.price} / Month
+        {selected
+          ? `Pay ₹${plan.price} / Month`
+          : `₹${plan.price} / Month`}
       </Button>
     </div>
   );
@@ -224,19 +229,22 @@ export function PlanPricingGrid({
   twoCol,
   plans,
   selectedPlanId,
-  onSelectPlan,
+  paymentBusy,
+  onPlanAction,
 }: {
   twoCol: boolean;
   plans: SubscriptionPlan[];
   selectedPlanId: string | null;
-  onSelectPlan: (plan: SubscriptionPlan) => void;
+  paymentBusy?: boolean;
+  onPlanAction: (plan: SubscriptionPlan) => void;
 }) {
   const cards = plans.map((plan) => (
     <PlanCard
       key={plan.planId}
       plan={plan}
       selected={plan.planId === selectedPlanId}
-      onChoose={() => onSelectPlan(plan)}
+      disabled={paymentBusy}
+      onChoose={() => onPlanAction(plan)}
     />
   ));
 
