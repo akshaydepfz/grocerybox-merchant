@@ -4,11 +4,14 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   ChevronLeft,
   ChevronRight,
+  ChevronRight as ChevronRightIcon,
   Eye,
   Loader2,
   RotateCcw,
   Search,
   ShoppingCart,
+  SlidersHorizontal,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -21,6 +24,7 @@ import { GroceryAnimatedLoader } from "@/components/shared/animated-loader";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { DashboardPage } from "@/features/dashboard/components/dashboard-page";
 import { DashboardSurface } from "@/features/dashboard/components/dashboard-surface";
+import { formatRelativeTime } from "@/features/dashboard/utils/dashboard-metrics";
 import { dashboardRoutePrefix } from "@/config/routes";
 import { ApiError } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
@@ -35,7 +39,6 @@ import {
   formatCustomerPhone,
   formatInr,
   formatOrderDateTime,
-  orderStepLabel,
 } from "../utils/format-order";
 
 import { OrderPaymentBadge } from "./order-payment-badge";
@@ -59,6 +62,17 @@ const PAYMENT_OPTIONS: { value: "" | MerchantOrderPaymentStatus; label: string }
   { value: "failed", label: "Failed" },
 ];
 
+const QUICK_STEP_CHIPS: { value: "" | MerchantOrderTimelineStep; label: string }[] =
+  [
+    { value: "", label: "All" },
+    { value: "placed", label: "Placed" },
+    { value: "confirmed", label: "Confirmed" },
+    { value: "packing", label: "Packing" },
+    { value: "out_for_delivery", label: "Out" },
+    { value: "delivered", label: "Delivered" },
+    { value: "cancelled", label: "Cancelled" },
+  ];
+
 export function OrdersScreen() {
   const { user, isRegistered } = useAuth();
   const searchParams = useSearchParams();
@@ -69,6 +83,7 @@ export function OrdersScreen() {
   const [search, setSearch] = useState(initialSearch);
   const [currentStep, setCurrentStep] = useState<"" | MerchantOrderTimelineStep>("");
   const [paymentStatus, setPaymentStatus] = useState<"" | MerchantOrderPaymentStatus>("");
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
     const handle = window.setTimeout(() => {
@@ -174,24 +189,26 @@ export function OrdersScreen() {
     : "Orders placed on your website checkout will appear here.";
 
   return (
-    <DashboardPage>
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#1a1f2e]">
+    <DashboardPage className="gap-3 sm:gap-6">
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-[#16a34a] sm:hidden">
+            {totalOrders.toLocaleString("en-IN")} orders
+          </p>
+          <h1 className="text-xl font-bold tracking-tight text-[#1a1f2e] sm:text-2xl">
             Orders
           </h1>
-          <p className="mt-1 text-sm text-[#6b7280]">
-            View storefront orders and update fulfillment status for customer
-            tracking.
+          <p className="mt-0.5 hidden text-sm text-[#6b7280] sm:block">
+            View storefront orders and update fulfillment for customer tracking.
           </p>
-          <p className="mt-2 text-xs font-medium text-[#9ca3af]">
+          <p className="mt-2 hidden text-xs font-medium text-[#9ca3af] sm:block">
             {totalOrders.toLocaleString("en-IN")} orders total
           </p>
         </div>
         <Button
           type="button"
           variant="outline"
-          className="h-10 shrink-0 rounded-xl border-[#e8eaef]"
+          className="h-10 w-full shrink-0 rounded-xl border-[#e8eaef] sm:w-auto sm:h-10"
           disabled={listQuery.isFetching}
           onClick={() => void listQuery.refetch()}
         >
@@ -200,31 +217,79 @@ export function OrdersScreen() {
         </Button>
       </header>
 
-      <DashboardSurface>
-        <div className="flex flex-col gap-4 border-b border-[#f0f1f4] px-5 py-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-base font-semibold text-[#1a1f2e]">
-                All orders
-              </h2>
-              <p className="mt-0.5 text-xs text-[#9ca3af]">
-                Search by order number or customer phone.
-              </p>
-            </div>
-            <div className="relative w-full lg:max-w-xl">
-              <Search
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9ca3af]"
-                aria-hidden
-              />
-              <OrderSearchInput
-                key={search}
-                initialValue={searchDraft}
-                onValueChange={setSearchDraft}
-              />
-            </div>
+      <DashboardSurface className="overflow-hidden">
+        <div className="sticky top-0 z-10 flex flex-col gap-3 border-b border-[#f0f1f4] bg-white px-3.5 py-3 sm:static sm:gap-4 sm:px-5 sm:py-4">
+          <div className="relative w-full sm:max-w-none lg:ml-auto lg:max-w-xl">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9ca3af]"
+              aria-hidden
+            />
+            <OrderSearchInput
+              key={search}
+              initialValue={searchDraft}
+              onValueChange={setSearchDraft}
+            />
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <OrderStatusChips
+            value={currentStep}
+            onChange={(value) => {
+              setCurrentStep(value);
+              setPage(1);
+            }}
+          />
+
+          <div className="flex items-center gap-2 sm:hidden">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className={cn(
+                "h-10 flex-1 rounded-xl",
+                (paymentStatus || mobileFiltersOpen) && "border-[#16a34a] text-[#16a34a]",
+              )}
+              onClick={() => setMobileFiltersOpen((open) => !open)}
+            >
+              <SlidersHorizontal className="size-4" aria-hidden />
+              <span className="ml-2">Filters</span>
+              {paymentStatus ? (
+                <span className="ml-1.5 size-1.5 rounded-full bg-[#16a34a]" />
+              ) : null}
+            </Button>
+            {hasActiveFilters ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-10 shrink-0 rounded-xl"
+                onClick={resetFilters}
+                aria-label="Reset filters"
+              >
+                <X className="size-4" />
+              </Button>
+            ) : null}
+          </div>
+
+          {mobileFiltersOpen ? (
+            <div className="grid gap-2 rounded-xl border border-[#eceef2] bg-[#fafbfc] p-3 sm:hidden">
+              <FilterSelect
+                label="Payment"
+                value={paymentStatus}
+                onChange={(value) => {
+                  setPaymentStatus(value as "" | MerchantOrderPaymentStatus);
+                  setPage(1);
+                }}
+              >
+                {PAYMENT_OPTIONS.map((option) => (
+                  <option key={option.label} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </FilterSelect>
+            </div>
+          ) : null}
+
+          <div className="hidden gap-2 sm:grid sm:grid-cols-2 lg:grid-cols-3">
             <FilterSelect
               label="Fulfillment"
               value={currentStep}
@@ -270,7 +335,7 @@ export function OrdersScreen() {
           </div>
 
           {hasActiveFilters ? (
-            <div className="flex justify-end">
+            <div className="hidden justify-end sm:flex">
               <Button
                 type="button"
                 variant="ghost"
@@ -285,7 +350,7 @@ export function OrdersScreen() {
         </div>
 
         {listQuery.isFetching && !listQuery.isLoading ? (
-          <div className="flex items-center gap-2 border-b border-[#f0f1f4] px-5 py-2 text-xs text-[#6b7280]">
+          <div className="flex items-center gap-2 border-b border-[#f0f1f4] px-3.5 py-2 text-xs text-[#6b7280] sm:px-5">
             <Loader2 className="size-3.5 animate-spin" aria-hidden />
             Refreshing…
           </div>
@@ -346,25 +411,28 @@ export function OrdersScreen() {
               </table>
             </div>
 
-            <div className="flex flex-col gap-3 p-4 md:hidden">
+            <ul className="flex flex-col gap-2 p-3 sm:gap-2.5 sm:p-4 md:hidden">
               {items.map((order) => (
-                <OrderMobileCard key={order.id} order={order} />
+                <li key={order.id}>
+                  <OrderMobileCard order={order} />
+                </li>
               ))}
-            </div>
+            </ul>
           </>
         )}
 
         {totalPages > 1 || limit !== 20 ? (
-          <div className="flex flex-col gap-3 border-t border-[#f0f1f4] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs text-[#6b7280]">
+          <div className="flex flex-col gap-3 border-t border-[#f0f1f4] px-3.5 py-3 sm:px-5 sm:py-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-center text-xs text-[#6b7280] sm:text-left">
               Page {currentPage} of {totalPages} ·{" "}
               {totalOrders.toLocaleString("en-IN")} orders
             </p>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
+                className="h-10 rounded-xl sm:h-9"
                 disabled={currentPage <= 1 || listQuery.isFetching}
                 onClick={() => setPage(Math.max(1, currentPage - 1))}
               >
@@ -375,6 +443,7 @@ export function OrdersScreen() {
                 type="button"
                 variant="outline"
                 size="sm"
+                className="h-10 rounded-xl sm:h-9"
                 disabled={currentPage >= totalPages || listQuery.isFetching}
                 onClick={() => setPage(currentPage + 1)}
               >
@@ -408,7 +477,7 @@ function OrderSearchInput({
         setValue(next);
         onValueChange(next);
       }}
-      className="h-10 w-full rounded-xl border border-[#e8eaef] bg-[#fafbfc] pl-10 pr-3 text-sm text-[#1a1f2e] placeholder:text-[#9ca3af] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a34a]/30"
+      className="h-11 w-full rounded-xl border border-[#e8eaef] bg-[#fafbfc] pl-10 pr-3 text-base text-[#1a1f2e] placeholder:text-[#9ca3af] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a34a]/30 sm:h-10 sm:text-sm"
     />
   );
 }
@@ -499,46 +568,77 @@ function OrderTableRow({ order }: { order: MerchantOrderListItem }) {
   );
 }
 
+function OrderStatusChips({
+  value,
+  onChange,
+}: {
+  value: "" | MerchantOrderTimelineStep;
+  onChange: (value: "" | MerchantOrderTimelineStep) => void;
+}) {
+  return (
+    <div
+      className="flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden"
+      role="tablist"
+      aria-label="Filter by fulfillment"
+    >
+      {QUICK_STEP_CHIPS.map((chip) => {
+        const active = value === chip.value;
+        return (
+          <button
+            key={chip.label}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(chip.value)}
+            className={cn(
+              "min-h-[36px] shrink-0 snap-start rounded-full border px-3.5 py-1.5 text-xs font-semibold transition active:scale-[0.98]",
+              active
+                ? "border-[#16a34a] bg-[#f0fdf4] text-[#15803d]"
+                : "border-[#e8eaef] bg-[#fafbfc] text-[#6b7280]",
+            )}
+          >
+            {chip.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function OrderMobileCard({ order }: { order: MerchantOrderListItem }) {
   const detailHref = `${dashboardRoutePrefix}/orders/${order.id}`;
+  const fulfillment = order.fulfillmentMethod.replace(/_/g, " ");
 
   return (
-    <article className="rounded-2xl border border-[#f0f1f4] bg-white p-4 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <Link
-            href={detailHref}
-            className="text-base font-semibold text-[#1a1f2e] hover:text-[#16a34a]"
-          >
-            {order.orderNumber}
-          </Link>
-          <p className="mt-0.5 text-xs text-[#9ca3af]">
-            {formatOrderDateTime(order.placedAt)}
+    <Link
+      href={detailHref}
+      className="block rounded-xl border border-[#eceef2] bg-white p-3.5 shadow-sm transition active:scale-[0.99] active:bg-[#fafbfc]"
+    >
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-base font-semibold text-[#1a1f2e]">
+              {order.orderNumber}
+            </span>
+            <OrderStepBadge step={order.currentStep} />
+          </div>
+          <p className="mt-1 text-xs text-[#6b7280]">
+            {formatCustomerPhone(order.customerPhone)} ·{" "}
+            {formatRelativeTime(order.placedAt)}
+          </p>
+          <p className="mt-1 line-clamp-1 text-[11px] text-[#9ca3af]">
+            {order.lineCount} line{order.lineCount === 1 ? "" : "s"} · {fulfillment}
+            {order.deliveryLabel ? ` · ${order.deliveryLabel}` : ""}
           </p>
         </div>
-        <p className="text-base font-bold tabular-nums text-[#1a1f2e]">
-          {formatInr(order.toPay)}
-        </p>
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          <p className="text-base font-bold tabular-nums text-[#1a1f2e]">
+            {formatInr(order.toPay)}
+          </p>
+          <OrderPaymentBadge status={order.paymentStatus} />
+          <ChevronRightIcon className="size-4 text-[#d1d5db]" aria-hidden />
+        </div>
       </div>
-      <p className="mt-2 text-sm text-[#6b7280]">
-        {formatCustomerPhone(order.customerPhone)}
-      </p>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <OrderStepBadge step={order.currentStep} />
-        <OrderPaymentBadge status={order.paymentStatus} />
-      </div>
-      <p className="mt-2 text-xs text-[#9ca3af]">
-        {orderStepLabel(order.currentStep)} · {order.deliveryLabel}
-      </p>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="mt-4 h-9 w-full rounded-xl"
-        asChild
-      >
-        <Link href={detailHref}>View order</Link>
-      </Button>
-    </article>
+    </Link>
   );
 }

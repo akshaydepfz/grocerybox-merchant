@@ -129,42 +129,19 @@ export function OrderDetailScreen({ orderId }: OrderDetailScreenProps) {
   ].filter((line) => line && String(line).trim().length > 0);
 
   return (
-    <div className="mx-auto flex w-full max-w-[960px] flex-col gap-6 pb-10">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <Link
-          href={listHref}
-          className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-[#6b7280] transition hover:text-[#16a34a]"
-        >
-          <ArrowLeft className="size-4" aria-hidden />
-          Back to orders
-        </Link>
-        <div className="flex flex-wrap items-center gap-2">
-          {detailQuery.isFetching && !detailQuery.isLoading ? (
-            <div className="flex items-center gap-2 text-xs text-[#6b7280]">
-              <Loader2 className="size-3.5 animate-spin" aria-hidden />
-              Refreshing…
-            </div>
-          ) : null}
-          {canCancel ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-9 rounded-xl text-destructive hover:bg-destructive/5 hover:text-destructive"
-              onClick={() => setCancelOpen(true)}
-            >
-              <Ban className="size-3.5" aria-hidden />
-              Cancel order
-            </Button>
-          ) : null}
-        </div>
-      </div>
+    <div className="mx-auto flex w-full max-w-[960px] flex-col gap-3 pb-6 sm:gap-6 sm:pb-10">
+      <OrderDetailTopBar
+        listHref={listHref}
+        canCancel={canCancel}
+        isFetching={detailQuery.isFetching && !detailQuery.isLoading}
+        onCancel={() => setCancelOpen(true)}
+      />
 
       <header>
-        <h1 className="text-2xl font-bold tracking-tight text-[#1a1f2e]">
+        <h1 className="text-xl font-bold tracking-tight text-[#1a1f2e] sm:text-2xl">
           {order.orderId}
         </h1>
-        <p className="mt-1 text-sm text-[#6b7280]">
+        <p className="mt-0.5 text-xs text-[#6b7280] sm:mt-1 sm:text-sm">
           Placed {formatOrderDateTime(order.placedAt)} ·{" "}
           {formatCustomerPhone(order.customerPhone)}
         </p>
@@ -177,7 +154,7 @@ export function OrderDetailScreen({ orderId }: OrderDetailScreenProps) {
       </header>
 
       {isCancelled ? (
-        <DashboardSurface className="border-red-200 bg-red-50/70 p-5">
+        <DashboardSurface className="border-red-200 bg-red-50/70 p-3.5 sm:p-5">
           <p className="text-sm font-semibold text-[#991b1b]">Order cancelled</p>
           <p className="mt-1 text-sm text-[#b91c1c]">
             Customers see this order as cancelled. Inventory from this order was
@@ -185,39 +162,24 @@ export function OrderDetailScreen({ orderId }: OrderDetailScreenProps) {
           </p>
         </DashboardSurface>
       ) : (
-        <DashboardSurface className="p-5">
-          <h2 className="text-base font-semibold text-[#1a1f2e]">
+        <DashboardSurface className="p-3.5 sm:p-5">
+          <h2 className="text-sm font-semibold text-[#1a1f2e] sm:text-base">
             Fulfillment status
           </h2>
-          <p className="mt-1 text-xs text-[#9ca3af]">
+          <p className="mt-0.5 hidden text-xs text-[#9ca3af] sm:block">
             Same five steps customers see on order tracking: placed → confirmed →
             packing → out for delivery → delivered.
           </p>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-            {MERCHANT_ORDER_FULFILLMENT_STEPS.map((step) => {
-              const active = selectedStep === step.id;
-              return (
-                <button
-                  key={step.id}
-                  type="button"
-                  disabled={updateMutation.isPending}
-                  onClick={() => setDraftStep(step.id)}
-                  className={cn(
-                    "rounded-xl border px-3 py-3 text-left text-sm transition",
-                    active
-                      ? "border-[#16a34a] bg-[#f0fdf4] text-[#15803d]"
-                      : "border-[#eceef2] bg-white text-[#4b5563] hover:border-[#d1d5db]",
-                  )}
-                >
-                  <p className="font-semibold">{step.title}</p>
-                </button>
-              );
-            })}
-          </div>
-          <div className="mt-4 flex justify-end">
+          <FulfillmentStepPicker
+            steps={MERCHANT_ORDER_FULFILLMENT_STEPS}
+            selectedStep={selectedStep}
+            disabled={updateMutation.isPending}
+            onSelect={setDraftStep}
+          />
+          <div className="mt-4 flex sm:justify-end">
             <Button
               type="button"
-              className="bg-[#16a34a] text-white hover:bg-[#15803d]"
+              className="h-11 w-full bg-[#16a34a] text-white hover:bg-[#15803d] sm:h-9 sm:w-auto"
               disabled={!dirty || updateMutation.isPending}
               onClick={() => updateMutation.mutate(selectedStep)}
             >
@@ -232,8 +194,8 @@ export function OrderDetailScreen({ orderId }: OrderDetailScreenProps) {
         </DashboardSurface>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <DashboardSurface className="p-5">
+      <div className="grid gap-3 sm:gap-6 lg:grid-cols-2">
+        <DashboardSurface className="p-3.5 sm:p-5">
           <h2 className="text-sm font-semibold text-[#1a1f2e]">Delivery</h2>
           <p className="mt-1 text-sm text-[#6b7280]">{order.deliveryLabel}</p>
           {order.etaWindow ? (
@@ -254,7 +216,7 @@ export function OrderDetailScreen({ orderId }: OrderDetailScreenProps) {
           ) : null}
         </DashboardSurface>
 
-        <DashboardSurface className="p-5">
+        <DashboardSurface className="p-3.5 sm:p-5">
           <h2 className="text-sm font-semibold text-[#1a1f2e]">Payment summary</h2>
           <dl className="mt-4 space-y-2 text-sm">
             <SummaryRow label="Items" value={formatInr(order.pricing.sellingSubtotal)} />
@@ -275,14 +237,14 @@ export function OrderDetailScreen({ orderId }: OrderDetailScreenProps) {
       </div>
 
       <DashboardSurface className="overflow-hidden p-0">
-        <div className="border-b border-[#f0f1f4] px-5 py-3">
+        <div className="border-b border-[#f0f1f4] px-3.5 py-2.5 sm:px-5 sm:py-3">
           <h2 className="text-sm font-semibold text-[#1a1f2e]">Items</h2>
         </div>
         <ul className="divide-y divide-[#f0f1f4]">
           {order.lines.map((line) => (
             <li
               key={`${line.productId}-${line.name}`}
-              className="flex items-start justify-between gap-4 px-5 py-4"
+              className="flex items-start justify-between gap-3 px-3.5 py-3 sm:gap-4 sm:px-5 sm:py-4"
             >
               <div>
                 <p className="font-medium text-[#1a1f2e]">{line.name}</p>
@@ -309,6 +271,110 @@ export function OrderDetailScreen({ orderId }: OrderDetailScreenProps) {
         }}
       />
     </div>
+  );
+}
+
+function OrderDetailTopBar({
+  listHref,
+  canCancel,
+  isFetching,
+  onCancel,
+}: {
+  listHref: string;
+  canCancel: boolean;
+  isFetching: boolean;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <Link
+        href={listHref}
+        className="inline-flex min-h-[44px] w-fit items-center gap-1.5 text-sm font-medium text-[#6b7280] transition hover:text-[#16a34a]"
+      >
+        <ArrowLeft className="size-4" aria-hidden />
+        Back to orders
+      </Link>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        {isFetching ? (
+          <div className="flex items-center gap-2 text-xs text-[#6b7280]">
+            <Loader2 className="size-3.5 animate-spin" aria-hidden />
+            Refreshing…
+          </div>
+        ) : null}
+        {canCancel ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-11 w-full rounded-xl text-destructive hover:bg-destructive/5 hover:text-destructive sm:h-9 sm:w-auto"
+            onClick={onCancel}
+          >
+            <Ban className="size-3.5" aria-hidden />
+            Cancel order
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function FulfillmentStepPicker({
+  steps,
+  selectedStep,
+  disabled,
+  onSelect,
+}: {
+  steps: typeof MERCHANT_ORDER_FULFILLMENT_STEPS;
+  selectedStep: MerchantOrderTimelineStep;
+  disabled: boolean;
+  onSelect: (step: MerchantOrderTimelineStep) => void;
+}) {
+  return (
+    <>
+      <div className="mt-3 flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:hidden [&::-webkit-scrollbar]:hidden">
+        {steps.map((step) => {
+          const active = selectedStep === step.id;
+          return (
+            <button
+              key={step.id}
+              type="button"
+              disabled={disabled}
+              onClick={() => onSelect(step.id)}
+              className={cn(
+                "min-w-[7.5rem] shrink-0 snap-start rounded-xl border px-3 py-2.5 text-left text-xs font-semibold transition active:scale-[0.98]",
+                active
+                  ? "border-[#16a34a] bg-[#f0fdf4] text-[#15803d]"
+                  : "border-[#eceef2] bg-white text-[#4b5563]",
+              )}
+            >
+              {step.title}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-3 hidden gap-2 sm:grid sm:grid-cols-2 lg:grid-cols-5">
+        {steps.map((step) => {
+          const active = selectedStep === step.id;
+          return (
+            <button
+              key={step.id}
+              type="button"
+              disabled={disabled}
+              onClick={() => onSelect(step.id)}
+              className={cn(
+                "rounded-xl border px-3 py-3 text-left text-sm transition",
+                active
+                  ? "border-[#16a34a] bg-[#f0fdf4] text-[#15803d]"
+                  : "border-[#eceef2] bg-white text-[#4b5563] hover:border-[#d1d5db]",
+              )}
+            >
+              <p className="font-semibold">{step.title}</p>
+            </button>
+          );
+        })}
+      </div>
+    </>
   );
 }
 
