@@ -70,10 +70,13 @@ export const DASHBOARD_BOTTOM_NAV_ITEMS: DashboardBottomNavItem[] = [
   },
 ];
 
+export const DASHBOARD_MORE_PATH = `${dashboardRoutePrefix}/more` as const;
+
 export const DASHBOARD_MORE_NAV_ITEM = {
   id: "more",
   label: "More",
   icon: LayoutGrid,
+  href: DASHBOARD_MORE_PATH,
 } as const;
 
 export type DashboardNavItem = {
@@ -178,3 +181,25 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     available: false,
   },
 ];
+
+const PRIMARY_BOTTOM_NAV_IDS = new Set(
+  DASHBOARD_BOTTOM_NAV_ITEMS.map((item) => item.id),
+);
+
+/** Secondary routes shown on the mobile More menu (excludes bottom tab items). */
+export const DASHBOARD_MORE_MENU_ITEMS: DashboardNavItem[] = DASHBOARD_NAV_ITEMS.filter(
+  (item) => !PRIMARY_BOTTOM_NAV_IDS.has(item.id),
+);
+
+export function isDashboardMoreTabActive(pathname: string): boolean {
+  if (pathname === DASHBOARD_MORE_PATH || pathname.startsWith(`${DASHBOARD_MORE_PATH}/`)) {
+    return true;
+  }
+  const onPrimaryTab = DASHBOARD_BOTTOM_NAV_ITEMS.some(
+    (item) => item.available && isDashboardNavActive(pathname, item),
+  );
+  return (
+    !onPrimaryTab &&
+    (pathname === dashboardRoutePrefix || pathname.startsWith(`${dashboardRoutePrefix}/`))
+  );
+}

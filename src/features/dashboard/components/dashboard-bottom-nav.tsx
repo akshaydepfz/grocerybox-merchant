@@ -3,31 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { dashboardRoutePrefix } from "@/config/routes";
 import { cn } from "@/lib/utils";
 
 import {
   DASHBOARD_BOTTOM_NAV_ITEMS,
   DASHBOARD_MORE_NAV_ITEM,
+  isDashboardMoreTabActive,
   isDashboardNavActive,
 } from "../constants/nav-items";
 
-type DashboardBottomNavProps = {
-  menuOpen: boolean;
-  onOpenMenu: () => void;
-};
-
-export function DashboardBottomNav({ menuOpen, onOpenMenu }: DashboardBottomNavProps) {
+export function DashboardBottomNav() {
   const pathname = usePathname();
   const MoreIcon = DASHBOARD_MORE_NAV_ITEM.icon;
-
-  const onPrimaryTab = DASHBOARD_BOTTOM_NAV_ITEMS.some(
-    (item) => item.available && isDashboardNavActive(pathname, item),
-  );
-  const moreRoutesActive =
-    !onPrimaryTab &&
-    (pathname === dashboardRoutePrefix ||
-      pathname.startsWith(`${dashboardRoutePrefix}/`));
+  const moreActive = isDashboardMoreTabActive(pathname);
 
   return (
     <nav
@@ -64,27 +52,20 @@ export function DashboardBottomNav({ menuOpen, onOpenMenu }: DashboardBottomNavP
         })}
 
         <li className="flex min-w-0">
-          <button
-            type="button"
-            onClick={onOpenMenu}
+          <Link
+            href={DASHBOARD_MORE_NAV_ITEM.href}
             className={cn(
               "flex min-h-[44px] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10px] font-semibold transition-colors active:scale-[0.97]",
-              menuOpen || moreRoutesActive
-                ? "text-[#16a34a]"
-                : "text-[#6b7280] hover:text-[#1a1f2e]",
+              moreActive ? "text-[#16a34a]" : "text-[#6b7280] hover:text-[#1a1f2e]",
             )}
-            aria-expanded={menuOpen}
-            aria-controls="dashboard-mobile-nav"
+            aria-current={moreActive ? "page" : undefined}
           >
             <MoreIcon
-              className={cn(
-                "size-[22px] shrink-0",
-                (menuOpen || moreRoutesActive) && "stroke-[2.25px]",
-              )}
+              className={cn("size-[22px] shrink-0", moreActive && "stroke-[2.25px]")}
               aria-hidden
             />
             <span className="leading-none">{DASHBOARD_MORE_NAV_ITEM.label}</span>
-          </button>
+          </Link>
         </li>
       </ul>
     </nav>
