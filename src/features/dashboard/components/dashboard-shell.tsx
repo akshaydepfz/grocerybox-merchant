@@ -1,13 +1,15 @@
 "use client";
 
-import { Menu, X } from "lucide-react";
+import { X } from "lucide-react";
 import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 
+import { DashboardBottomNav } from "./dashboard-bottom-nav";
 import { DashboardSidebar } from "./dashboard-sidebar";
 
 type DashboardShellProps = {
@@ -15,12 +17,24 @@ type DashboardShellProps = {
 };
 
 export function DashboardShell({ children }: DashboardShellProps) {
+  const pathname = usePathname();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
+  const openMobile = useCallback(() => setMobileOpen(true), []);
 
   const showMobileNav = mobileOpen && !isDesktop;
+
+  useEffect(() => {
+    if (isDesktop) {
+      setMobileOpen(false);
+    }
+  }, [isDesktop]);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     if (!showMobileNav) return;
@@ -52,7 +66,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
         <button
           type="button"
           className={cn(
-            "absolute inset-0 bg-black/40 transition-opacity duration-200",
+            "absolute inset-0 bg-black/45 transition-opacity duration-200",
             showMobileNav ? "opacity-100" : "opacity-0",
           )}
           onClick={closeMobile}
@@ -62,8 +76,8 @@ export function DashboardShell({ children }: DashboardShellProps) {
         <div
           id="dashboard-mobile-nav"
           className={cn(
-            "absolute inset-y-0 left-0 shadow-2xl transition-transform duration-200 ease-out",
-            showMobileNav ? "translate-x-0" : "-translate-x-full",
+            "absolute inset-y-0 right-0 w-[min(100%,20rem)] shadow-2xl transition-transform duration-200 ease-out",
+            showMobileNav ? "translate-x-0" : "translate-x-full",
           )}
         >
           <div className="relative h-full">
@@ -83,24 +97,17 @@ export function DashboardShell({ children }: DashboardShellProps) {
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="sticky top-0 z-30 flex h-14 items-center border-b border-[#eceef2] bg-[#f5f6f8] px-4 lg:hidden">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => setMobileOpen(true)}
-            aria-expanded={showMobileNav}
-            aria-controls="dashboard-mobile-nav"
-            aria-label="Open menu"
-          >
-            <Menu className="size-5" />
-          </Button>
-          <span className="ml-2 text-sm font-semibold text-[#1a1f2e]">
-            GroceryBox Merchant
-          </span>
-        </div>
+        <main
+          className={cn(
+            "flex-1",
+            "px-3 pt-3 sm:px-4 sm:pt-4 lg:p-6",
+            "pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))] lg:pb-6",
+          )}
+        >
+          {children}
+        </main>
 
-        <main className="flex-1 p-4 sm:p-5 lg:p-6">{children}</main>
+        <DashboardBottomNav menuOpen={mobileOpen} onOpenMenu={openMobile} />
       </div>
     </div>
   );

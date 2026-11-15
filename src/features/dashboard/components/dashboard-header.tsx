@@ -40,20 +40,21 @@ export function DashboardHeader({ className }: { className?: string }) {
   return (
     <header
       className={cn(
-        "flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between",
+        "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4",
         className,
       )}
     >
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-[#1a1f2e]">
+      <div className="min-w-0">
+        <p className="text-xs font-medium text-[#16a34a] lg:hidden">{storeName}</p>
+        <h1 className="text-xl font-bold tracking-tight text-[#1a1f2e] sm:text-2xl">
           {greeting}, {profileName} 👋
         </h1>
-        <p className="mt-1 text-sm text-[#6b7280]">
+        <p className="mt-0.5 text-xs text-[#6b7280] sm:mt-1 sm:text-sm">
           Here&apos;s what&apos;s happening with your store today.
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+      <div className="hidden flex-wrap items-center gap-2 sm:flex sm:gap-3 lg:flex">
         <Link
           href={`${dashboardRoutePrefix}/profile`}
           className="flex items-center gap-2.5 rounded-2xl border border-[#e8eaef] bg-white px-3 py-2 shadow-sm transition hover:bg-[#fafbfc]"

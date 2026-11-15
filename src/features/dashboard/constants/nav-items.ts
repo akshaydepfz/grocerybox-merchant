@@ -5,6 +5,7 @@ import {
   FolderTree,
   HelpCircle,
   LayoutDashboard,
+  LayoutGrid,
   Ticket,
   Package,
   Settings,
@@ -16,6 +17,64 @@ import {
 } from "lucide-react";
 
 import { dashboardRoutePrefix } from "@/config/routes";
+
+export function isDashboardNavActive(
+  pathname: string,
+  item: Pick<DashboardNavItem, "id" | "href">,
+): boolean {
+  if (item.id === "dashboard") {
+    return pathname === item.href;
+  }
+  return pathname === item.href || pathname.startsWith(`${item.href}/`);
+}
+
+export type DashboardBottomNavItem = {
+  id: string;
+  label: string;
+  shortLabel?: string;
+  href: string;
+  icon: LucideIcon;
+  available: boolean;
+};
+
+/** Primary mobile tab bar (app-style). Secondary routes live in the “More” drawer. */
+export const DASHBOARD_BOTTOM_NAV_ITEMS: DashboardBottomNavItem[] = [
+  {
+    id: "dashboard",
+    label: "Home",
+    href: dashboardRoutePrefix,
+    icon: LayoutDashboard,
+    available: true,
+  },
+  {
+    id: "orders",
+    label: "Orders",
+    href: `${dashboardRoutePrefix}/orders`,
+    icon: ShoppingCart,
+    available: true,
+  },
+  {
+    id: "products",
+    label: "Products",
+    shortLabel: "Products",
+    href: `${dashboardRoutePrefix}/products`,
+    icon: Package,
+    available: true,
+  },
+  {
+    id: "profile",
+    label: "Profile",
+    href: `${dashboardRoutePrefix}/profile`,
+    icon: CircleUser,
+    available: true,
+  },
+];
+
+export const DASHBOARD_MORE_NAV_ITEM = {
+  id: "more",
+  label: "More",
+  icon: LayoutGrid,
+} as const;
 
 export type DashboardNavItem = {
   id: string;

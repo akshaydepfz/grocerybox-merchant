@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { signOutAndClearWebSession } from "@/features/auth/services/auth-service";
 import { cn } from "@/lib/utils";
 
-import { DASHBOARD_NAV_ITEMS } from "../constants/nav-items";
+import { DASHBOARD_NAV_ITEMS, isDashboardNavActive } from "../constants/nav-items";
 
 type DashboardSidebarProps = {
   onNavigate?: () => void;
@@ -59,11 +59,7 @@ export function DashboardSidebar({
         aria-label="Main"
       >
         {DASHBOARD_NAV_ITEMS.map((item) => {
-          const isActive =
-            item.id === "dashboard"
-              ? pathname === item.href
-              : item.href === pathname ||
-                pathname.startsWith(`${item.href}/`);
+          const isActive = isDashboardNavActive(pathname, item);
           const Icon = item.icon;
 
           const row = (

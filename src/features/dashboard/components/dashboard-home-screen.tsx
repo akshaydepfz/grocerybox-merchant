@@ -141,7 +141,7 @@ export function DashboardHomeScreen() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-4 sm:gap-6">
       <DashboardHeader />
 
       {dashboard.isRefreshing ? (
@@ -151,7 +151,7 @@ export function DashboardHomeScreen() {
         </div>
       ) : null}
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-2.5 sm:gap-4 xl:grid-cols-4">
         {dashboard.stats.map((stat) => {
           const visual = STAT_ICONS[stat.label as keyof typeof STAT_ICONS];
           const Icon = visual.icon;
@@ -159,20 +159,25 @@ export function DashboardHomeScreen() {
             <div
               key={stat.label}
               className={cn(
-                "relative overflow-hidden rounded-2xl border border-[#e8f5e9] p-5",
+                "relative overflow-hidden rounded-2xl border border-[#e8f5e9] p-3.5 sm:p-5",
                 visual.cardBg,
               )}
             >
               <div
                 className={cn(
-                  "absolute right-4 top-4 flex size-11 items-center justify-center rounded-xl",
+                  "absolute right-2.5 top-2.5 flex size-9 items-center justify-center rounded-xl sm:right-4 sm:top-4 sm:size-11",
                   visual.iconBg,
                 )}
               >
-                <Icon className={cn("size-5", visual.iconColor)} aria-hidden />
+                <Icon
+                  className={cn("size-4 sm:size-5", visual.iconColor)}
+                  aria-hidden
+                />
               </div>
-              <p className="text-sm font-medium text-[#6b7280]">{stat.label}</p>
-              <p className="mt-2 text-2xl font-bold tracking-tight text-[#1a1f2e]">
+              <p className="pr-8 text-[11px] font-medium text-[#6b7280] sm:pr-0 sm:text-sm">
+                {stat.label}
+              </p>
+              <p className="mt-1.5 text-lg font-bold tracking-tight text-[#1a1f2e] sm:mt-2 sm:text-2xl">
                 {stat.value}
               </p>
               {stat.delta ? (
@@ -191,8 +196,8 @@ export function DashboardHomeScreen() {
         })}
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <DashboardSurface className="p-5 lg:col-span-2">
+      <div className="grid gap-3 sm:gap-4 lg:grid-cols-3">
+        <DashboardSurface className="order-2 p-4 sm:p-5 lg:order-1 lg:col-span-2">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="text-base font-semibold text-[#1a1f2e]">
@@ -212,7 +217,7 @@ export function DashboardHomeScreen() {
               <Link href={`${dashboardRoutePrefix}/orders`}>View orders</Link>
             </Button>
           </div>
-          <div className="mt-4 h-52 w-full">
+          <div className="mt-3 h-44 w-full sm:mt-4 sm:h-52">
             <DashboardSalesChart
               points={dashboard.salesSeries}
               rangeLabel={dashboard.salesRangeLabel}
@@ -220,8 +225,8 @@ export function DashboardHomeScreen() {
           </div>
         </DashboardSurface>
 
-        <div className="flex flex-col gap-4">
-          <div className="relative overflow-hidden rounded-2xl bg-[#bef264] p-5">
+        <div className="order-1 flex flex-col gap-3 sm:gap-4 lg:order-2">
+          <div className="relative overflow-hidden rounded-2xl bg-[#bef264] p-4 sm:p-5">
             <div className="pointer-events-none absolute -right-4 top-2 opacity-90">
               <Ticket className="size-20 text-[#0a3d32]/15" strokeWidth={1.2} />
             </div>
@@ -237,7 +242,7 @@ export function DashboardHomeScreen() {
             />
           </div>
 
-          <DashboardSurface className="p-4">
+          <DashboardSurface className="p-3 sm:p-4">
             <p className="px-1 text-sm font-semibold text-[#1a1f2e]">Quick Actions</p>
             <QuickActions
               storefrontUrl={storefrontUrl}
