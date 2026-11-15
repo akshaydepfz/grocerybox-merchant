@@ -41,6 +41,7 @@ import {
   PaymentOptionTile,
   StoreConfigSection,
   StoreConfigSectionIcons,
+  StoreConfigWhatsAppIcon,
   ToggleSettingCard,
   UpiBadge,
 } from "./store-config-parts";
@@ -200,7 +201,7 @@ export function StoreConfigScreen() {
             <OrderOptionCard
               title="WhatsApp Orders"
               description="Customers can place orders via WhatsApp."
-              icon={StoreConfigSectionIcons.whatsApp}
+              iconNode={<StoreConfigWhatsAppIcon />}
               iconColor="#25D366"
               iconBackground="#E8F8EC"
               selected={form.whatsAppOrders}

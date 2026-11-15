@@ -7,7 +7,6 @@ import {
   Home,
   IndianRupee,
   MapPin,
-  MessageCircle,
   Store,
   Truck,
   type LucideIcon,
@@ -54,25 +53,30 @@ export function StoreConfigSection({
   );
 }
 
-export function OrderOptionCard({
-  title,
-  description,
-  icon: Icon,
-  iconColor,
-  iconBackground,
-  selected,
-  disabled,
-  onChange,
-}: {
+type OrderOptionCardProps = {
   title: string;
   description: string;
-  icon: LucideIcon;
   iconColor: string;
   iconBackground: string;
   selected: boolean;
   disabled?: boolean;
   onChange: (value: boolean) => void;
-}) {
+} & (
+  | { icon: LucideIcon; iconNode?: never }
+  | { icon?: never; iconNode: ReactNode }
+);
+
+export function OrderOptionCard({
+  title,
+  description,
+  icon: Icon,
+  iconNode,
+  iconColor,
+  iconBackground,
+  selected,
+  disabled,
+  onChange,
+}: OrderOptionCardProps) {
   return (
     <div
       role="group"
@@ -89,7 +93,11 @@ export function OrderOptionCard({
         className="flex size-10 shrink-0 items-center justify-center rounded-full"
         style={{ backgroundColor: iconBackground }}
       >
-        <Icon className="size-[22px]" style={{ color: iconColor }} />
+        {iconNode ?? (
+          Icon ? (
+            <Icon className="size-[22px]" style={{ color: iconColor }} />
+          ) : null
+        )}
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-bold text-gb-mo-gray-900">
@@ -235,6 +243,18 @@ export function PaymentOptionTile({
   );
 }
 
+export function StoreConfigWhatsAppIcon({ className }: { className?: string }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- brand SVG from /public
+    <img
+      src="/whatsapp.svg"
+      alt=""
+      aria-hidden
+      className={cn("size-[22px]", className)}
+    />
+  );
+}
+
 export function UpiBadge() {
   return (
     <span className="rounded border border-gb-mo-gray-100 bg-gb-mo-gray-100 px-2 py-1 text-xs font-extrabold italic text-gb-mo-gray-900">
@@ -255,7 +275,6 @@ export const StoreConfigSectionIcons = {
   orders: FileText,
   delivery: Truck,
   payment: CreditCard,
-  whatsApp: MessageCircle,
   website: Globe,
   homeDelivery: Home,
   storePickup: Store,
