@@ -7,6 +7,7 @@ import {
 import {
   ChevronLeft,
   ChevronRight,
+  ChevronRight as ChevronRightIcon,
   Eye,
   Loader2,
   Package,
@@ -14,7 +15,9 @@ import {
   Plus,
   RotateCcw,
   Search,
+  SlidersHorizontal,
   Trash2,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { type ReactNode, useEffect, useState } from "react";
@@ -56,6 +59,19 @@ import { ProductThumbnail } from "./product-thumbnail";
 
 const CATEGORY_OPTIONS_LIMIT = 100;
 
+const STATUS_CHIPS = [
+  { value: "all", label: "All" },
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+] as const;
+
+const STOCK_CHIPS = [
+  { value: "all", label: "All stock" },
+  { value: "in_stock", label: "In stock" },
+  { value: "low_stock", label: "Low" },
+  { value: "out_of_stock", label: "Out" },
+] as const;
+
 export function ProductsScreen() {
   const { user, isRegistered } = useAuth();
   const { state, patchParams, resetFilters, hasActiveFilters } =
@@ -64,6 +80,7 @@ export function ProductsScreen() {
   const [searchDraft, setSearchDraft] = useState(state.search);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<MerchantProduct | null>(null);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const openDelete = (product: MerchantProduct) => {
     setDeleteTarget(product);
@@ -187,23 +204,33 @@ export function ProductsScreen() {
       ? "Try adjusting your search or filters."
       : "Add your first product to start selling.";
 
+  const mobileFiltersActive =
+    state.categoryId.length > 0 ||
+    state.subcategoryId.length > 0 ||
+    state.featuredFilter !== "all" ||
+    state.stockFilter !== "all" ||
+    Boolean(state.sortBy);
+
   return (
-    <DashboardPage>
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#1a1f2e]">
+    <DashboardPage className="gap-3 sm:gap-6">
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-[#16a34a] md:hidden">
+            {totalProducts.toLocaleString("en-IN")} products
+          </p>
+          <h1 className="text-xl font-bold tracking-tight text-[#1a1f2e] sm:text-2xl">
             Products
           </h1>
-          <p className="mt-1 text-sm text-[#6b7280]">
-            Manage your store products and inventory.
+          <p className="mt-0.5 hidden text-sm text-[#6b7280] sm:block">
+            Manage your store catalog and inventory.
           </p>
-          <p className="mt-2 text-xs font-medium text-[#9ca3af]">
+          <p className="mt-2 hidden text-xs font-medium text-[#9ca3af] sm:block">
             {totalProducts.toLocaleString("en-IN")} products total
           </p>
         </div>
         <Button
           type="button"
-          className="h-10 shrink-0 rounded-xl bg-[#16a34a] px-4 text-sm font-semibold text-white hover:bg-[#15803d]"
+          className="h-11 w-full shrink-0 rounded-xl bg-[#16a34a] px-4 text-sm font-semibold text-white hover:bg-[#15803d] sm:h-10 sm:w-auto"
           asChild
         >
           <Link href={`${dashboardRoutePrefix}/products/new`}>
@@ -213,31 +240,88 @@ export function ProductsScreen() {
         </Button>
       </header>
 
-      <DashboardSurface>
-        <div className="flex flex-col gap-4 border-b border-[#f0f1f4] px-5 py-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-base font-semibold text-[#1a1f2e]">
-                All Products
-              </h2>
-              <p className="mt-0.5 text-xs text-[#9ca3af]">
-                Search by name, SKU, barcode, or brand.
-              </p>
-            </div>
-            <div className="relative w-full lg:max-w-xl">
-              <Search
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9ca3af]"
-                aria-hidden
-              />
-              <ProductSearchInput
-                key={state.search}
-                initialValue={state.search}
-                onValueChange={setSearchDraft}
-              />
-            </div>
+      <DashboardSurface className="overflow-hidden">
+        <div className="sticky top-0 z-10 flex flex-col gap-3 border-b border-[#f0f1f4] bg-white px-3.5 py-3 md:static md:gap-4 md:px-5 md:py-4">
+          <div className="relative w-full md:max-w-none lg:ml-auto lg:max-w-xl">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9ca3af]"
+              aria-hidden
+            />
+            <ProductSearchInput
+              key={state.search}
+              initialValue={state.search}
+              onValueChange={setSearchDraft}
+            />
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <ProductFilterChips
+            ariaLabel="Product status"
+            value={state.activeFilter}
+            options={STATUS_CHIPS}
+            onChange={(value) => {
+              patchParams({
+                status: value === "all" ? null : value,
+                page: null,
+              });
+            }}
+          />
+
+          <ProductFilterChips
+            ariaLabel="Stock level"
+            value={state.stockFilter}
+            options={STOCK_CHIPS}
+            onChange={(value) => {
+              patchParams({
+                stock: value === "all" ? null : value,
+                page: null,
+              });
+            }}
+          />
+
+          <div className="flex items-center gap-2 md:hidden">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className={cn(
+                "h-10 flex-1 rounded-xl",
+                (mobileFiltersOpen || mobileFiltersActive) &&
+                  "border-[#16a34a] text-[#16a34a]",
+              )}
+              onClick={() => setMobileFiltersOpen((open) => !open)}
+            >
+              <SlidersHorizontal className="size-4" aria-hidden />
+              <span className="ml-2">More filters</span>
+              {mobileFiltersActive ? (
+                <span className="ml-1.5 size-1.5 rounded-full bg-[#16a34a]" />
+              ) : null}
+            </Button>
+            {hasActiveFilters ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-10 shrink-0 rounded-xl"
+                onClick={resetFilters}
+                aria-label="Reset filters"
+              >
+                <X className="size-4" />
+              </Button>
+            ) : null}
+          </div>
+
+          {mobileFiltersOpen ? (
+            <ProductMobileFiltersPanel
+              state={state}
+              patchParams={patchParams}
+              categoryOptions={categoryOptions}
+              subcategoryOptions={subcategoryOptions}
+              categoriesLoading={categoriesQuery.isLoading}
+              subcategoriesLoading={subcategoriesQuery.isLoading}
+            />
+          ) : null}
+
+          <div className="hidden gap-2 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             <FilterSelect
               label="Category"
               value={state.categoryId}
@@ -354,7 +438,7 @@ export function ProductsScreen() {
             </FilterSelect>
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="hidden flex-col gap-2 md:flex sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-2">
               {state.sortBy ? (
                 <FilterSelect
@@ -411,7 +495,7 @@ export function ProductsScreen() {
         </div>
 
         {listQuery.isFetching && !listQuery.isLoading ? (
-          <div className="flex items-center gap-2 border-b border-[#f0f1f4] px-5 py-2 text-xs text-[#6b7280]">
+          <div className="flex items-center gap-2 border-b border-[#f0f1f4] px-3.5 py-2 text-xs text-[#6b7280] md:px-5">
             <Loader2 className="size-3.5 animate-spin" aria-hidden />
             Refreshing…
           </div>
@@ -492,29 +576,31 @@ export function ProductsScreen() {
               </table>
             </div>
 
-            <div className="flex flex-col gap-3 p-4 md:hidden">
+            <ul className="flex flex-col gap-2 p-3 md:hidden">
               {items.map((product) => (
-                <ProductMobileCard
-                  key={product.id}
-                  product={product}
-                  onDelete={() => openDelete(product)}
-                />
+                <li key={product.id}>
+                  <ProductMobileCard
+                    product={product}
+                    onDelete={() => openDelete(product)}
+                  />
+                </li>
               ))}
-            </div>
+            </ul>
           </>
         )}
 
         {totalPages > 1 || state.limit !== 20 ? (
-          <div className="flex flex-col gap-3 border-t border-[#f0f1f4] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs text-[#6b7280]">
+          <div className="flex flex-col gap-3 border-t border-[#f0f1f4] px-3.5 py-3 md:px-5 md:py-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-center text-xs text-[#6b7280] sm:text-left">
               Page {currentPage} of {totalPages} ·{" "}
               {totalProducts.toLocaleString("en-IN")} items
             </p>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
+                className="h-10 rounded-xl md:h-9"
                 disabled={currentPage <= 1 || listQuery.isFetching}
                 onClick={() => {
                   const prev = Math.max(1, currentPage - 1);
@@ -530,6 +616,7 @@ export function ProductsScreen() {
                 type="button"
                 variant="outline"
                 size="sm"
+                className="h-10 rounded-xl md:h-9"
                 disabled={currentPage >= totalPages || listQuery.isFetching}
                 onClick={() => {
                   patchParams({ page: String(currentPage + 1) });
@@ -575,7 +662,7 @@ function ProductSearchInput({
         setValue(next);
         onValueChange(next);
       }}
-      className="h-10 w-full rounded-xl border border-[#e8eaef] bg-[#fafbfc] pl-10 pr-3 text-sm text-[#1a1f2e] placeholder:text-[#9ca3af] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a34a]/30"
+      className="h-11 w-full rounded-xl border border-[#e8eaef] bg-[#fafbfc] pl-10 pr-3 text-base text-[#1a1f2e] placeholder:text-[#9ca3af] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a34a]/30 md:h-10 md:text-sm"
     />
   );
 }
@@ -721,6 +808,150 @@ function ProductTableRow({
   );
 }
 
+function ProductFilterChips<T extends string>({
+  ariaLabel,
+  value,
+  options,
+  onChange,
+}: {
+  ariaLabel: string;
+  value: T;
+  options: readonly { value: T; label: string }[];
+  onChange: (value: T) => void;
+}) {
+  return (
+    <div
+      className="flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden"
+      role="tablist"
+      aria-label={ariaLabel}
+    >
+      {options.map((chip) => {
+        const active = value === chip.value;
+        return (
+          <button
+            key={chip.label}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(chip.value)}
+            className={cn(
+              "min-h-[36px] shrink-0 snap-start rounded-full border px-3.5 py-1.5 text-xs font-semibold transition active:scale-[0.98]",
+              active
+                ? "border-[#16a34a] bg-[#f0fdf4] text-[#15803d]"
+                : "border-[#e8eaef] bg-[#fafbfc] text-[#6b7280]",
+            )}
+          >
+            {chip.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ProductMobileFiltersPanel({
+  state,
+  patchParams,
+  categoryOptions,
+  subcategoryOptions,
+  categoriesLoading,
+  subcategoriesLoading,
+}: {
+  state: ReturnType<typeof useProductListQueryParams>["state"];
+  patchParams: ReturnType<typeof useProductListQueryParams>["patchParams"];
+  categoryOptions: { id: string; name: string }[];
+  subcategoryOptions: { id: string; name: string }[];
+  categoriesLoading: boolean;
+  subcategoriesLoading: boolean;
+}) {
+  return (
+    <div className="grid gap-2 rounded-xl border border-[#eceef2] bg-[#fafbfc] p-3 md:hidden">
+      <FilterSelect
+        label="Category"
+        value={state.categoryId}
+        disabled={categoriesLoading}
+        onChange={(value) => {
+          patchParams({
+            category_id: value || null,
+            subcategory_id: null,
+            page: null,
+          });
+        }}
+      >
+        <option value="">All categories</option>
+        {categoryOptions.map((category) => (
+          <option key={category.id} value={category.id}>
+            {category.name}
+          </option>
+        ))}
+      </FilterSelect>
+
+      <FilterSelect
+        label="Subcategory"
+        value={state.subcategoryId}
+        disabled={!state.categoryId || subcategoriesLoading}
+        onChange={(value) => {
+          patchParams({
+            subcategory_id: value || null,
+            page: null,
+          });
+        }}
+      >
+        <option value="">
+          {state.categoryId ? "All subcategories" : "Select category first"}
+        </option>
+        {subcategoryOptions.map((subcategory) => (
+          <option key={subcategory.id} value={subcategory.id}>
+            {subcategory.name}
+          </option>
+        ))}
+      </FilterSelect>
+
+      <FilterSelect
+        label="Featured"
+        value={state.featuredFilter}
+        onChange={(value) => {
+          patchParams({
+            featured: value === "all" ? null : value,
+            page: null,
+          });
+        }}
+      >
+        <option value="all">All products</option>
+        <option value="featured">Featured</option>
+        <option value="not_featured">Not featured</option>
+      </FilterSelect>
+
+      <FilterSelect
+        label="Sort by"
+        value={state.sortBy || "default"}
+        onChange={(value) => {
+          if (value === "default") {
+            patchParams({
+              sort_by: null,
+              sort_order: null,
+              page: null,
+            });
+            return;
+          }
+          patchParams({
+            sort_by: value,
+            sort_order: state.sortOrder,
+            page: null,
+          });
+        }}
+      >
+        <option value="default">Default order</option>
+        <option value="name">Product name</option>
+        <option value="selling_price">Selling price</option>
+        <option value="stock_quantity">Stock quantity</option>
+        <option value="created_at">Created date</option>
+        <option value="updated_at">Updated date</option>
+      </FilterSelect>
+    </div>
+  );
+}
+
 function ProductMobileCard({
   product,
   onDelete,
@@ -729,80 +960,83 @@ function ProductMobileCard({
   onDelete: () => void;
 }) {
   const detailHref = `${dashboardRoutePrefix}/products/${product.id}`;
+  const editHref = `${dashboardRoutePrefix}/products/${product.id}/edit`;
 
   return (
-    <article className="rounded-2xl border border-[#f0f1f4] bg-white p-4 shadow-sm">
-      <div className="flex gap-3">
+    <article className="overflow-hidden rounded-xl border border-[#eceef2] bg-white shadow-sm">
+      <Link
+        href={detailHref}
+        className="flex gap-3 p-3.5 transition active:bg-[#fafbfc]"
+      >
         <ProductThumbnail
           imageUrl={product.primaryImage?.imageUrl}
           name={product.name}
           size="md"
         />
         <div className="min-w-0 flex-1">
-          <Link
-            href={detailHref}
-            className="text-base font-semibold text-[#1a1f2e] hover:text-[#16a34a]"
-          >
+          <p className="line-clamp-2 text-sm font-semibold leading-snug text-[#1a1f2e]">
             {product.name}
-          </Link>
-          {product.brand ? (
-            <p className="text-xs text-[#9ca3af]">{product.brand}</p>
-          ) : null}
-          <p className="mt-2 text-sm font-semibold text-[#1a1f2e]">
-            {formatInr(product.sellingPrice)}
-            {product.mrp != null && product.mrp > product.sellingPrice ? (
-              <span className="ml-2 text-xs font-normal text-[#9ca3af] line-through">
-                {formatInr(product.mrp)}
-              </span>
-            ) : null}
           </p>
+          {product.brand ? (
+            <p className="mt-0.5 truncate text-xs text-[#9ca3af]">{product.brand}</p>
+          ) : null}
           <p className="mt-1 text-xs text-[#6b7280]">
             {product.categoryName}
             {product.subcategoryName ? ` · ${product.subcategoryName}` : ""}
           </p>
-          <p className="mt-1 text-xs text-[#6b7280]">
-            Stock:{" "}
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            <ProductActiveBadge isActive={product.isActive} />
+            <ProductFeaturedBadge isFeatured={product.isFeatured} />
+          </div>
+        </div>
+        <div className="flex shrink-0 flex-col items-end justify-between gap-1">
+          <p className="text-sm font-bold tabular-nums text-[#1a1f2e]">
+            {formatInr(product.sellingPrice)}
+          </p>
+          {product.mrp != null && product.mrp > product.sellingPrice ? (
+            <p className="text-[10px] text-[#9ca3af] line-through">
+              {formatInr(product.mrp)}
+            </p>
+          ) : null}
+          <p className="text-[10px] text-[#6b7280]">
             {formatStockQuantity(
               product.stockQuantity,
               product.unitValue,
               product.unit,
             )}
           </p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            <ProductActiveBadge isActive={product.isActive} />
-            <ProductFeaturedBadge isFeatured={product.isFeatured} />
-          </div>
+          <ChevronRightIcon className="size-4 text-[#d1d5db]" aria-hidden />
         </div>
-      </div>
-      <div className="mt-3 flex gap-2">
+      </Link>
+      <div className="grid grid-cols-[1fr_auto_auto] gap-2 border-t border-[#f0f1f4] bg-[#fafbfc] p-2">
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="h-9 flex-1 rounded-xl"
+          className="h-10 rounded-lg border-[#eceef2] bg-white"
           asChild
         >
-          <Link href={detailHref}>View details</Link>
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-9 rounded-xl"
-          asChild
-        >
-          <Link
-            href={`${dashboardRoutePrefix}/products/${product.id}/edit`}
-            aria-label={`Edit ${product.name}`}
-          >
+          <Link href={editHref}>
             <Pencil className="size-3.5" aria-hidden />
+            <span className="ml-1.5">Edit</span>
           </Link>
         </Button>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="h-9 rounded-xl text-destructive hover:bg-destructive/5 hover:text-destructive"
+          className="h-10 rounded-lg border-[#eceef2] bg-white px-3"
+          asChild
+        >
+          <Link href={detailHref} aria-label={`View ${product.name}`}>
+            <Eye className="size-3.5" aria-hidden />
+          </Link>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-10 rounded-lg border-[#eceef2] bg-white px-3 text-destructive hover:bg-destructive/5"
           onClick={onDelete}
           aria-label={`Delete ${product.name}`}
         >
