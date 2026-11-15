@@ -1,3 +1,5 @@
+import { GROCERYBOX_BRAND_DISPLAY } from "@/config/store-domain";
+
 import { openRazorpayCheckout } from "../services/razorpay-checkout";
 import { createSubscriptionPaymentOrder } from "../services/subscription-service";
 import type { SubscriptionPlan } from "../types/subscription";
@@ -30,7 +32,7 @@ export async function runSubscriptionCheckout(options: {
     amountPaise: order.amount,
     currency: order.currency,
     orderId: order.orderId,
-    merchantName: "Grocery.in",
+    merchantName: GROCERYBOX_BRAND_DISPLAY,
     description: `${options.plan.name} subscription`,
     customerEmail: options.customerEmail,
     onSuccess: (success) => {

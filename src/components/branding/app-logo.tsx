@@ -13,7 +13,7 @@ type AppLogoImageProps = {
 export function AppLogoImage({
   size,
   className,
-  alt = "Grocery.in",
+  alt = "Grocerybox.in",
   priority,
 }: AppLogoImageProps) {
   return (
@@ -46,14 +46,13 @@ const GROCERY_BRAND = {
 type GroceryBrandLogoProps = {
   size?: "compact" | "default";
   className?: string;
-  /** Merchant sign-in uses Grocerybox.in; other surfaces default to Grocery.in. */
   variant?: "grocery-in" | "grocerybox-in";
 };
 
 export function GroceryBrandLogo({
   size = "default",
   className,
-  variant = "grocery-in",
+  variant = "grocerybox-in",
 }: GroceryBrandLogoProps) {
   const markSize = size === "compact" ? 36 : 40;
   const text = size === "compact" ? "text-xl" : "text-2xl";
@@ -78,10 +77,13 @@ export function GroceryBrandLogo({
 
 export function GroceryBrandLogoOnboarding({ className }: { className?: string }) {
   return (
-    <div className={cn("inline-flex items-center gap-2", className)}>
-      <AppLogoImage size={32} />
-      <span className="text-2xl font-bold tracking-tight text-gb-mo-gray-900">
-        Grocery<span className="text-gb-onboard-lime-500">.in</span>
+    <div className={cn("inline-flex min-w-0 items-center gap-1.5 sm:gap-2", className)}>
+      <span className="shrink-0 origin-left scale-[0.88] sm:scale-100">
+        <AppLogoImage size={32} alt="Grocerybox.in" />
+      </span>
+      <span className="truncate text-base font-bold tracking-tight text-gb-mo-gray-900 sm:text-2xl">
+        Grocerybox
+        <span className="text-gb-onboard-lime-500">.in</span>
       </span>
     </div>
   );

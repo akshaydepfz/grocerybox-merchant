@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { GROCERYBOX_BRAND_DISPLAY } from "@/config/store-domain";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { AuthError, resolveSignedInEmail } from "@/features/auth/services/auth-service";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -205,7 +206,7 @@ export function PlanScreen() {
         amountPaise: order.amount,
         currency: order.currency,
         orderId: order.orderId,
-        merchantName: "Grocery.in",
+        merchantName: GROCERYBOX_BRAND_DISPLAY,
         description: `${plan.name} subscription`,
         customerEmail: signedInEmail || undefined,
         onSuccess: (success) => {

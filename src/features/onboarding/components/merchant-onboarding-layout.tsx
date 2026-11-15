@@ -157,7 +157,7 @@ function HeaderBrandRow() {
     <div className="flex flex-wrap items-center gap-2">
       <GroceryBrandLogoOnboarding />
       <div className="mx-2 hidden h-6 w-px bg-gb-mo-gray-300 sm:block" />
-      <span className="text-lg font-semibold text-gb-mo-gray-800">
+      <span className="text-sm font-semibold text-gb-mo-gray-800 sm:text-lg">
         Merchant Onboarding
       </span>
     </div>

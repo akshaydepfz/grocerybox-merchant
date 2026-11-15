@@ -14,6 +14,10 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
+import {
+  GROCERYBOX_STORE_DOMAIN_SUFFIX,
+  merchantStoreSubdomainHost,
+} from "@/config/store-domain";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import type { StoreSubdomainAvailability } from "../types/store-identity";
 import {
@@ -46,7 +50,7 @@ export function StoreIdentityForm({
   const twoCol = useMediaQuery("(min-width: 640px)");
 
   const normalizedSlug = normalizeSubdomain(subdomain);
-  const previewHost = `${normalizedSlug || "subdomain"}.grocery.in`;
+  const previewHost = merchantStoreSubdomainHost(normalizedSlug);
   const previewName = storeName.trim() || "Your Store";
   const previewTagline = previewDescription(description);
 
@@ -144,8 +148,8 @@ function SubdomainField({
             </span>
           ) : null}
         </div>
-        <SubdomainSuffix className="border-l border-gb-mo-gray-200 bg-[#E8F9C1] px-4 py-3.5 text-xs font-bold text-gb-mo-gray-900">
-          .grocery.in
+        <SubdomainSuffix className="border-l border-gb-mo-gray-200 bg-[#E8F9C1] px-2 py-3.5 text-[10px] font-bold text-gb-mo-gray-900 sm:px-3 sm:text-xs">
+          {GROCERYBOX_STORE_DOMAIN_SUFFIX}
         </SubdomainSuffix>
       </div>
       <SlugAvailabilityMessage availability={availability} subdomain={value} />
