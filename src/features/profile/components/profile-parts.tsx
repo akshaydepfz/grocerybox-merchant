@@ -160,6 +160,10 @@ export function ProfileOnboardingProgress({
             <span className="font-semibold text-[#1a1f2e]">
               {status.replaceAll("_", " ")}
             </span>
+            <span className="text-[#6b7280]">
+              {" "}
+              · 8 steps to publish your store (not the profile page alone)
+            </span>
           </p>
         </div>
         <p className="text-xl font-bold tabular-nums text-[#14532d] sm:text-2xl">{percent}%</p>
