@@ -6,6 +6,7 @@ import { ApiError } from "@/lib/api/types";
 import {
   onboardingReviewFromEnvelopeData,
   type OnboardingReview,
+  type StorePublishOptions,
   type StorePublishResult,
 } from "../types/onboarding-review";
 
@@ -19,6 +20,7 @@ function storePublishFromEnvelopeData(
       typeof data.published_at === "string" && data.published_at.length > 0
         ? data.published_at
         : null,
+    masterCatalogImported: (data.master_catalog_imported as boolean) ?? false,
   };
 }
 
@@ -43,8 +45,12 @@ export async function fetchOnboardingReview(): Promise<OnboardingReview> {
   );
 }
 
-export async function publishStore(): Promise<StorePublishResult> {
-  const response = await apiClient.post(API_ENDPOINTS.merchantStorePublish, {});
+export async function publishStore(
+  options: StorePublishOptions,
+): Promise<StorePublishResult> {
+  const response = await apiClient.post(API_ENDPOINTS.merchantStorePublish, {
+    catalog_setup: options.catalogSetup,
+  });
   if (response.status === 200) {
     const envelope = parseApiEnvelope(response.data);
     if (!envelope.success || typeof envelope.data !== "object") {

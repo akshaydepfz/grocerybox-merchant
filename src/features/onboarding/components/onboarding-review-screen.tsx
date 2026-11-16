@@ -35,6 +35,8 @@ import {
   ReviewSectionRow,
   SubscriptionStatusCard,
 } from "./onboarding-review-parts";
+import { PublishStoreCatalogDialog } from "./publish-store-catalog-dialog";
+import type { StorePublishCatalogSetup } from "../types/onboarding-review";
 
 const PLAN_PATH = "/onboarding/plan";
 const PLAN_SUCCESS_PATH = "/onboarding/plan/success";
@@ -51,6 +53,9 @@ export function OnboardingReviewScreen() {
   const signedInEmail = resolveSignedInEmail(user?.email);
 
   const [isCheckoutBusy, setIsCheckoutBusy] = useState(false);
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
+  const [catalogSetup, setCatalogSetup] =
+    useState<StorePublishCatalogSetup>("import_master");
   const verifyingSignatureRef = useRef<string | null>(null);
 
   const reviewQuery = useQuery({
@@ -78,13 +83,20 @@ export function OnboardingReviewScreen() {
   const publishMutation = useMutation({
     mutationFn: publishStore,
     onSuccess: async (result) => {
+      setPublishDialogOpen(false);
       await queryClient.invalidateQueries({
         queryKey: ["merchant-onboarding-review"],
       });
+      if (result.masterCatalogImported) {
+        await queryClient.invalidateQueries({ queryKey: ["merchant-categories"] });
+        await queryClient.invalidateQueries({ queryKey: ["merchant-products"] });
+      }
       toast.success(
         result.alreadyPublished
           ? "Your store is already published."
-          : "Your store has been published successfully.",
+          : result.masterCatalogImported
+            ? "Your store is live with the starter catalogue."
+            : "Your store has been published successfully.",
       );
       if (result.alreadyPublished) {
         router.push(DASHBOARD_PATH);
@@ -192,7 +204,7 @@ export function OnboardingReviewScreen() {
         <OnboardingFormFooter
           onBack={() => router.push(REVIEW_BACK_PATH)}
           onContinue={
-            canPublish ? () => publishMutation.mutate() : undefined
+            canPublish ? () => setPublishDialogOpen(true) : undefined
           }
           continueLabel={
             publishMutation.isPending ? "Publishing…" : "Publish Store"
@@ -266,6 +278,15 @@ export function OnboardingReviewScreen() {
           </>
         )}
       </section>
+
+      <PublishStoreCatalogDialog
+        open={publishDialogOpen}
+        onOpenChange={setPublishDialogOpen}
+        selected={catalogSetup}
+        onSelect={setCatalogSetup}
+        isPublishing={publishMutation.isPending}
+        onConfirm={() => publishMutation.mutate({ catalogSetup })}
+      />
     </MerchantOnboardingScreenLayout>
   );
 }

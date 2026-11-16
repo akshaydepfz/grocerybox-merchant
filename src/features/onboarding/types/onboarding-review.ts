@@ -26,10 +26,17 @@ export type OnboardingReview = {
   sections: OnboardingSectionStatus[];
 };
 
+export type StorePublishCatalogSetup = "import_master" | "manual";
+
+export type StorePublishOptions = {
+  catalogSetup: StorePublishCatalogSetup;
+};
+
 export type StorePublishResult = {
   storePublished: boolean;
   alreadyPublished: boolean;
   publishedAt: string | null;
+  masterCatalogImported: boolean;
 };
 
 export function parseSubscriptionPublishStatus(
