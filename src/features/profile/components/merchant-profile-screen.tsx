@@ -16,6 +16,7 @@ import {
   UserRound,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -30,6 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { dashboardRoutePrefix } from "@/config/routes";
 import { merchantStorePublicUrl } from "@/config/store-domain";
 import { DashboardPage } from "@/features/dashboard/components/dashboard-page";
 import { ApiError } from "@/lib/api/types";
@@ -347,7 +349,24 @@ export function MerchantProfileScreen() {
       </ProfileSection>
 
       <div className="grid gap-3 sm:gap-5 lg:grid-cols-2">
-        <ProfileSection title="Branding" description="Logo, banner, and theme colors">
+        <ProfileSection
+          title="Branding"
+          description="Logo, banner, and theme colors"
+          action={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className={`${actionButtonClass} h-10 rounded-xl sm:h-9`}
+              asChild
+            >
+              <Link href={`${dashboardRoutePrefix}/profile/branding`}>
+                <Pencil className="size-3.5" />
+                Edit branding
+              </Link>
+            </Button>
+          }
+        >
           {branding ? (
             <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">

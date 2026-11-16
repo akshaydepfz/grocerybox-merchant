@@ -1,11 +1,19 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Palette, Save } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { ErrorState } from "@/components/shared/error-state";
+import { GroceryAnimatedLoader } from "@/components/shared/animated-loader";
 import { Button } from "@/components/ui/button";
+import { dashboardRoutePrefix } from "@/config/routes";
+import { DashboardPage } from "@/features/dashboard/components/dashboard-page";
+import { MERCHANT_PROFILE_QUERY_KEY } from "@/features/profile/hooks/use-merchant-profile";
+import { ProfileSection } from "@/features/profile/components/profile-parts";
 import {
   Dialog,
   DialogContent,
@@ -60,11 +68,18 @@ import { StoreBrandingColorPickerDialog } from "./store-branding-color-picker-di
 
 const STORE_IDENTITY_PATH = "/onboarding/store-identity";
 const STORE_LOCATION_PATH = "/onboarding/store-location";
+const PROFILE_PATH = `${dashboardRoutePrefix}/profile`;
 const CONTINUE_LIME_CLASS = "bg-[#C7F400]";
 
 type ImageKind = "logo" | "banner";
 
-export function StoreBrandingScreen() {
+type StoreBrandingScreenProps = {
+  /** Onboarding step flow vs editable from merchant profile. */
+  mode?: "onboarding" | "edit";
+};
+
+export function StoreBrandingScreen({ mode = "onboarding" }: StoreBrandingScreenProps) {
+  const isEditMode = mode === "edit";
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -123,6 +138,13 @@ export function StoreBrandingScreen() {
   const secondaryHex = userColors?.secondary ?? serverSecondary;
   const selectedQuickPick =
     userColors?.quickPick ?? (serverQuickPick >= 0 ? serverQuickPick : -1);
+
+  const refreshBrandingCaches = () => {
+    void queryClient.invalidateQueries({ queryKey: ["merchant-store-branding"] });
+    if (isEditMode) {
+      void queryClient.invalidateQueries({ queryKey: MERCHANT_PROFILE_QUERY_KEY });
+    }
+  };
 
   useEffect(() => {
     if (brandingQuery.error) {
@@ -201,7 +223,10 @@ export function StoreBrandingScreen() {
           ? await uploadLogoMutation.mutateAsync(file)
           : await uploadBannerMutation.mutateAsync(file);
       setBrandingOverride(data);
-      void queryClient.invalidateQueries({ queryKey: ["merchant-store-branding"] });
+      refreshBrandingCaches();
+      if (isEditMode) {
+        toast.success(kind === "logo" ? "Logo updated" : "Banner updated");
+      }
       if (kind === "logo") {
         setLogoFileName(
           displayNameFromUrl(data.branding.logoUrl, file.name),
@@ -239,6 +264,10 @@ export function StoreBrandingScreen() {
           ? await deleteLogoMutation.mutateAsync()
           : await deleteBannerMutation.mutateAsync();
       setBrandingOverride(data);
+      refreshBrandingCaches();
+      if (isEditMode) {
+        toast.success(kind === "logo" ? "Logo removed" : "Banner removed");
+      }
       if (kind === "logo") {
         setLogoFileName("");
         setLogoPreviewUrl((prev) => {
@@ -295,7 +324,13 @@ export function StoreBrandingScreen() {
 
     try {
       await saveColorsMutation.mutateAsync();
-      router.push(STORE_LOCATION_PATH);
+      refreshBrandingCaches();
+      if (isEditMode) {
+        toast.success("Brand colours saved");
+        router.push(PROFILE_PATH);
+      } else {
+        router.push(STORE_LOCATION_PATH);
+      }
     } catch (error) {
       toast.error(
         error instanceof ApiError || error instanceof AuthError
@@ -341,6 +376,176 @@ export function StoreBrandingScreen() {
     onDelete: () => setDeleteKind("banner"),
   };
 
+  const brandingFormFields = (
+    <section className="min-w-0 max-w-full space-y-5 overflow-x-hidden sm:space-y-7">
+      <div
+        className={
+          twoCol
+            ? "grid grid-cols-2 gap-5"
+            : "flex min-w-0 max-w-full flex-col gap-4 sm:gap-5"
+        }
+      >
+        <LogoUploadCard {...logoCardProps} />
+        <BannerUploadCard {...bannerCardProps} />
+      </div>
+
+      <div className="min-w-0 max-w-full">
+        <p className="text-sm font-bold text-gb-mo-gray-900">Brand Colours</p>
+        <p className="mt-1 text-xs leading-relaxed text-gb-mo-gray-400">
+          Choose colours for your store theme and branding.
+        </p>
+        <div
+          className={
+            wideColors
+              ? "mt-3 grid grid-cols-3 gap-5"
+              : "mt-3 flex flex-col gap-3 sm:gap-4"
+          }
+        >
+          <BrandColorSelector
+            label="Primary Colour"
+            required
+            hex={colorToHex(primaryHex)}
+            disabled={isBusy}
+            onClick={() => setPicker("primary")}
+          />
+          <BrandColorSelector
+            label="Secondary Colour"
+            required
+            hex={colorToHex(secondaryHex)}
+            disabled={isBusy}
+            onClick={() => setPicker("secondary")}
+          />
+          <QuickPickSwatches
+            selectedIndex={selectedQuickPick}
+            disabled={isBusy}
+            onSelect={applyQuickPick}
+          />
+        </div>
+      </div>
+
+      <StoreBrandingPreview
+        storeName={storeName}
+        primaryHex={primaryHex}
+        secondaryHex={secondaryHex}
+        hasBanner={hasBanner}
+        logoSrc={logoSrc}
+        bannerSrc={bannerSrc}
+      />
+    </section>
+  );
+
+  let mainContent: ReactNode;
+
+  if (isEditMode) {
+    if (!user) {
+      mainContent = (
+        <GroceryAnimatedLoader
+          theme="dashboard"
+          label="Loading branding"
+          sublabel="Checking sign-in…"
+          className="py-24"
+        />
+      );
+    } else if (brandingQuery.isLoading && !branding) {
+      mainContent = (
+        <GroceryAnimatedLoader
+          theme="dashboard"
+          label="Loading branding"
+          sublabel="Fetching logo, banner, and colours…"
+          className="py-24"
+        />
+      );
+    } else if (brandingQuery.isError && !branding) {
+      mainContent = (
+        <ErrorState
+          title="Could not load branding"
+          message={
+            brandingQuery.error instanceof ApiError
+              ? brandingQuery.error.message
+              : "Unable to load store branding."
+          }
+          onRetry={() => void brandingQuery.refetch()}
+          retryLabel="Try again"
+        />
+      );
+    } else {
+      mainContent = (
+        <DashboardPage className="mx-auto max-w-6xl gap-3 sm:gap-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+            <div className="min-w-0">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="-ml-2 mb-1 h-8 gap-1 px-2 text-[#6b7280] hover:text-[#1a1f2e]"
+                asChild
+              >
+                <Link href={PROFILE_PATH}>
+                  <ArrowLeft className="size-4" />
+                  Back to profile
+                </Link>
+              </Button>
+              <div className="flex items-center gap-2 text-[#16a34a]">
+                <Palette className="size-5" aria-hidden />
+                <span className="text-xs font-semibold uppercase tracking-wide">
+                  Store branding
+                </span>
+              </div>
+              <h1 className="mt-1 text-xl font-bold tracking-tight text-[#1a1f2e] sm:text-2xl">
+                Logo, banner & colours
+              </h1>
+              <p className="mt-1 max-w-2xl text-sm text-[#6b7280]">
+                Updates apply to your customer storefront. Logo and banner upload
+                immediately; save to apply colour changes.
+              </p>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              className="w-full gap-1.5 bg-[#16a34a] text-white hover:bg-[#15803d] sm:w-auto"
+              onClick={() => void handleContinue()}
+              disabled={isBusy}
+            >
+              <Save className="size-4" />
+              {saveColorsMutation.isPending ? "Saving…" : "Save colours"}
+            </Button>
+          </div>
+
+          <ProfileSection
+            title="Branding assets"
+            description="Upload or replace your store logo and banner."
+          >
+            {brandingFormFields}
+          </ProfileSection>
+        </DashboardPage>
+      );
+    }
+  } else {
+    mainContent = (
+      <MerchantOnboardingScreenLayout
+        signedInEmail={signedInEmail}
+        currentStep={3}
+        footer={
+          <OnboardingFormFooter
+            onBack={isBusy ? undefined : () => router.push(STORE_IDENTITY_PATH)}
+            onContinue={() => void handleContinue()}
+            isContinueLoading={saveColorsMutation.isPending}
+            continueColor={CONTINUE_LIME_CLASS}
+          />
+        }
+      >
+        <OnboardingStepProgress currentStep={3} useGradient />
+        <h1 className="mt-4 text-xl font-extrabold tracking-tight text-gb-mo-gray-900 sm:mt-5 sm:text-[28px]">
+          Store Branding
+        </h1>
+        <p className="mt-1 text-xs font-medium leading-relaxed text-gb-mo-gray-500 sm:text-sm">
+          Add your store logo, banner and choose your brand colours.
+        </p>
+        <div className="mt-4 sm:mt-7">{brandingFormFields}</div>
+      </MerchantOnboardingScreenLayout>
+    );
+  }
+
   return (
     <>
       <input
@@ -358,84 +563,7 @@ export function StoreBrandingScreen() {
         onChange={onFileInputChange("banner")}
       />
 
-      <MerchantOnboardingScreenLayout
-        signedInEmail={signedInEmail}
-        currentStep={3}
-        footer={
-          <OnboardingFormFooter
-            onBack={
-              isBusy ? undefined : () => router.push(STORE_IDENTITY_PATH)
-            }
-            onContinue={() => void handleContinue()}
-            isContinueLoading={saveColorsMutation.isPending}
-            continueColor={CONTINUE_LIME_CLASS}
-          />
-        }
-      >
-        <OnboardingStepProgress currentStep={3} useGradient />
-        <h1 className="mt-4 text-xl font-extrabold tracking-tight text-gb-mo-gray-900 sm:mt-5 sm:text-[28px]">
-          Store Branding
-        </h1>
-        <p className="mt-1 text-xs font-medium leading-relaxed text-gb-mo-gray-500 sm:text-sm">
-          Add your store logo, banner and choose your brand colours.
-        </p>
-
-        <section className="mt-4 min-w-0 max-w-full space-y-5 overflow-x-hidden sm:mt-7 sm:space-y-7">
-          <div
-            className={
-              twoCol
-                ? "grid grid-cols-2 gap-5"
-                : "flex min-w-0 max-w-full flex-col gap-4 sm:gap-5"
-            }
-          >
-            <LogoUploadCard {...logoCardProps} />
-            <BannerUploadCard {...bannerCardProps} />
-          </div>
-
-          <div className="min-w-0 max-w-full">
-            <p className="text-sm font-bold text-gb-mo-gray-900">Brand Colours</p>
-            <p className="mt-1 text-xs leading-relaxed text-gb-mo-gray-400">
-              Choose colours for your store theme and branding.
-            </p>
-            <div
-              className={
-                wideColors
-                  ? "mt-3 grid grid-cols-3 gap-5"
-                  : "mt-3 flex flex-col gap-3 sm:gap-4"
-              }
-            >
-              <BrandColorSelector
-                label="Primary Colour"
-                required
-                hex={colorToHex(primaryHex)}
-                disabled={isBusy}
-                onClick={() => setPicker("primary")}
-              />
-              <BrandColorSelector
-                label="Secondary Colour"
-                required
-                hex={colorToHex(secondaryHex)}
-                disabled={isBusy}
-                onClick={() => setPicker("secondary")}
-              />
-              <QuickPickSwatches
-                selectedIndex={selectedQuickPick}
-                disabled={isBusy}
-                onSelect={applyQuickPick}
-              />
-            </div>
-          </div>
-
-          <StoreBrandingPreview
-            storeName={storeName}
-            primaryHex={primaryHex}
-            secondaryHex={secondaryHex}
-            hasBanner={hasBanner}
-            logoSrc={logoSrc}
-            bannerSrc={bannerSrc}
-          />
-        </section>
-      </MerchantOnboardingScreenLayout>
+      {mainContent}
 
       <StoreBrandingColorPickerDialog
         open={picker === "primary"}
