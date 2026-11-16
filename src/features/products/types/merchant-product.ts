@@ -10,6 +10,7 @@ export type MerchantProductUnit =
 
 export type MerchantProductStockStatus =
   | "in_stock"
+  | "well_stocked"
   | "out_of_stock"
   | "low_stock";
 

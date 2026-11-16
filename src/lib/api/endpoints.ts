@@ -38,6 +38,7 @@ export const API_ENDPOINTS = {
   merchantCategories: `${API_V1_PREFIX}/merchant/categories`,
   merchantCategoryImageUpload: `${API_V1_PREFIX}/merchant/categories/images/upload`,
   merchantProducts: `${API_V1_PREFIX}/merchant/products`,
+  merchantInventorySummary: `${API_V1_PREFIX}/merchant/inventory/summary`,
   merchantProductImageUpload: `${API_V1_PREFIX}/merchant/products/images/upload`,
   merchantOrders: `${API_V1_PREFIX}/merchant/orders`,
   merchantCustomers: `${API_V1_PREFIX}/merchant/customers`,
@@ -77,7 +78,7 @@ export function merchantSubcategoryPath(
 
 export function merchantProductPath(
   productId: string,
-  action?: "activate" | "deactivate",
+  action?: "activate" | "deactivate" | "stock",
 ): string {
   const base = `${API_ENDPOINTS.merchantProducts}/${productId}`;
   if (action) {

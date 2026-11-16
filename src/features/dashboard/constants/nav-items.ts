@@ -122,7 +122,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: "Inventory",
     href: `${dashboardRoutePrefix}/inventory`,
     icon: Warehouse,
-    available: false,
+    available: true,
   },
   {
     id: "customers",

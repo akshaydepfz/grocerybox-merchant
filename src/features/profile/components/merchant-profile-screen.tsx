@@ -59,7 +59,6 @@ import {
   ProfileField,
   ProfileFieldGrid,
   ProfileImagePreview,
-  ProfileOnboardingProgress,
   ProfileQuickLinks,
   ProfileSection,
   ProfileStatusRow,
@@ -258,11 +257,6 @@ export function MerchantProfileScreen() {
       <ProfileQuickLinks />
 
       <DashboardStorefrontCard />
-
-      <ProfileOnboardingProgress
-        status={profile.onboardingStatus}
-        storePublished={profile.storePublished}
-      />
 
       <ProfileHeaderSection profile={profile} onEditName={openEdit} />
 
