@@ -34,6 +34,7 @@ import { formatRelativeTime } from "../utils/dashboard-metrics";
 
 import { DashboardHeader } from "./dashboard-header";
 import { DashboardSalesChart } from "./dashboard-sales-chart";
+import { DashboardStorefrontCard } from "./dashboard-storefront-card";
 import { DashboardSurface } from "./dashboard-surface";
 
 const STAT_ICONS = {
@@ -143,6 +144,8 @@ export function DashboardHomeScreen() {
   return (
     <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-4 sm:gap-6">
       <DashboardHeader />
+
+      <DashboardStorefrontCard />
 
       {dashboard.isRefreshing ? (
         <div className="flex items-center gap-2 text-xs text-[#6b7280]">

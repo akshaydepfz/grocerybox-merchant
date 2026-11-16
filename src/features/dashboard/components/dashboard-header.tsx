@@ -45,7 +45,6 @@ export function DashboardHeader({ className }: { className?: string }) {
       )}
     >
       <div className="min-w-0">
-        <p className="text-xs font-medium text-[#16a34a] lg:hidden">{storeName}</p>
         <h1 className="text-xl font-bold tracking-tight text-[#1a1f2e] sm:text-2xl">
           {greeting}, {profileName} 👋
         </h1>
