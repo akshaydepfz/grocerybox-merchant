@@ -1,7 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
-  CreditCard,
   FolderTree,
   HelpCircle,
   LayoutDashboard,
@@ -11,7 +10,6 @@ import {
   Settings,
   ShoppingCart,
   Users,
-  UserRound,
   CircleUser,
   Warehouse,
 } from "lucide-react";
@@ -143,7 +141,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: "Analytics",
     href: `${dashboardRoutePrefix}/analytics`,
     icon: BarChart3,
-    available: false,
+    available: true,
   },
   {
     id: "profile",
@@ -158,20 +156,6 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     href: `${dashboardRoutePrefix}/settings`,
     icon: Settings,
     available: true,
-  },
-  {
-    id: "payments",
-    label: "Payments",
-    href: `${dashboardRoutePrefix}/payments`,
-    icon: CreditCard,
-    available: false,
-  },
-  {
-    id: "team",
-    label: "Team",
-    href: `${dashboardRoutePrefix}/team`,
-    icon: UserRound,
-    available: false,
   },
   {
     id: "help",

@@ -34,7 +34,7 @@ const MENU_SECTIONS: {
   },
   {
     title: "Store & account",
-    itemIds: ["settings", "payments", "team", "help"],
+    itemIds: ["settings", "help"],
   },
 ];
 

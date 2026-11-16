@@ -39,6 +39,7 @@ export const API_ENDPOINTS = {
   merchantCategoryImageUpload: `${API_V1_PREFIX}/merchant/categories/images/upload`,
   merchantProducts: `${API_V1_PREFIX}/merchant/products`,
   merchantInventorySummary: `${API_V1_PREFIX}/merchant/inventory/summary`,
+  merchantAnalytics: `${API_V1_PREFIX}/merchant/analytics`,
   merchantProductImageUpload: `${API_V1_PREFIX}/merchant/products/images/upload`,
   merchantOrders: `${API_V1_PREFIX}/merchant/orders`,
   merchantCustomers: `${API_V1_PREFIX}/merchant/customers`,
