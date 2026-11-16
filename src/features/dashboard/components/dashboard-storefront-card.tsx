@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { AppLogoImage } from "@/components/branding/app-logo";
+import { MerchantStoreLogo } from "@/components/branding/merchant-store-logo";
 import { Button } from "@/components/ui/button";
 import { merchantStorePublicUrl, merchantStoreSubdomainHost } from "@/config/store-domain";
 import { dashboardRoutePrefix } from "@/config/routes";
@@ -80,9 +80,12 @@ export function DashboardStorefrontCard({ className }: { className?: string }) {
       )}
     >
       <div className="flex min-w-0 items-start gap-3 sm:items-center">
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-[#dcfce7] bg-white shadow-sm sm:size-12">
-          <AppLogoImage size={36} className="rounded-lg" />
-        </div>
+        <MerchantStoreLogo
+          size={48}
+          className="shrink-0 rounded-xl border border-[#dcfce7] bg-white shadow-sm"
+          storeName={storeName}
+          logoUrl={profileQuery.data?.branding?.logoUrl}
+        />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <p className="truncate text-sm font-bold text-[#1a1f2e] sm:text-base">

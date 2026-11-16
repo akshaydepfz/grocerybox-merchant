@@ -34,6 +34,7 @@ import { Input } from "@/components/ui/input";
 import { dashboardRoutePrefix } from "@/config/routes";
 import { merchantStorePublicUrl } from "@/config/store-domain";
 import { DashboardPage } from "@/features/dashboard/components/dashboard-page";
+import { DashboardStorefrontCard } from "@/features/dashboard/components/dashboard-storefront-card";
 import { ApiError } from "@/lib/api/types";
 
 import {
@@ -256,20 +257,7 @@ export function MerchantProfileScreen() {
 
       <ProfileQuickLinks />
 
-      {storeUrl ? (
-        <div className="flex flex-col gap-2 rounded-xl border border-[#dcefe0] bg-[#f0fdf4] p-3 sm:hidden">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#15803d]">
-            Storefront
-          </p>
-          <p className="break-all font-mono text-xs text-[#14532d]">{storeUrl}</p>
-          <div className="grid grid-cols-2 gap-2">
-            <CopyStoreLinkButton url={storeUrl} className="!w-full" />
-            {profile.storePublished ? (
-              <OpenStoreLink url={storeUrl} className="!w-full text-center" />
-            ) : null}
-          </div>
-        </div>
-      ) : null}
+      <DashboardStorefrontCard />
 
       <ProfileOnboardingProgress
         status={profile.onboardingStatus}

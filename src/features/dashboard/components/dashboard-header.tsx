@@ -3,7 +3,7 @@
 import { Bell, ChevronDown } from "lucide-react";
 import Link from "next/link";
 
-import { AppLogoImage } from "@/components/branding/app-logo";
+import { MerchantStoreLogo } from "@/components/branding/merchant-store-logo";
 import { merchantStoreSubdomainHost } from "@/config/store-domain";
 import { dashboardRoutePrefix } from "@/config/routes";
 import { useMerchantProfileQuery } from "@/features/profile/hooks/use-merchant-profile";
@@ -58,7 +58,12 @@ export function DashboardHeader({ className }: { className?: string }) {
           href={`${dashboardRoutePrefix}/profile`}
           className="flex items-center gap-2.5 rounded-2xl border border-[#e8eaef] bg-white px-3 py-2 shadow-sm transition hover:bg-[#fafbfc]"
         >
-          <AppLogoImage size={32} className="rounded-lg" />
+          <MerchantStoreLogo
+            size={32}
+            className="rounded-lg"
+            storeName={storeName}
+            logoUrl={profileQuery.data?.branding?.logoUrl}
+          />
           <div className="text-left">
             <p className="text-xs font-semibold text-[#1a1f2e]">{storeName}</p>
             <p className="text-[10px] text-[#9ca3af]">{storeHost}</p>

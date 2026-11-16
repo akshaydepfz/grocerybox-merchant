@@ -6,9 +6,10 @@ import { Crown, Loader2, LogOut } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
-import { AppLogoImage } from "@/components/branding/app-logo";
+import { MerchantStoreLogo } from "@/components/branding/merchant-store-logo";
 import { Button } from "@/components/ui/button";
 import { signOutAndClearWebSession } from "@/features/auth/services/auth-service";
+import { useMerchantProfileQuery } from "@/features/profile/hooks/use-merchant-profile";
 import { cn } from "@/lib/utils";
 
 import { DASHBOARD_NAV_ITEMS, isDashboardNavActive } from "../constants/nav-items";
@@ -23,7 +24,13 @@ export function DashboardSidebar({
   className,
 }: DashboardSidebarProps) {
   const pathname = usePathname();
+  const profileQuery = useMerchantProfileQuery();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const storeName =
+    profileQuery.data?.store?.storeName?.trim() ||
+    profileQuery.data?.business?.businessName?.trim() ||
+    "Your store";
 
   const handleLogout = useCallback(async () => {
     if (isLoggingOut) {
@@ -47,10 +54,15 @@ export function DashboardSidebar({
       )}
     >
       <div className="flex items-center gap-2.5 px-5 py-6">
-        <AppLogoImage size={36} className="rounded-lg bg-white/10 p-1" />
+        <MerchantStoreLogo
+          size={36}
+          className="rounded-lg bg-white/10"
+          storeName={storeName}
+          logoUrl={profileQuery.data?.branding?.logoUrl}
+        />
         <div className="min-w-0 leading-tight">
-          <p className="truncate text-sm font-semibold">GroceryBox</p>
-          <p className="text-[11px] text-white/60">Merchant</p>
+          <p className="truncate text-sm font-semibold">{storeName}</p>
+          <p className="text-[11px] text-white/60">Merchant dashboard</p>
         </div>
       </div>
 

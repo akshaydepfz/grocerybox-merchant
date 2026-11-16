@@ -6,7 +6,7 @@ import { Loader2, LogOut } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
-import { AppLogoImage } from "@/components/branding/app-logo";
+import { MerchantStoreLogo } from "@/components/branding/merchant-store-logo";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { signOutAndClearWebSession } from "@/features/auth/services/auth-service";
 import { merchantStoreSubdomainHost } from "@/config/store-domain";
@@ -80,7 +80,7 @@ export function DashboardMoreScreen() {
   return (
     <DashboardPage className="gap-4 pb-4">
       <header className="flex items-center gap-3 rounded-2xl border border-[#eceef2] bg-white p-4 shadow-sm">
-        <AppLogoImage size={44} className="rounded-xl" />
+        <MerchantStoreLogo size={44} className="rounded-xl" storeName={storeName} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-bold text-[#1a1f2e]">{storeName}</p>
           <p className="truncate text-xs text-[#6b7280]">
