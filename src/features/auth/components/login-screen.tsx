@@ -27,7 +27,9 @@ import { useAuth } from "./auth-provider";
 import { GoogleGlyph } from "./google-glyph";
 
 const SIGN_IN_BRAND_LOGO = { variant: "grocerybox-in" as const };
-const WHATSAPP_SUPPORT_URL = "https://wa.me/919567602325";
+const WHATSAPP_SUPPORT_MESSAGE =
+  "Hi, I need help setting up my Grocerybox.in merchant account.";
+const WHATSAPP_SUPPORT_URL = `https://wa.me/919567602325?text=${encodeURIComponent(WHATSAPP_SUPPORT_MESSAGE)}`;
 
 function GroceryboxDomainInHeadline() {
   return (
