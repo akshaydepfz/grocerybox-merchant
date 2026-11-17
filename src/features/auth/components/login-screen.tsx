@@ -27,6 +27,7 @@ import { useAuth } from "./auth-provider";
 import { GoogleGlyph } from "./google-glyph";
 
 const SIGN_IN_BRAND_LOGO = { variant: "grocerybox-in" as const };
+const WHATSAPP_SUPPORT_URL = "https://wa.me/919567602325";
 
 function GroceryboxDomainInHeadline() {
   return (
@@ -146,7 +147,28 @@ export function LoginScreen() {
           )}
         </div>
       </div>
+      <FloatingWhatsAppSupport />
     </div>
+  );
+}
+
+function FloatingWhatsAppSupport() {
+  return (
+    <a
+      href={WHATSAPP_SUPPORT_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Chat with us on WhatsApp"
+      className={cn(
+        "fixed z-50 flex size-14 items-center justify-center rounded-full bg-white",
+        "shadow-[0_8px_24px_rgb(0_0_0_/0.12)] ring-1 ring-gb-onboard-slate-200/80",
+        "transition hover:scale-105 hover:shadow-[0_12px_28px_rgb(0_0_0_/0.16)]",
+        "bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-[max(1.25rem,env(safe-area-inset-right))]",
+      )}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element -- brand SVG from /public */}
+      <img src="/whatsapp.svg" alt="" aria-hidden className="size-10" />
+    </a>
   );
 }
 
