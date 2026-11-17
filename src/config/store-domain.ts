@@ -22,3 +22,9 @@ export function merchantStorePublicUrl(subdomain: string): string {
   }
   return `https://${slug}.${GROCERYBOX_STORE_DOMAIN}`;
 }
+
+/** Delivery partner sign-in (delivery app). */
+export const DELIVERY_PARTNER_PORTAL_HOST = "delivery.grocerybox.in" as const;
+
+export const DELIVERY_PARTNER_PORTAL_URL =
+  `https://${DELIVERY_PARTNER_PORTAL_HOST}` as const;
