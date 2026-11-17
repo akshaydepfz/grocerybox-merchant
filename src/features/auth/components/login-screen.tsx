@@ -147,28 +147,7 @@ export function LoginScreen() {
           )}
         </div>
       </div>
-      <FloatingWhatsAppSupport />
     </div>
-  );
-}
-
-function FloatingWhatsAppSupport() {
-  return (
-    <a
-      href={WHATSAPP_SUPPORT_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Chat with us on WhatsApp"
-      className={cn(
-        "fixed z-50 flex size-14 items-center justify-center rounded-full bg-white",
-        "shadow-[0_8px_24px_rgb(0_0_0_/0.12)] ring-1 ring-gb-onboard-slate-200/80",
-        "transition hover:scale-105 hover:shadow-[0_12px_28px_rgb(0_0_0_/0.16)]",
-        "bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-[max(1.25rem,env(safe-area-inset-right))]",
-      )}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element -- brand SVG from /public */}
-      <img src="/whatsapp.svg" alt="" aria-hidden className="size-10" />
-    </a>
   );
 }
 
@@ -486,7 +465,43 @@ function SignInCard({
             .
           </p>
         </div>
+        <AccountSetupAssist compact={isMobileLayout} />
       </div>
+    </div>
+  );
+}
+
+function AccountSetupAssist({ compact }: { compact?: boolean }) {
+  return (
+    <div
+      className={cn(
+        "flex w-full items-center justify-between gap-3 rounded-2xl border border-gb-onboard-slate-200/80 bg-gb-onboard-slate-50/60 px-3.5 py-3",
+        compact ? "mt-4" : "mt-5",
+      )}
+    >
+      <div className="min-w-0 text-left">
+        <p className="text-xs font-semibold text-gb-onboard-slate-800">
+          Account setup assist
+        </p>
+        <p className="mt-0.5 text-[11px] leading-snug text-gb-onboard-slate-500">
+          Stuck on sign-up? We&apos;ll guide you on WhatsApp.
+        </p>
+      </div>
+      <a
+        href={WHATSAPP_SUPPORT_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={cn(
+          "inline-flex shrink-0 items-center gap-1.5 rounded-full",
+          "border border-[#00E676]/40 bg-white px-3 py-1.5",
+          "text-xs font-semibold text-gb-onboard-slate-800 shadow-sm",
+          "transition hover:border-[#00E676]/60 hover:bg-[#00E676]/5",
+        )}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- brand SVG from /public */}
+        <img src="/whatsapp.svg" alt="" aria-hidden className="size-4" />
+        WhatsApp
+      </a>
     </div>
   );
 }
