@@ -9,6 +9,7 @@ import {
   Package,
   Settings,
   ShoppingCart,
+  Truck,
   Users,
   CircleUser,
   Warehouse,
@@ -99,6 +100,13 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: "Orders",
     href: `${dashboardRoutePrefix}/orders`,
     icon: ShoppingCart,
+    available: true,
+  },
+  {
+    id: "delivery-boys",
+    label: "Delivery Boys",
+    href: `${dashboardRoutePrefix}/delivery-boys`,
+    icon: Truck,
     available: true,
   },
   {

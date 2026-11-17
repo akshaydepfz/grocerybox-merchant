@@ -44,6 +44,8 @@ export const API_ENDPOINTS = {
   merchantOrders: `${API_V1_PREFIX}/merchant/orders`,
   merchantCustomers: `${API_V1_PREFIX}/merchant/customers`,
   merchantCoupons: `${API_V1_PREFIX}/merchant/coupons`,
+  merchantDeliveryBoys: `${API_V1_PREFIX}/merchant/delivery-boys`,
+  merchantDeliveryBoysSummary: `${API_V1_PREFIX}/merchant/delivery-boys/summary`,
 } as const satisfies Record<string, string>;
 
 export function merchantCategoryPath(
@@ -105,6 +107,10 @@ export function merchantCouponPath(
     return `${base}/${action}`;
   }
   return base;
+}
+
+export function merchantDeliveryBoyPath(deliveryBoyId: string): string {
+  return `${API_ENDPOINTS.merchantDeliveryBoys}/${deliveryBoyId}`;
 }
 
 export function merchantOrderStatusPath(orderId: string): string {
