@@ -1,5 +1,6 @@
 export {
   createMerchantDeliveryBoy,
+  deleteMerchantDeliveryBoy,
   friendlyDeliveryBoyError,
   getMerchantDeliveryBoy,
   getMerchantDeliveryBoySummary,

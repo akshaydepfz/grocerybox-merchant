@@ -99,6 +99,14 @@ export async function updateMerchantDeliveryBoy(
   return assertDeliveryBoyPayload(response.data, response.status);
 }
 
+export async function deleteMerchantDeliveryBoy(id: string): Promise<void> {
+  const response = await apiClient.delete(merchantDeliveryBoyPath(id));
+  const envelope = parseApiEnvelope(response.data);
+  if (!envelope.success) {
+    throw new ApiError(envelopeErrorMessage(response.status, envelope), response.status);
+  }
+}
+
 export function friendlyDeliveryBoyError(error: ApiError): string {
   if (error.status === 409) {
     return error.message.length > 0

@@ -1,14 +1,17 @@
 "use client";
 
-import { Ellipsis, Eye, Pencil } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Ellipsis, Eye, Loader2, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -19,8 +22,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { dashboardRoutePrefix } from "@/config/routes";
+import { ApiError } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
+import {
+  deleteMerchantDeliveryBoy,
+  friendlyDeliveryBoyError,
+} from "../services";
 import type { MerchantDeliveryBoy } from "../types/merchant-delivery-boy";
 import {
   deliveryBoyInitials,
@@ -34,7 +42,34 @@ type DeliveryBoysTableProps = {
 };
 
 export function DeliveryBoysTable({ items }: DeliveryBoysTableProps) {
+  const queryClient = useQueryClient();
   const [viewTarget, setViewTarget] = useState<MerchantDeliveryBoy | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<MerchantDeliveryBoy | null>(
+    null,
+  );
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!deleteTarget || deleting) return;
+    setDeleting(true);
+    try {
+      await deleteMerchantDeliveryBoy(deleteTarget.id);
+      await queryClient.invalidateQueries({ queryKey: ["merchant-delivery-boys"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["merchant-delivery-boys-summary"],
+      });
+      toast.success("Delivery partner removed");
+      setDeleteTarget(null);
+    } catch (error) {
+      const message =
+        error instanceof ApiError
+          ? friendlyDeliveryBoyError(error)
+          : "Unable to delete delivery partner.";
+      toast.error(message);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   if (items.length === 0) {
     return null;
@@ -94,6 +129,7 @@ export function DeliveryBoysTable({ items }: DeliveryBoysTableProps) {
                   <RowActions
                     editHref={`${dashboardRoutePrefix}/delivery-boys/${row.id}/edit`}
                     onView={() => setViewTarget(row)}
+                    onDelete={() => setDeleteTarget(row)}
                   />
                 </td>
               </tr>
@@ -162,6 +198,16 @@ export function DeliveryBoysTable({ items }: DeliveryBoysTableProps) {
                 </Link>
               </Button>
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-2 h-9 w-full rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+              onClick={() => setDeleteTarget(row)}
+            >
+              <Trash2 className="size-3.5" aria-hidden />
+              Remove
+            </Button>
           </article>
         ))}
       </div>
@@ -205,6 +251,50 @@ export function DeliveryBoysTable({ items }: DeliveryBoysTableProps) {
           ) : null}
         </DialogContent>
       </Dialog>
+
+      <Dialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => !open && !deleting && setDeleteTarget(null)}
+      >
+        <DialogContent className="max-w-md rounded-2xl border-[#e8eaef]">
+          <DialogHeader>
+            <DialogTitle className="text-[#1a1f2e]">
+              Remove delivery partner?
+            </DialogTitle>
+            <DialogDescription className="text-[#6b7280]">
+              {deleteTarget
+                ? `This will permanently remove ${deleteTarget.fullName} from your delivery team. They will no longer be able to sign in.`
+                : null}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-xl"
+              disabled={deleting}
+              onClick={() => setDeleteTarget(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="rounded-xl bg-red-600 text-white hover:bg-red-700"
+              disabled={deleting}
+              onClick={() => void handleDelete()}
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                  Removing…
+                </>
+              ) : (
+                "Remove"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
@@ -246,9 +336,11 @@ function StatusBadge({ isActive }: { isActive: boolean }) {
 function RowActions({
   editHref,
   onView,
+  onDelete,
 }: {
   editHref: string;
   onView: () => void;
+  onDelete: () => void;
 }) {
   return (
     <DropdownMenu>
@@ -273,6 +365,13 @@ function RowActions({
             <Pencil className="size-4" aria-hidden />
             Edit
           </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          variant="destructive"
+          onSelect={onDelete}
+        >
+          <Trash2 className="size-4" aria-hidden />
+          Remove
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

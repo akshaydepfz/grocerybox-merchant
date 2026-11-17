@@ -2,6 +2,7 @@
 
 import { Eye, EyeOff, Loader2, Shield } from "lucide-react";
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { type FormEvent, type ReactNode, useState } from "react";
 import { toast } from "sonner";
@@ -37,6 +38,7 @@ type DeliveryBoyFormProps =
 
 export function DeliveryBoyForm(props: DeliveryBoyFormProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const isEdit = props.mode === "edit";
   const partner = isEdit ? props.partner : null;
 
@@ -125,6 +127,15 @@ export function DeliveryBoyForm(props: DeliveryBoyFormProps) {
           isActive,
         });
         toast.success("Delivery partner created");
+      }
+      await queryClient.invalidateQueries({ queryKey: ["merchant-delivery-boys"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["merchant-delivery-boys-summary"],
+      });
+      if (isEdit && partner) {
+        await queryClient.invalidateQueries({
+          queryKey: ["merchant-delivery-boy", partner.id],
+        });
       }
       router.push(listHref);
     } catch (error) {
