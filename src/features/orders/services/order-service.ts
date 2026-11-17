@@ -56,13 +56,18 @@ export async function getMerchantOrder(id: string): Promise<MerchantOrderDetail>
   return assertOrderDetail(response.data, response.status);
 }
 
+export type UpdateMerchantOrderStatusInput = {
+  currentStep: MerchantOrderTimelineStep;
+  deliveryBoyId?: string;
+};
+
 export async function updateMerchantOrderStatus(
   id: string,
-  currentStep: MerchantOrderTimelineStep,
+  input: UpdateMerchantOrderStatusInput,
 ): Promise<MerchantOrderDetail> {
   const response = await apiClient.patch(
     merchantOrderStatusPath(id),
-    orderStatusUpdateToJson(currentStep),
+    orderStatusUpdateToJson(input.currentStep, input.deliveryBoyId),
   );
   return assertOrderDetail(response.data, response.status);
 }

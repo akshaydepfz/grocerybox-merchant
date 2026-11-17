@@ -29,6 +29,12 @@ export const MERCHANT_ORDER_FULFILLMENT_STEPS = MERCHANT_ORDER_STEPS.filter(
   (step) => step.id !== "cancelled",
 );
 
+export type MerchantOrderDeliveryPartner = {
+  id: string;
+  fullName: string;
+  phone: string;
+};
+
 export type MerchantOrderListItem = {
   id: string;
   orderNumber: string;
@@ -43,6 +49,8 @@ export type MerchantOrderListItem = {
   lineCount: number;
   itemCount: number;
   toPay: number;
+  deliveryBoyId?: string;
+  deliveryBoyName?: string;
 };
 
 export type MerchantOrderAddress = {
@@ -107,6 +115,7 @@ export type MerchantOrderDetail = {
   pricing: MerchantOrderPricing;
   toPay: number;
   totalSavings: number;
+  deliveryBoy?: MerchantOrderDeliveryPartner | null;
 };
 
 export type MerchantOrderListParams = {
@@ -160,6 +169,10 @@ export function merchantOrderListItemFromJson(
     lineCount: typeof raw.line_count === "number" ? raw.line_count : 0,
     itemCount: typeof raw.item_count === "number" ? raw.item_count : 0,
     toPay: typeof raw.to_pay === "number" ? raw.to_pay : 0,
+    deliveryBoyId:
+      raw.delivery_boy_id != null ? String(raw.delivery_boy_id) : undefined,
+    deliveryBoyName:
+      raw.delivery_boy_name != null ? String(raw.delivery_boy_name) : undefined,
   };
 }
 
@@ -266,7 +279,45 @@ export function merchantOrderDetailFromJson(
     toPay: pricing.toPay,
     totalSavings:
       typeof raw.total_savings === "number" ? raw.total_savings : pricing.totalSavings,
+    deliveryBoy:
+      raw.delivery_boy_id != null
+        ? {
+            id: String(raw.delivery_boy_id),
+            fullName: String(raw.delivery_boy_name ?? "Delivery partner"),
+            phone: String(raw.delivery_boy_phone ?? ""),
+          }
+        : null,
   };
+}
+
+export function nextMerchantOrderStep(
+  current: MerchantOrderTimelineStep,
+): MerchantOrderTimelineStep | null {
+  const flow: MerchantOrderTimelineStep[] = [
+    "placed",
+    "confirmed",
+    "packing",
+    "out_for_delivery",
+    "delivered",
+  ];
+  const index = flow.indexOf(current);
+  if (index < 0 || index >= flow.length - 1) return null;
+  return flow[index + 1] ?? null;
+}
+
+export function nextStepActionLabel(step: MerchantOrderTimelineStep): string {
+  switch (step) {
+    case "confirmed":
+      return "Confirm order";
+    case "packing":
+      return "Start packing";
+    case "out_for_delivery":
+      return "Assign & dispatch";
+    case "delivered":
+      return "Mark as delivered";
+    default:
+      return "Update status";
+  }
 }
 
 export function parseOrderListData(data: unknown): MerchantOrderListResult {
@@ -297,6 +348,13 @@ export function parseOrderListData(data: unknown): MerchantOrderListResult {
   };
 }
 
-export function orderStatusUpdateToJson(step: MerchantOrderTimelineStep): Record<string, string> {
-  return { current_step: step };
+export function orderStatusUpdateToJson(
+  step: MerchantOrderTimelineStep,
+  deliveryBoyId?: string,
+): Record<string, string> {
+  const body: Record<string, string> = { current_step: step };
+  if (deliveryBoyId?.trim()) {
+    body.delivery_boy_id = deliveryBoyId.trim();
+  }
+  return body;
 }

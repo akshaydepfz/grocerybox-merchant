@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Ban, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Ban, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -13,17 +13,13 @@ import { useAuth } from "@/features/auth/components/auth-provider";
 import { DashboardSurface } from "@/features/dashboard/components/dashboard-surface";
 import { dashboardRoutePrefix } from "@/config/routes";
 import { ApiError } from "@/lib/api/types";
-import { cn } from "@/lib/utils";
 
 import {
   friendlyOrderError,
   getMerchantOrder,
   updateMerchantOrderStatus,
 } from "../services";
-import {
-  MERCHANT_ORDER_FULFILLMENT_STEPS,
-  type MerchantOrderTimelineStep,
-} from "../types/merchant-order";
+import type { MerchantOrderTimelineStep } from "../types/merchant-order";
 import {
   formatCustomerPhone,
   formatInr,
@@ -32,6 +28,7 @@ import {
 } from "../utils/format-order";
 
 import { OrderCancelDialog } from "./order-cancel-dialog";
+import { OrderFulfillmentPanel } from "./order-fulfillment-panel";
 import { OrderStepBadge } from "./order-step-badge";
 
 type OrderDetailScreenProps = {
@@ -50,16 +47,23 @@ export function OrderDetailScreen({ orderId }: OrderDetailScreenProps) {
     refetchOnWindowFocus: false,
   });
 
-  const [draftStep, setDraftStep] = useState<MerchantOrderTimelineStep | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
 
   const updateMutation = useMutation({
-    mutationFn: (step: MerchantOrderTimelineStep) =>
-      updateMerchantOrderStatus(orderId, step),
+    mutationFn: (input: {
+      step: MerchantOrderTimelineStep;
+      deliveryBoyId?: string;
+    }) =>
+      updateMerchantOrderStatus(orderId, {
+        currentStep: input.step,
+        deliveryBoyId: input.deliveryBoyId,
+      }),
     onSuccess: async (order) => {
-      setDraftStep(null);
       await queryClient.invalidateQueries({ queryKey: ["merchant-orders"] });
       await queryClient.invalidateQueries({ queryKey: ["merchant-order", orderId] });
+      await queryClient.invalidateQueries({
+        queryKey: ["merchant-delivery-boys-summary"],
+      });
       toast.success(`Order updated to “${orderStepLabel(order.currentStep)}”.`);
     },
     onError: (error) => {
@@ -112,8 +116,6 @@ export function OrderDetailScreen({ orderId }: OrderDetailScreenProps) {
     return null;
   }
 
-  const selectedStep = draftStep ?? order.currentStep;
-  const dirty = selectedStep !== order.currentStep;
   const isCancelled = order.currentStep === "cancelled";
   const isDelivered = order.currentStep === "delivered";
   const canCancel = !isCancelled && !isDelivered;
@@ -162,42 +164,24 @@ export function OrderDetailScreen({ orderId }: OrderDetailScreenProps) {
           </p>
         </DashboardSurface>
       ) : (
-        <DashboardSurface className="p-3.5 sm:p-5">
-          <h2 className="text-sm font-semibold text-[#1a1f2e] sm:text-base">
-            Fulfillment status
-          </h2>
-          <p className="mt-0.5 hidden text-xs text-[#9ca3af] sm:block">
-            Same five steps customers see on order tracking: placed → confirmed →
-            packing → out for delivery → delivered.
-          </p>
-          <FulfillmentStepPicker
-            steps={MERCHANT_ORDER_FULFILLMENT_STEPS}
-            selectedStep={selectedStep}
-            disabled={updateMutation.isPending}
-            onSelect={setDraftStep}
-          />
-          <div className="mt-4 flex sm:justify-end">
-            <Button
-              type="button"
-              className="h-11 w-full bg-[#16a34a] text-white hover:bg-[#15803d] sm:h-9 sm:w-auto"
-              disabled={!dirty || updateMutation.isPending}
-              onClick={() => updateMutation.mutate(selectedStep)}
-            >
-              {updateMutation.isPending ? (
-                <Loader2 className="size-4 animate-spin" aria-hidden />
-              ) : (
-                <Save className="size-4" aria-hidden />
-              )}
-              <span className="ml-2">Save status</span>
-            </Button>
-          </div>
-        </DashboardSurface>
+        <OrderFulfillmentPanel
+          order={order}
+          pending={updateMutation.isPending}
+          onAdvance={(step, deliveryBoyId) => {
+            updateMutation.mutate({ step, deliveryBoyId });
+          }}
+        />
       )}
 
       <div className="grid gap-3 sm:gap-6 lg:grid-cols-2">
         <DashboardSurface className="p-3.5 sm:p-5">
           <h2 className="text-sm font-semibold text-[#1a1f2e]">Delivery</h2>
           <p className="mt-1 text-sm text-[#6b7280]">{order.deliveryLabel}</p>
+          {order.deliveryBoy ? (
+            <p className="mt-2 text-sm text-[#15803d]">
+              Partner: <span className="font-semibold">{order.deliveryBoy.fullName}</span>
+            </p>
+          ) : null}
           {order.etaWindow ? (
             <p className="mt-2 text-xs text-[#9ca3af]">ETA: {order.etaWindow}</p>
           ) : null}
@@ -315,66 +299,6 @@ function OrderDetailTopBar({
         ) : null}
       </div>
     </div>
-  );
-}
-
-function FulfillmentStepPicker({
-  steps,
-  selectedStep,
-  disabled,
-  onSelect,
-}: {
-  steps: typeof MERCHANT_ORDER_FULFILLMENT_STEPS;
-  selectedStep: MerchantOrderTimelineStep;
-  disabled: boolean;
-  onSelect: (step: MerchantOrderTimelineStep) => void;
-}) {
-  return (
-    <>
-      <div className="mt-3 flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:hidden [&::-webkit-scrollbar]:hidden">
-        {steps.map((step) => {
-          const active = selectedStep === step.id;
-          return (
-            <button
-              key={step.id}
-              type="button"
-              disabled={disabled}
-              onClick={() => onSelect(step.id)}
-              className={cn(
-                "min-w-[7.5rem] shrink-0 snap-start rounded-xl border px-3 py-2.5 text-left text-xs font-semibold transition active:scale-[0.98]",
-                active
-                  ? "border-[#16a34a] bg-[#f0fdf4] text-[#15803d]"
-                  : "border-[#eceef2] bg-white text-[#4b5563]",
-              )}
-            >
-              {step.title}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="mt-3 hidden gap-2 sm:grid sm:grid-cols-2 lg:grid-cols-5">
-        {steps.map((step) => {
-          const active = selectedStep === step.id;
-          return (
-            <button
-              key={step.id}
-              type="button"
-              disabled={disabled}
-              onClick={() => onSelect(step.id)}
-              className={cn(
-                "rounded-xl border px-3 py-3 text-left text-sm transition",
-                active
-                  ? "border-[#16a34a] bg-[#f0fdf4] text-[#15803d]"
-                  : "border-[#eceef2] bg-white text-[#4b5563] hover:border-[#d1d5db]",
-              )}
-            >
-              <p className="font-semibold">{step.title}</p>
-            </button>
-          );
-        })}
-      </div>
-    </>
   );
 }
 
