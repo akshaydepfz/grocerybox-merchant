@@ -30,7 +30,7 @@ const MENU_SECTIONS: {
   },
   {
     title: "Customers & insights",
-    itemIds: ["customers", "analytics"],
+    itemIds: ["customers", "delivery-boys", "analytics"],
   },
   {
     title: "Store & account",
