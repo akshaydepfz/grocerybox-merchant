@@ -91,6 +91,8 @@ export function DashboardStorefrontCard({ className }: { className?: string }) {
     }
   };
 
+  const showDeliveryPanel = deliveryBoyManagement;
+
   return (
     <div
       className={cn(
@@ -173,39 +175,39 @@ export function DashboardStorefrontCard({ className }: { className?: string }) {
       </div>
       </div>
 
-      <div className="flex flex-col gap-3 border-t border-[#dcefe0] bg-[#fafdfb] p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-5">
-        <div className="flex min-w-0 items-start gap-3 sm:items-center">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-[#bbf7d0] bg-[#dcfce7] text-[#15803d] sm:size-11">
-            <Truck className="size-5" aria-hidden />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-[#1a1f2e]">Delivery panel</p>
-            <p className="mt-0.5 text-[11px] leading-relaxed text-[#9ca3af]">
-              Partners sign in here with the phone number and password you assign.
-            </p>
-            <p className="mt-1 flex items-center gap-1.5 font-mono text-xs text-[#14532d] sm:text-sm">
-              <Truck className="size-3.5 shrink-0 text-[#16a34a] sm:hidden" aria-hidden />
-              {DELIVERY_PARTNER_PORTAL_HOST}
-            </p>
+      {showDeliveryPanel ? (
+        <div className="flex flex-col gap-3 border-t border-[#dcefe0] bg-[#fafdfb] p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-5">
+          <div className="flex min-w-0 items-start gap-3 sm:items-center">
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-[#bbf7d0] bg-[#dcfce7] text-[#15803d] sm:size-11">
+              <Truck className="size-5" aria-hidden />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold text-[#1a1f2e]">Delivery panel</p>
+              <p className="mt-0.5 text-[11px] leading-relaxed text-[#9ca3af]">
+                Partners sign in here with the phone number and password you assign.
+              </p>
+              <p className="mt-1 flex items-center gap-1.5 font-mono text-xs text-[#14532d] sm:text-sm">
+                <Truck className="size-3.5 shrink-0 text-[#16a34a] sm:hidden" aria-hidden />
+                {DELIVERY_PARTNER_PORTAL_HOST}
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-10 flex-1 rounded-xl border-[#dcefe0] bg-white text-xs font-semibold text-[#15803d] hover:bg-white sm:h-9 sm:flex-none"
-            onClick={() => void copyDeliveryLink()}
-          >
-            {deliveryCopied ? (
-              <Check className="size-3.5" aria-hidden />
-            ) : (
-              <Copy className="size-3.5" aria-hidden />
-            )}
-            {deliveryCopied ? "Copied" : "Copy link"}
-          </Button>
-          {deliveryBoyManagement ? (
+          <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-10 flex-1 rounded-xl border-[#dcefe0] bg-white text-xs font-semibold text-[#15803d] hover:bg-white sm:h-9 sm:flex-none"
+              onClick={() => void copyDeliveryLink()}
+            >
+              {deliveryCopied ? (
+                <Check className="size-3.5" aria-hidden />
+              ) : (
+                <Copy className="size-3.5" aria-hidden />
+              )}
+              {deliveryCopied ? "Copied" : "Copy link"}
+            </Button>
             <Button
               type="button"
               size="sm"
@@ -215,20 +217,20 @@ export function DashboardStorefrontCard({ className }: { className?: string }) {
             >
               <Link href={`${dashboardRoutePrefix}/delivery-boys`}>Manage team</Link>
             </Button>
-          ) : null}
-          <Button
-            type="button"
-            size="sm"
-            className="h-10 flex-1 rounded-xl bg-[#0d9488] text-xs font-semibold text-white hover:bg-[#0f766e] sm:h-9 sm:flex-none"
-            asChild
-          >
-            <a href={DELIVERY_PARTNER_PORTAL_URL} target="_blank" rel="noopener noreferrer">
-              Open panel
-              <ExternalLink className="size-3.5" aria-hidden />
-            </a>
-          </Button>
+            <Button
+              type="button"
+              size="sm"
+              className="h-10 flex-1 rounded-xl bg-[#0d9488] text-xs font-semibold text-white hover:bg-[#0f766e] sm:h-9 sm:flex-none"
+              asChild
+            >
+              <a href={DELIVERY_PARTNER_PORTAL_URL} target="_blank" rel="noopener noreferrer">
+                Open panel
+                <ExternalLink className="size-3.5" aria-hidden />
+              </a>
+            </Button>
+          </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }
