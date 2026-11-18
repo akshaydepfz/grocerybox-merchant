@@ -12,7 +12,10 @@ import { signOutAndClearWebSession } from "@/features/auth/services/auth-service
 import { useMerchantProfileQuery } from "@/features/profile/hooks/use-merchant-profile";
 import { cn } from "@/lib/utils";
 
+import { useDeliveryBoyManagementEnabled } from "@/features/profile/hooks/use-delivery-boy-management";
+
 import { DASHBOARD_NAV_ITEMS, isDashboardNavActive } from "../constants/nav-items";
+import { dashboardNavItemsForPlan } from "../utils/dashboard-nav-for-plan";
 
 type DashboardSidebarProps = {
   onNavigate?: () => void;
@@ -25,7 +28,12 @@ export function DashboardSidebar({
 }: DashboardSidebarProps) {
   const pathname = usePathname();
   const profileQuery = useMerchantProfileQuery();
+  const deliveryBoyManagement = useDeliveryBoyManagementEnabled();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const navItems = dashboardNavItemsForPlan(DASHBOARD_NAV_ITEMS, {
+    deliveryBoyManagement,
+  });
 
   const storeName =
     profileQuery.data?.store?.storeName?.trim() ||
@@ -70,7 +78,7 @@ export function DashboardSidebar({
         className="flex-1 space-y-0.5 overflow-y-auto px-3"
         aria-label="Main"
       >
-        {DASHBOARD_NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const isActive = isDashboardNavActive(pathname, item);
           const Icon = item.icon;
 

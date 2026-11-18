@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 
-import { DeliveryBoyEditScreen } from "@/features/delivery-boys/components";
+import {
+  DeliveryBoyEditScreen,
+  DeliveryBoyPlanGate,
+} from "@/features/delivery-boys/components";
 
 export const metadata: Metadata = {
   title: "Edit Delivery Boy | GroceryBox Merchant",
@@ -13,5 +16,9 @@ type PageProps = {
 
 export default async function EditDeliveryBoyPage({ params }: PageProps) {
   const { id } = await params;
-  return <DeliveryBoyEditScreen deliveryBoyId={id} />;
+  return (
+    <DeliveryBoyPlanGate>
+      <DeliveryBoyEditScreen deliveryBoyId={id} />
+    </DeliveryBoyPlanGate>
+  );
 }

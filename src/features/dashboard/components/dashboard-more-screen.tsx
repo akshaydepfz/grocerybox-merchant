@@ -14,10 +14,16 @@ import { dashboardRoutePrefix } from "@/config/routes";
 import { useMerchantProfileQuery } from "@/features/profile/hooks/use-merchant-profile";
 import { cn } from "@/lib/utils";
 
+import { useDeliveryBoyManagementEnabled } from "@/features/profile/hooks/use-delivery-boy-management";
+
 import {
   DASHBOARD_MORE_MENU_ITEMS,
   isDashboardNavActive,
 } from "../constants/nav-items";
+import {
+  dashboardMoreMenuItemIdsForPlan,
+  dashboardNavItemsForPlan,
+} from "../utils/dashboard-nav-for-plan";
 import { DashboardPage } from "./dashboard-page";
 
 const MENU_SECTIONS: {
@@ -38,8 +44,11 @@ const MENU_SECTIONS: {
   },
 ];
 
-function itemsForSection(sectionIds: string[]) {
-  const byId = new Map(DASHBOARD_MORE_MENU_ITEMS.map((item) => [item.id, item]));
+function itemsForSection(
+  sectionIds: string[],
+  moreMenuItems: typeof DASHBOARD_MORE_MENU_ITEMS,
+) {
+  const byId = new Map(moreMenuItems.map((item) => [item.id, item]));
   return sectionIds
     .map((id) => byId.get(id))
     .filter((item): item is (typeof DASHBOARD_MORE_MENU_ITEMS)[number] => Boolean(item));
@@ -49,7 +58,12 @@ export function DashboardMoreScreen() {
   const pathname = usePathname();
   const { user } = useAuth();
   const profileQuery = useMerchantProfileQuery();
+  const deliveryBoyManagement = useDeliveryBoyManagementEnabled();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const moreMenuItems = dashboardNavItemsForPlan(DASHBOARD_MORE_MENU_ITEMS, {
+    deliveryBoyManagement,
+  });
 
   const storeName =
     profileQuery.data?.store?.storeName?.trim() ||
@@ -100,7 +114,10 @@ export function DashboardMoreScreen() {
       </p>
 
       {MENU_SECTIONS.map((section) => {
-        const items = itemsForSection(section.itemIds);
+        const sectionIds = dashboardMoreMenuItemIdsForPlan(section.itemIds, {
+          deliveryBoyManagement,
+        });
+        const items = itemsForSection(sectionIds, moreMenuItems);
         if (items.length === 0) return null;
 
         return (

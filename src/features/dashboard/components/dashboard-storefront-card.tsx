@@ -14,6 +14,7 @@ import {
   merchantStoreSubdomainHost,
 } from "@/config/store-domain";
 import { dashboardRoutePrefix } from "@/config/routes";
+import { useDeliveryBoyManagementEnabled } from "@/features/profile/hooks/use-delivery-boy-management";
 import { useMerchantProfileQuery } from "@/features/profile/hooks/use-merchant-profile";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +46,7 @@ function StoreStatusBadge({ online }: { online: boolean }) {
 
 export function DashboardStorefrontCard({ className }: { className?: string }) {
   const profileQuery = useMerchantProfileQuery();
+  const deliveryBoyManagement = useDeliveryBoyManagementEnabled();
   const [copied, setCopied] = useState(false);
   const [deliveryCopied, setDeliveryCopied] = useState(false);
 
@@ -203,15 +205,17 @@ export function DashboardStorefrontCard({ className }: { className?: string }) {
             )}
             {deliveryCopied ? "Copied" : "Copy link"}
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="h-10 flex-1 rounded-xl border-[#bbf7d0] bg-white text-xs font-semibold text-[#15803d] hover:bg-[#f0fdf4] sm:h-9 sm:flex-none"
-            asChild
-          >
-            <Link href={`${dashboardRoutePrefix}/delivery-boys`}>Manage team</Link>
-          </Button>
+          {deliveryBoyManagement ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-10 flex-1 rounded-xl border-[#bbf7d0] bg-white text-xs font-semibold text-[#15803d] hover:bg-[#f0fdf4] sm:h-9 sm:flex-none"
+              asChild
+            >
+              <Link href={`${dashboardRoutePrefix}/delivery-boys`}>Manage team</Link>
+            </Button>
+          ) : null}
           <Button
             type="button"
             size="sm"

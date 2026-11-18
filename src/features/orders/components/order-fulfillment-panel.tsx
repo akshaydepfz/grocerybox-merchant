@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { DashboardSurface } from "@/features/dashboard/components/dashboard-surface";
 import { listMerchantDeliveryBoys } from "@/features/delivery-boys/services";
 import { deliveryBoyInitials } from "@/features/delivery-boys/utils/format-delivery-boy";
+import { useDeliveryBoyManagementEnabled } from "@/features/profile/hooks/use-delivery-boy-management";
 import { cn } from "@/lib/utils";
 
 import {
@@ -45,6 +46,7 @@ export function OrderFulfillmentPanel({
   pending,
   onAdvance,
 }: OrderFulfillmentPanelProps) {
+  const deliveryBoyManagement = useDeliveryBoyManagementEnabled();
   const steps = MERCHANT_ORDER_FULFILLMENT_STEPS;
   const currentIndex = steps.findIndex((step) => step.id === order.currentStep);
   const nextStep = nextMerchantOrderStep(order.currentStep);
@@ -53,6 +55,7 @@ export function OrderFulfillmentPanel({
     nextStep === "out_for_delivery" ||
     (order.currentStep === "out_for_delivery" && nextStep === "delivered");
   const needsPartnerPicker =
+    deliveryBoyManagement &&
     isHomeDelivery &&
     (nextStep === "out_for_delivery" || order.currentStep === "out_for_delivery");
 

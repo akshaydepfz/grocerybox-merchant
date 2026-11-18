@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 
-import { DeliveryBoysScreen } from "@/features/delivery-boys/components";
+import {
+  DeliveryBoyPlanGate,
+  DeliveryBoysScreen,
+} from "@/features/delivery-boys/components";
 
 export const metadata: Metadata = {
   title: "Delivery Boys | GroceryBox Merchant",
@@ -8,5 +11,9 @@ export const metadata: Metadata = {
 };
 
 export default function DeliveryBoysPage() {
-  return <DeliveryBoysScreen />;
+  return (
+    <DeliveryBoyPlanGate>
+      <DeliveryBoysScreen />
+    </DeliveryBoyPlanGate>
+  );
 }
