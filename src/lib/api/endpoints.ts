@@ -46,6 +46,7 @@ export const API_ENDPOINTS = {
   merchantCoupons: `${API_V1_PREFIX}/merchant/coupons`,
   merchantDeliveryBoys: `${API_V1_PREFIX}/merchant/delivery-boys`,
   merchantDeliveryBoysSummary: `${API_V1_PREFIX}/merchant/delivery-boys/summary`,
+  merchantDomains: `${API_V1_PREFIX}/merchant/domains`,
 } as const satisfies Record<string, string>;
 
 export function merchantCategoryPath(
@@ -111,6 +112,17 @@ export function merchantCouponPath(
 
 export function merchantDeliveryBoyPath(deliveryBoyId: string): string {
   return `${API_ENDPOINTS.merchantDeliveryBoys}/${deliveryBoyId}`;
+}
+
+export function merchantDomainPath(
+  domainId: string,
+  action?: "verify",
+): string {
+  const base = `${API_ENDPOINTS.merchantDomains}/${domainId}`;
+  if (action) {
+    return `${base}/${action}`;
+  }
+  return base;
 }
 
 export function merchantOrderStatusPath(orderId: string): string {

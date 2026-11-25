@@ -12,6 +12,7 @@ import {
   Truck,
   Users,
   CircleUser,
+  Globe,
   Warehouse,
 } from "lucide-react";
 
@@ -163,6 +164,13 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: "Store Settings",
     href: `${dashboardRoutePrefix}/settings`,
     icon: Settings,
+    available: true,
+  },
+  {
+    id: "custom-domain",
+    label: "Custom Domain",
+    href: `${dashboardRoutePrefix}/custom-domain`,
+    icon: Globe,
     available: true,
   },
   {
