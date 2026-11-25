@@ -40,7 +40,7 @@ const MENU_SECTIONS: {
   },
   {
     title: "Store & account",
-    itemIds: ["settings", "help"],
+    itemIds: ["settings", "custom-domain", "help"],
   },
 ];
 
